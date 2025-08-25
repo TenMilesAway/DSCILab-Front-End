@@ -10,7 +10,8 @@ import {
   UserRequest,
   deleteUserApi,
   PasswordRequest,
-  updateUserPasswordApi
+  updateUserPasswordApi,
+  getUserTypesApi
 } from "@/api/system/user";
 import editForm from "./form.vue";
 import passwordForm from "./passwordForm.vue";
@@ -31,6 +32,7 @@ export function useHook() {
     phoneNumber: undefined,
     status: undefined,
     username: undefined,
+    userType: undefined,
     timeRangeColumn: "createTime"
   });
 
@@ -50,6 +52,7 @@ export function useHook() {
   const deptTreeList = ref([]);
   const postOptions = ref([]);
   const roleOptions = ref([]);
+  const userTypeOptions = ref([]);
 
   const columns: TableColumnList = [
     {
@@ -67,6 +70,39 @@ export function useHook() {
       label: "昵称",
       prop: "nickname",
       minWidth: 130
+    },
+    {
+      label: "真实姓名",
+      prop: "realName",
+      minWidth: 130
+    },
+    {
+      label: "入学年份",
+      prop: "enrollmentYear",
+      minWidth: 100
+    },
+    {
+      label: "研究方向",
+      prop: "researchDirection",
+      minWidth: 150
+    },
+    {
+      label: "用户类型",
+      prop: "userTypeName",
+      minWidth: 100,
+      cellRenderer: ({ row, props }) => (
+        <el-tag
+          size={props.size}
+          type={
+            row.userType === 1 ? "danger" :
+            row.userType === 2 ? "warning" :
+            row.userType === 3 ? "success" : "info"
+          }
+          effect="plain"
+        >
+          {row.userTypeName || "未知"}
+        </el-tag>
+      )
     },
     {
       label: "性别",
@@ -252,6 +288,10 @@ export function useHook() {
           userId: row?.userId ?? 0,
           username: row?.username ?? "",
           nickname: row?.nickname ?? "",
+          realName: row?.realName ?? "",
+          enrollmentYear: row?.enrollmentYear ?? null,
+          researchDirection: row?.researchDirection ?? "",
+          userType: row?.userType ?? undefined,
           deptId: row?.deptId ?? undefined,
           phoneNumber: row?.phoneNumber ?? "",
           email: row?.email ?? "",
@@ -367,6 +407,9 @@ export function useHook() {
 
     const roleResponse = await getRoleListApi({});
     roleOptions.value = roleResponse.data.rows;
+
+    const userTypeResponse = await getUserTypesApi();
+    userTypeOptions.value = userTypeResponse.data;
   });
 
   return {
@@ -384,6 +427,10 @@ export function useHook() {
     getList,
     handleDelete,
     openResetPasswordDialog,
-    openUploadDialog
+    openUploadDialog,
+    userTypeOptions,
+    deptTreeList,
+    postOptions,
+    roleOptions
   };
 }

@@ -12,6 +12,7 @@ interface FormProps {
   deptOptions: any[];
   postOptions: PostPageResponse[];
   roleOptions: RoleDTO[];
+  userTypeOptions: any[];
 }
 
 const props = withDefaults(defineProps<FormProps>(), {
@@ -19,25 +20,31 @@ const props = withDefaults(defineProps<FormProps>(), {
     userId: 0,
     username: "",
     nickname: "",
+    realName: "",
+    enrollmentYear: null,
+    researchDirection: "",
     deptId: 0,
-    phone: "",
+    phoneNumber: "",
     email: "",
     password: "",
     sex: 0,
     status: 1,
     postId: 0,
     roleId: 0,
+    userType: 3,
     remark: ""
   }),
   deptOptions: () => [],
   postOptions: () => [],
-  roleOptions: () => []
+  roleOptions: () => [],
+  userTypeOptions: () => []
 });
 
 const newFormInline = ref(props.formInline);
 const deptOptions = ref(props.deptOptions);
 const roleOptions = ref(props.roleOptions);
 const postOptions = ref(props.postOptions);
+const userTypeOptions = ref(props.userTypeOptions);
 
 const formRuleRef = ref();
 
@@ -111,6 +118,56 @@ defineExpose({ getFormRuleRef });
             v-model="newFormInline.nickname"
             clearable
             placeholder="请输入昵称"
+          />
+        </el-form-item>
+      </re-col>
+
+      <re-col :value="12">
+        <el-form-item label="真实姓名" prop="realName">
+          <el-input
+            v-model="newFormInline.realName"
+            clearable
+            placeholder="请输入真实姓名"
+          />
+        </el-form-item>
+      </re-col>
+
+      <re-col :value="12">
+        <el-form-item label="用户类型" prop="userType">
+          <el-select
+            class="w-full"
+            v-model="newFormInline.userType"
+            placeholder="请选择用户类型"
+            clearable
+          >
+            <el-option
+              v-for="userType in userTypeOptions"
+              :key="userType.value"
+              :label="userType.label"
+              :value="userType.value"
+            />
+          </el-select>
+        </el-form-item>
+      </re-col>
+
+      <re-col :value="12">
+        <el-form-item label="入学年份" prop="enrollmentYear">
+          <el-input-number
+            v-model="newFormInline.enrollmentYear"
+            :min="1950"
+            :max="2030"
+            placeholder="请输入入学年份"
+            class="w-full"
+          />
+        </el-form-item>
+      </re-col>
+
+      <re-col :value="12">
+        <el-form-item label="研究方向" prop="researchDirection">
+          <el-input
+            v-model="newFormInline.researchDirection"
+            clearable
+            placeholder="请输入研究方向"
           />
         </el-form-item>
       </re-col>

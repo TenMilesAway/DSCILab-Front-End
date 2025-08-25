@@ -35,7 +35,8 @@ const {
   handleDelete,
   openDialog,
   getList,
-  openUploadDialog
+  openUploadDialog,
+  userTypeOptions
 } = useHook();
 
 watch(
@@ -79,6 +80,21 @@ watch(
             clearable
             class="!w-[160px]"
           />
+        </el-form-item>
+        <el-form-item label="用户类型：" prop="userType">
+          <el-select
+            v-model="searchFormParams.userType"
+            placeholder="请选择用户类型"
+            clearable
+            class="!w-[160px]"
+          >
+            <el-option
+              v-for="userType in userTypeOptions"
+              :key="userType.value"
+              :label="userType.label"
+              :value="userType.value"
+            />
+          </el-select>
         </el-form-item>
         <el-form-item label="状态：" prop="status">
           <el-select

@@ -20,6 +20,9 @@ const props = defineProps({
 
 const userModel = reactive<UserProfileRequest>({
   nickname: props.user.nickname,
+  realName: props.user.realName,
+  enrollmentYear: props.user.enrollmentYear,
+  researchDirection: props.user.researchDirection,
   phoneNumber: props.user.phoneNumber,
   email: props.user.email,
   sex: props.user.sex
@@ -69,6 +72,21 @@ function submit() {
   <el-form ref="userRef" :model="userModel" :rules="rules" label-width="80px">
     <el-form-item label="用户昵称">
       <el-input v-model="userModel.nickname" maxlength="30" />
+    </el-form-item>
+    <el-form-item label="真实姓名">
+      <el-input v-model="userModel.realName" maxlength="30" />
+    </el-form-item>
+    <el-form-item label="入学年份">
+      <el-input-number
+        v-model="userModel.enrollmentYear"
+        :min="1950"
+        :max="2030"
+        placeholder="请输入入学年份"
+        class="w-full"
+      />
+    </el-form-item>
+    <el-form-item label="研究方向">
+      <el-input v-model="userModel.researchDirection" maxlength="200" />
     </el-form-item>
     <el-form-item label="手机号码">
       <el-input v-model="userModel.phoneNumber" maxlength="11" />

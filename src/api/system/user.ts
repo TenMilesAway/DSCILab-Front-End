@@ -6,6 +6,7 @@ export interface UserQuery extends BasePageQuery {
   status?: number;
   userId?: number;
   username?: string;
+  userType?: number;
 }
 
 /**
@@ -22,6 +23,9 @@ export interface UserDTO {
   loginDate?: Date;
   loginIp?: string;
   nickname?: string;
+  realName?: string;
+  enrollmentYear?: number;
+  researchDirection?: string;
   phoneNumber?: string;
   postId?: number;
   remark?: string;
@@ -35,6 +39,7 @@ export interface UserDTO {
   userId?: number;
   username?: string;
   userType?: number;
+  userTypeName?: string;
 }
 
 /**
@@ -46,6 +51,9 @@ export interface UserRequest {
   deptId?: number;
   email?: string;
   nickname?: string;
+  realName?: string;
+  enrollmentYear?: number;
+  researchDirection?: string;
   phoneNumber?: string;
   password: string;
   postId?: number;
@@ -54,6 +62,7 @@ export interface UserRequest {
   sex?: number;
   status?: number;
   username?: string;
+  userType?: number;
 }
 
 /**
@@ -62,6 +71,9 @@ export interface UserRequest {
 export interface UserProfileRequest {
   email?: string;
   nickName?: string;
+  realName?: string;
+  enrollmentYear?: number;
+  researchDirection?: string;
   phoneNumber?: string;
   sex?: number;
   userId?: number;
@@ -172,5 +184,22 @@ export const updateCurrentUserPasswordApi = (data?: ResetPasswordRequest) => {
     {
       data
     }
+  );
+};
+
+/** 获取用户类型列表 */
+export const getUserTypesApi = () => {
+  return http.request<ResponseData<Array<{value: number, label: string, remark: string}>>>(
+    "get",
+    "/system/users/types"
+  );
+};
+
+/** 按用户类型获取用户列表 */
+export const getUsersByTypeApi = (userType: number, params?: UserQuery) => {
+  return http.request<ResponseData<PageDTO<UserDTO>>>(
+    "get",
+    `/system/users/type/${userType}`,
+    { params }
   );
 };
