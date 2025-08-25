@@ -67,15 +67,17 @@ export function useHook() {
       minWidth: 130
     },
     {
-      label: "昵称",
-      prop: "nickname",
-      minWidth: 130
-    },
-    {
       label: "真实姓名",
       prop: "realName",
       minWidth: 130
     },
+    /*
+    {
+      label: "昵称",
+      prop: "nickname",
+      minWidth: 130
+    },
+    */
     {
       label: "入学年份",
       prop: "enrollmentYear",
@@ -94,9 +96,13 @@ export function useHook() {
         <el-tag
           size={props.size}
           type={
-            row.userType === 1 ? "danger" :
-            row.userType === 2 ? "warning" :
-            row.userType === 3 ? "success" : "info"
+            row.userType === 1
+              ? "danger"
+              : row.userType === 2
+              ? "warning"
+              : row.userType === 3
+              ? "success"
+              : "info"
           }
           effect="plain"
         >
@@ -124,11 +130,13 @@ export function useHook() {
       minWidth: 130,
       hide: true
     },
+    /*
     {
       label: "部门",
       prop: "deptName",
       minWidth: 130
     },
+    */
     {
       label: "手机号码",
       prop: "phoneNumber",

@@ -132,7 +132,7 @@ onBeforeUnmount(() => {
     font-size: 24px;
     line-height: 48px;
   }
-}
+}shu li
 
 .right-panel-items {
   height: calc(100vh - 60px);

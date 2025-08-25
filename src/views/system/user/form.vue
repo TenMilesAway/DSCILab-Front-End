@@ -41,9 +41,7 @@ const props = withDefaults(defineProps<FormProps>(), {
 });
 
 const newFormInline = ref(props.formInline);
-const deptOptions = ref(props.deptOptions);
 const roleOptions = ref(props.roleOptions);
-const postOptions = ref(props.postOptions);
 const userTypeOptions = ref(props.userTypeOptions);
 
 const formRuleRef = ref();
@@ -72,6 +70,7 @@ defineExpose({ getFormRuleRef });
           />
         </el-form-item>
       </re-col>
+
       <re-col :value="12">
         <el-form-item label="部门">
           <el-tree-select
@@ -112,6 +111,7 @@ defineExpose({ getFormRuleRef });
         </el-form-item>
       </re-col>
 
+      <!--
       <re-col :value="12">
         <el-form-item label="昵称" prop="nickname">
           <el-input
@@ -121,6 +121,7 @@ defineExpose({ getFormRuleRef });
           />
         </el-form-item>
       </re-col>
+      -->
 
       <re-col :value="12">
         <el-form-item label="真实姓名" prop="realName">
