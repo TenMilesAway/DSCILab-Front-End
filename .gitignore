@@ -21,4 +21,5 @@ tests/**/coverage/
 *.ntvs*
 *.njsproj
 *.sln
-tsconfig.tsbuildinfo
+tsconfig.tsbuildinfo/target/
+*.jar
