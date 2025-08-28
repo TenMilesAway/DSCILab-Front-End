@@ -1,9 +1,17 @@
 <template>
   <div class="member-info-container">
-    <!-- 主要内容区域 -->
-    <div class="main-content" v-if="member">
+    <!-- 加载状态 -->
+    <Transition name="fade" mode="out-in">
+      <div v-if="loading" class="loading-container">
+        <div class="loading-content">
+          <div class="loading-spinner"></div>
+          <p class="loading-text">正在加载成员信息...</p>
+        </div>
+      </div>
+      <!-- 主要内容区域 -->
+       <div v-else-if="member" class="main-content" :class="{ 'content-loaded': contentLoaded }">
       <!-- 左侧信息定位导航 -->
-      <div class="info-sidebar">
+        <div class="info-sidebar animate-item">
         <div class="sidebar-header">
           <button 
             @click="$emit('back')"
@@ -27,13 +35,24 @@
       </div>
 
       <!-- 右侧内容区域 -->
-      <div class="content-area">
+      <div class="content-area animate-item">
         <div class="member-detail-card">
         <!-- 头像和基本信息 -->
-        <div class="member-header">
+        <div class="member-header animate-item">
           <div class="avatar-section">
-            <div 
-              class="member-avatar" 
+            <img 
+              v-if="member.photo"
+              :src="member.photo"
+              :alt="member.name"
+              class="member-avatar"
+              @error="handleImageError"
+            />
+            <img 
+              v-else
+              src="/src/assets/lab/avatar.jpg"
+              :alt="member.name"
+              class="member-avatar"
+              @error="handleImageError"
             />
           </div>
           <div class="basic-info">
@@ -46,7 +65,7 @@
         </div>
 
         <!-- 详细信息 -->
-        <div class="detail-sections">
+        <div class="detail-sections animate-item">
           <!-- 个人信息 -->
           <div id="personal-info-section" class="info-section">
             <h3 class="section-title">个人信息</h3>
@@ -106,12 +125,13 @@
         </div>
         </div>
       </div>
-    </div>
+      </div>
+    </Transition>
   </div>
 </template>
 
 <script setup lang="ts">
-import { defineEmits, defineProps, ref, nextTick, onMounted, onUnmounted } from 'vue';
+import { defineEmits, defineProps, ref, nextTick, onMounted, onUnmounted, watch } from 'vue';
 
 interface Member {
   id: number;
@@ -130,6 +150,32 @@ const props = defineProps<Props>();
 const emit = defineEmits<{
   back: [];
 }>();
+
+// 加载状态
+const loading = ref(true);
+const contentLoaded = ref(false);
+
+// 模拟数据加载过程
+const loadMemberData = async () => {
+  loading.value = true;
+  contentLoaded.value = false;
+  
+  // 模拟API调用延迟
+  await new Promise(resolve => setTimeout(resolve, 1000));
+  
+  loading.value = false;
+  // 延迟一点时间让内容逐步显示
+  setTimeout(() => {
+    contentLoaded.value = true;
+  }, 100);
+};
+
+// 监听 member 变化
+watch(() => props.member, (newMember) => {
+  if (newMember) {
+    loadMemberData();
+  }
+}, { immediate: true });
 
 // 信息定位导航配置
 const navigationItems = [
@@ -176,9 +222,10 @@ const getCategoryName = (category: string): string => {
 // 处理图片加载错误
 const handleImageError = (event: Event) => {
   const img = event.target as HTMLImageElement;
+  const defaultAvatar = '/src/assets/lab/avatar.jpg';
   // 防止无限循环，只有当前src不是默认头像时才切换
-  if (img.src !== window.location.origin + '/default-avatar.png') {
-    img.src = '/default-avatar.png';
+  if (img.src !== window.location.origin + defaultAvatar) {
+    img.src = defaultAvatar;
   } else {
     // 如果默认头像也加载失败，移除src属性，显示alt文本
     img.removeAttribute('src');
@@ -236,14 +283,97 @@ onUnmounted(() => {
   padding: 0px 20px;
 }
 
+/* 加载状态样式 */
+.loading-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  width: 100%;
+  padding-top: 80px;
+}
+
+.loading-content {
+  text-align: center;
+  background: rgba(248, 250, 252, 0.95);
+  backdrop-filter: blur(15px);
+  border-radius: 20px;
+  padding: 40px;
+  box-shadow: 0 20px 60px rgba(148, 163, 184, 0.2);
+  border: 1px solid rgba(226, 232, 240, 0.3);
+}
+
+.loading-spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid rgba(59, 130, 246, 0.2);
+  border-top: 4px solid #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 20px;
+}
+
+.loading-text {
+  color: #64748b;
+  font-size: 16px;
+  margin: 0;
+  font-weight: 500;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* 过渡动画 */
+.fade-enter-active,
+.fade-leave-active {
+  transition: all 0.5s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+/* 内容加载动画 */
+.animate-item {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.main-content.content-loaded .animate-item {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.main-content.content-loaded .info-sidebar {
+  transition-delay: 0.1s;
+}
+
+.main-content.content-loaded .member-header {
+  transition-delay: 0.2s;
+}
+
+.main-content.content-loaded .detail-sections {
+  transition-delay: 0.3s;
+}
+
+.main-content.content-loaded .content-area {
+  transition-delay: 0.15s;
+}
+
 
 
 .main-content {
   display: flex;
-  gap: 30px;
-  max-width: 1400px;
-  margin: 0px auto 0;
+  gap: 0px;
+  max-width: 1300px;
+  margin: 0 auto;
   align-items: flex-start;
+  padding-left: 0px;
 }
 
 .info-sidebar {

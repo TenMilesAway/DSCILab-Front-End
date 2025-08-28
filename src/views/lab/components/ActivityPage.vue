@@ -216,6 +216,8 @@ const selectedNewsId = ref<number>(0)
 // 图片加载状态管理
 const imageLoadingStates = ref<Record<number, boolean>>({})
 const imageLoadedStates = ref<Record<number, boolean>>({})
+// 保存滚动位置
+const savedScrollPosition = ref(0)
 
 // 计算属性
 const filteredNews = computed(() => {
@@ -353,12 +355,16 @@ const handleCurrentChange = (val: number) => {
 }
 
 const handleNewsClick = (newsItem: News) => {
+  // 保存当前滚动位置
+  savedScrollPosition.value = window.scrollY
   // 处理新闻卡片点击事件
   showDetail.value = true
   selectedNewsId.value = newsItem.id
 }
 
 const handleViewDetails = (newsItem: News) => {
+  // 保存当前滚动位置
+  savedScrollPosition.value = window.scrollY
   // 处理查看详情按钮点击事件
   showDetail.value = true
   selectedNewsId.value = newsItem.id
@@ -368,11 +374,17 @@ const handleBackToList = () => {
   // 返回新闻列表
   showDetail.value = false
   selectedNewsId.value = 0
+  // 恢复滚动位置
+  setTimeout(() => {
+    window.scrollTo(0, savedScrollPosition.value)
+  }, 100)
 }
 
 const handleDetailNewsClick = (newsItem: News) => {
   // 处理详情页面中的相关新闻点击
   selectedNewsId.value = newsItem.id
+  // 重置滚动条到顶部（因为是新的详情页面）
+  window.scrollTo(0, 0)
 }
 
 const handleImageError = (event: Event) => {

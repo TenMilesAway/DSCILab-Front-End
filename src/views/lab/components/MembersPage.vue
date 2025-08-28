@@ -361,9 +361,10 @@ const getCategoryName = (categoryKey: string) => {
 .members-container {
   display: flex;
   gap: 30px;
-  max-width: 1400px;
+  max-width: 1600px;
   margin: 0 auto;
   align-items: flex-start;
+  padding-left: 20px;
 }
 
 /* 左侧导航栏样式 */

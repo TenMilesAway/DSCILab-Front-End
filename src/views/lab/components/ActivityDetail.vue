@@ -13,83 +13,97 @@
     </div>
 
     <!-- 新闻详情内容 -->
-    <div v-if="newsDetail" class="detail-content">
-      <!-- 新闻头部信息 -->
-      <div class="detail-header">
-        <div class="category-tag">
-          <el-tag 
-            :type="getCategoryTagType(newsDetail.category)"
-            size="large"
-          >
-            {{ getCategoryLabel(newsDetail.category) }}
-          </el-tag>
-        </div>
-        
-        <h1 class="detail-title">{{ newsDetail.title }}</h1>
-        
-        <div class="detail-meta">
-          <div class="meta-item">
-            <el-icon><Calendar /></el-icon>
-            <span>发布时间：{{ formatPublishTime(newsDetail.publishTime) }}</span>
+    <Transition name="fade-slide" mode="out-in">
+      <div v-if="newsDetail && !loading" class="detail-content">
+        <!-- 新闻头部信息 -->
+        <div class="detail-header" :class="{ 'content-loaded': contentLoaded }">
+          <div class="category-tag">
+            <el-tag 
+              :type="getCategoryTagType(newsDetail.category)"
+              size="large"
+            >
+              {{ getCategoryLabel(newsDetail.category) }}
+            </el-tag>
           </div>
-          <div class="meta-item">
-            <el-icon><View /></el-icon>
-            <span>阅读量：{{ newsDetail.viewCount || 0 }}</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- 新闻图片 -->
-      <div v-if="newsDetail.image" class="detail-image">
-        <img 
-          :src="newsDetail.image" 
-          :alt="newsDetail.title"
-          @error="handleImageError"
-        />
-      </div>
-
-      <!-- 新闻正文 -->
-      <div class="detail-body">
-        <div class="content-text" v-html="formatContent(newsDetail.content)"></div>
-      </div>
-
-      <!-- 相关新闻推荐 -->
-      <div v-if="relatedNews.length > 0" class="related-news">
-        <h3>相关新闻</h3>
-        <div class="related-list">
-          <div 
-            v-for="item in relatedNews" 
-            :key="item.id"
-            class="related-item"
-            @click="handleRelatedClick(item)"
-          >
-            <div class="related-image">
-              <img 
-                :src="item.image || defaultImage" 
-                :alt="item.title"
-                @error="handleImageError"
-              />
+          
+          <h1 class="detail-title">{{ newsDetail.title }}</h1>
+          
+          <div class="detail-meta">
+            <div class="meta-item">
+              <el-icon><Calendar /></el-icon>
+              <span>发布时间：{{ formatPublishTime(newsDetail.publishTime) }}</span>
             </div>
-            <div class="related-info">
-              <h4>{{ item.title }}</h4>
-              <p>{{ item.content.substring(0, 100) }}...</p>
-              <span class="related-time">{{ formatPublishTime(item.publishTime) }}</span>
+            <div class="meta-item">
+              <el-icon><View /></el-icon>
+              <span>阅读量：{{ newsDetail.viewCount || 0 }}</span>
             </div>
           </div>
         </div>
+
+        <!-- 新闻图片 -->
+        <div class="detail-image" :class="{ 'content-loaded': contentLoaded }">
+          <img 
+            :src="getImageSrc(newsDetail.image)" 
+            :alt="newsDetail.title"
+            @load="handleImageLoad"
+            @error="handleImageError"
+            :class="{ 'image-loaded': imageLoaded }"
+          />
+        </div>
+
+        <!-- 新闻正文 -->
+        <div class="detail-body" :class="{ 'content-loaded': contentLoaded }">
+          <div class="content-text" v-html="formatContent(newsDetail.content)"></div>
+        </div>
+
+        <!-- 相关新闻推荐 -->
+        <div v-if="relatedNews.length > 0" class="related-news" :class="{ 'content-loaded': contentLoaded }">
+          <h3>相关新闻</h3>
+          <div class="related-list">
+            <div 
+              v-for="(item, index) in relatedNews" 
+              :key="item.id"
+              class="related-item"
+              :style="{ 'animation-delay': `${index * 0.1}s` }"
+              @click="handleRelatedClick(item)"
+            >
+              <div class="related-image">
+                <img 
+                  :src="getImageSrc(item.image)" 
+                  :alt="item.title"
+                  @error="handleImageError"
+                />
+              </div>
+              <div class="related-info">
+                <h4>{{ item.title }}</h4>
+                <p>{{ item.content.substring(0, 100) }}...</p>
+                <span class="related-time">{{ formatPublishTime(item.publishTime) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
 
-    <!-- 加载状态 -->
-    <div v-else-if="loading" class="loading">
-      <el-skeleton :rows="8" animated />
-    </div>
+      <!-- 加载状态 -->
+      <div v-else-if="loading" class="loading">
+        <div class="loading-skeleton">
+          <!-- 自定义骨架屏 -->
+          <div class="skeleton-header">
+            <div class="skeleton-tag"></div>
+            <div class="skeleton-title"></div>
+            <div class="skeleton-meta">
+              <div class="skeleton-meta-item"></div>
+              <div class="skeleton-meta-item"></div>
+            </div>
+          </div>
+          <div class="skeleton-image"></div>
+          <div class="skeleton-content">
+            <div class="skeleton-line" v-for="i in 6" :key="i"></div>
+          </div>
+        </div>
+      </div>
 
-    <!-- 错误状态 -->
-    <div v-else class="error">
-      <el-empty description="新闻不存在或已被删除" />
-      <el-button type="primary" @click="handleBack">返回新闻列表</el-button>
-    </div>
+    </Transition>
   </div>
 </template>
 
@@ -131,6 +145,8 @@ const emit = defineEmits<{
 // 响应式数据
 const loading = ref(false)
 const newsDetail = ref<News | null>(null)
+const contentLoaded = ref(false)
+const imageLoaded = ref(false)
 
 // 计算相关新闻（同类别的其他新闻，最多显示3条）
 const relatedNews = computed(() => {
@@ -191,9 +207,24 @@ const formatContent = (content: string) => {
     .join('')
 }
 
+const getImageSrc = (image?: string) => {
+  // 如果没有图片或图片路径为空，返回默认图片
+  if (!image || image.trim() === '') {
+    return defaultImage
+  }
+  return image
+}
+
 const handleImageError = (event: Event) => {
   const img = event.target as HTMLImageElement
-  img.src = defaultImage
+  // 防止无限循环，只有当前不是默认图片时才切换
+  if (img.src !== defaultImage) {
+    img.src = defaultImage
+  }
+}
+
+const handleImageLoad = () => {
+  imageLoaded.value = true
 }
 
 const handleBack = () => {
@@ -207,10 +238,14 @@ const handleRelatedClick = (news: News) => {
 const loadNewsDetail = () => {
   if (!props.newsId || !props.allNews.length) {
     newsDetail.value = null
+    contentLoaded.value = false
+    imageLoaded.value = false
     return
   }
   
   loading.value = true
+  contentLoaded.value = false
+  imageLoaded.value = false
   
   // 模拟异步加载
   setTimeout(() => {
@@ -223,12 +258,19 @@ const loadNewsDetail = () => {
     }
     
     loading.value = false
+    
+    // 延迟显示内容，创建渐进加载效果
+    setTimeout(() => {
+      contentLoaded.value = true
+    }, 100)
   }, 300)
 }
 
 // 组件挂载时加载详情
 onMounted(() => {
   loadNewsDetail()
+  // 进入详情页时重置滚动条到顶部
+  window.scrollTo(0, 0)
 })
 
 // 监听 newsId 变化
@@ -238,6 +280,22 @@ watch(() => props.newsId, () => {
 </script>
 
 <style scoped lang="scss">
+// 过渡动画
+.fade-slide-enter-active,
+.fade-slide-leave-active {
+  transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.fade-slide-enter-from {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.fade-slide-leave-to {
+  opacity: 0;
+  transform: translateY(-20px);
+}
+
 .activity-detail {
   max-width: 1200px;
   margin: 0 auto;
@@ -256,11 +314,27 @@ watch(() => props.newsId, () => {
 }
 
 .detail-content {
+  // 内容加载动画
+  .detail-header,
+  .detail-image,
+  .detail-body,
+  .related-news {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: all 0.6s cubic-bezier(0.25, 0.8, 0.25, 1);
+    
+    &.content-loaded {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
   .detail-header {
     text-align: center;
     margin-bottom: 30px;
     padding-bottom: 20px;
     border-bottom: 1px solid #e4e7ed;
+    transition-delay: 0.1s;
     
     .category-tag {
       margin-bottom: 15px;
@@ -296,16 +370,27 @@ watch(() => props.newsId, () => {
   .detail-image {
     text-align: center;
     margin-bottom: 30px;
+    transition-delay: 0.2s;
     
     img {
       max-width: 100%;
       height: auto;
       border-radius: 8px;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      opacity: 0;
+      transform: scale(0.95);
+      transition: all 0.5s ease;
+      
+      &.image-loaded {
+        opacity: 1;
+        transform: scale(1);
+      }
     }
   }
   
   .detail-body {
+    transition-delay: 0.3s;
+    
     .content-text {
       font-size: 16px;
       line-height: 1.8;
@@ -331,6 +416,7 @@ watch(() => props.newsId, () => {
   margin-top: 50px;
   padding-top: 30px;
   border-top: 1px solid #e4e7ed;
+  transition-delay: 0.4s;
   
   h3 {
     font-size: 1.5rem;
@@ -352,6 +438,16 @@ watch(() => props.newsId, () => {
     padding: 15px;
     cursor: pointer;
     transition: all 0.3s ease;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: slideInUp 0.6s ease forwards;
+    
+    @keyframes slideInUp {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
     
     &:hover {
       background: #e3f2fd;
@@ -409,6 +505,90 @@ watch(() => props.newsId, () => {
 
 .loading {
   padding: 40px;
+  
+  .loading-skeleton {
+    max-width: 800px;
+    margin: 0 auto;
+    
+    .skeleton-header {
+      text-align: center;
+      margin-bottom: 30px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #e4e7ed;
+      
+      .skeleton-tag {
+        width: 80px;
+        height: 24px;
+        background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+        background-size: 200% 100%;
+        animation: skeleton-loading 1.5s infinite;
+        border-radius: 12px;
+        margin: 0 auto 15px;
+      }
+      
+      .skeleton-title {
+        width: 60%;
+        height: 36px;
+        background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+        background-size: 200% 100%;
+        animation: skeleton-loading 1.5s infinite;
+        border-radius: 4px;
+        margin: 0 auto 20px;
+      }
+      
+      .skeleton-meta {
+        display: flex;
+        justify-content: center;
+        gap: 30px;
+        
+        .skeleton-meta-item {
+          width: 120px;
+          height: 16px;
+          background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+          background-size: 200% 100%;
+          animation: skeleton-loading 1.5s infinite;
+          border-radius: 4px;
+        }
+      }
+    }
+    
+    .skeleton-image {
+      width: 100%;
+      height: 300px;
+      background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+      background-size: 200% 100%;
+      animation: skeleton-loading 1.5s infinite;
+      border-radius: 8px;
+      margin-bottom: 30px;
+    }
+    
+    .skeleton-content {
+      .skeleton-line {
+        height: 16px;
+        background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+        background-size: 200% 100%;
+        animation: skeleton-loading 1.5s infinite;
+        border-radius: 4px;
+        margin-bottom: 12px;
+        
+        &:nth-child(1) { width: 100%; }
+        &:nth-child(2) { width: 95%; }
+        &:nth-child(3) { width: 88%; }
+        &:nth-child(4) { width: 92%; }
+        &:nth-child(5) { width: 85%; }
+        &:nth-child(6) { width: 78%; }
+      }
+    }
+    
+    @keyframes skeleton-loading {
+      0% {
+        background-position: -200% 0;
+      }
+      100% {
+        background-position: 200% 0;
+      }
+    }
+  }
 }
 
 .error {
@@ -452,6 +632,29 @@ watch(() => props.newsId, () => {
         height: 120px;
         margin-right: 0;
         margin-bottom: 10px;
+      }
+    }
+  }
+  
+  .loading {
+    padding: 20px;
+    
+    .loading-skeleton {
+      .skeleton-header {
+        .skeleton-title {
+          width: 80%;
+          height: 28px;
+        }
+        
+        .skeleton-meta {
+          flex-direction: column;
+          gap: 10px;
+          align-items: center;
+        }
+      }
+      
+      .skeleton-image {
+        height: 200px;
       }
     }
   }
