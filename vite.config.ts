@@ -45,7 +45,7 @@ export default ({ command, mode }: ConfigEnv): UserConfigExport => {
       // 本地跨域代理 https://cn.vitejs.dev/config/server-options.html#server-proxy
       proxy: {
         "/dev-api": {
-          target: "http://localhost:8080",
+          target: "http://10.153.31.65:8080",
           changeOrigin: true,
           rewrite: path => path.replace(/^\/dev-api/, "")
         }

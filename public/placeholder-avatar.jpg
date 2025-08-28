@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="150" viewBox="0 0 120 150">
+  <rect width="120" height="150" fill="#f3f4f6" stroke="#d1d5db" stroke-width="2" rx="12"/>
+  <g transform="translate(60, 75)">
+    <!-- 人像图标 -->
+    <circle cx="0" cy="-20" r="15" fill="#9ca3af"/>
+    <path d="M-25 20 Q-25 0 -15 0 L15 0 Q25 0 25 20 Z" fill="#9ca3af"/>
+  </g>
+  <text x="60" y="130" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#6b7280">照片预留位置</text>
+</svg>
