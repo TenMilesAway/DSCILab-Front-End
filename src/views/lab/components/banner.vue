@@ -24,8 +24,8 @@ withDefaults(defineProps<Props>(), {
 <style scoped lang="scss">
 .lab-banner {
   height: 450px;
-  background: linear-gradient(135deg, #94a3b8 0%, #cbd5e1 30%, #e2e8f0 70%, #f1f5f9 100%);
-  color: #334155;
+  background: url('@/assets/lab/default.jpg') center/cover no-repeat;
+  color: #ffffff;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -34,6 +34,7 @@ withDefaults(defineProps<Props>(), {
   padding: 0 20px;
   position: relative;
   overflow: hidden;
+  margin-bottom: 0;
 }
 
 .lab-banner::before {
@@ -43,23 +44,28 @@ withDefaults(defineProps<Props>(), {
   left: 0;
   right: 0;
   bottom: 0;
-  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="50" cy="50" r="0.8" fill="%23f8fafc" opacity="0.4"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>') repeat;
-  opacity: 0.6;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 1;
 }
 
 .lab-banner-title {
   font-size: 2.5rem;
   font-weight: bold;
   margin-bottom: 16px;
-  text-shadow: 0 2px 4px rgba(148, 163, 184, 0.3);
-  color: #1e293b;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
+  color: #ffffff;
+  position: relative;
+  z-index: 2;
 }
 
 .lab-banner-subtitle {
   font-size: 1.5rem;
-  opacity: 0.8;
+  opacity: 0.9;
   margin-bottom: 30px;
-  color: #475569;
+  color: #ffffff;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+  position: relative;
+  z-index: 2;
 }
 
 /* 响应式调整 */

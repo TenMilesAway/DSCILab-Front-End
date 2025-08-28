@@ -18,6 +18,12 @@ interface Props {
   researchAreas?: ResearchArea[];
 }
 
+const selectedIndex = ref<number | null>(null);
+
+const selectArea = (index: number) => {
+  selectedIndex.value = selectedIndex.value === index ? null : index;
+};
+
 withDefaults(defineProps<Props>(), {
   title: '研究方向',
   subtitle: 'RESEARCH AREAS',
@@ -64,18 +70,34 @@ withDefaults(defineProps<Props>(), {
         <p class="research-subtitle">{{ subtitle }}</p>
       </div>
       
-      <div class="research-cards">
-        <div class="research-card" v-for="(item, index) in researchAreas" :key="index" :style="{animationDelay: index * 0.1 + 's'}">
-          <div class="research-card-inner">
-            <div class="research-icon">
+      <div class="research-scroll-container">
+        <div 
+          v-for="(item, index) in researchAreas" 
+          :key="index" 
+          class="research-item"
+          :class="{ 'expanded': selectedIndex === index, [`research-item-${index}`]: true }"
+          @click="selectArea(index)"
+        >
+          <!-- 折叠状态的标题卡片 -->
+          <div class="research-tab">
+            <div class="tab-icon">
               <i :class="item.icon"></i>
             </div>
-            <h3 class="research-card-title">{{ item.title }}</h3>
-            <p class="research-card-desc">{{ item.description }}</p>
-            <div class="research-card-overlay">
-              <div class="overlay-content">
-                <h4>{{ item.title }}</h4>
-                <p>{{ item.detailDesc }}</p>
+            <h3 class="tab-title">{{ item.title }}</h3>
+          </div>
+          
+          <!-- 展开状态的详细内容 -->
+          <div class="research-content">
+            <div class="content-inner">
+              <div class="content-header">
+                <div class="content-icon">
+                  <i :class="item.icon"></i>
+                </div>
+                <h3 class="content-title">{{ item.title }}</h3>
+              </div>
+              <div class="content-body">
+                <p class="content-description">{{ item.description }}</p>
+                <p class="content-detail">{{ item.detailDesc }}</p>
               </div>
             </div>
           </div>
@@ -88,7 +110,7 @@ withDefaults(defineProps<Props>(), {
 <style scoped lang="scss">
 /* 研究方向区域样式 */
 .research-section {
-  background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 30%, #94a3b8 70%, #64748b 100%);
+  background: #f8fafc;
   padding: 100px 0;
   margin-top: 80px;
   position: relative;
@@ -96,7 +118,7 @@ withDefaults(defineProps<Props>(), {
 }
 
 .research-container {
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
   padding: 0 20px;
 }
@@ -110,10 +132,13 @@ withDefaults(defineProps<Props>(), {
 .research-title {
   font-size: 3rem;
   font-weight: 800;
-  color: #1e293b;
+  background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
   margin-bottom: 15px;
   position: relative;
-  text-shadow: 0 2px 4px rgba(148, 163, 184, 0.3);
+  text-shadow: 0 2px 4px rgba(30, 58, 138, 0.3);
   letter-spacing: 1px;
 }
 
@@ -125,141 +150,314 @@ withDefaults(defineProps<Props>(), {
   transform: translateX(-50%);
   width: 80px;
   height: 4px;
-  background: linear-gradient(90deg, #64748b, rgba(148, 163, 184, 0.6));
+  background: linear-gradient(90deg, #3b82f6, #1e3a8a);
   border-radius: 2px;
-  box-shadow: 0 2px 4px rgba(148, 163, 184, 0.2);
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
 }
 
 .research-subtitle {
   font-size: 1.2rem;
-  color: rgba(51, 65, 85, 0.8);
+  color: #64748b;
   letter-spacing: 3px;
   margin-top: 25px;
   font-weight: 300;
 }
 
-.research-cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 30px;
-  margin-top: 40px;
-}
-
-.research-card {
-  perspective: 1000px;
-  height: 320px;
-  animation: fadeInUp 0.8s ease-out both;
-}
-
-.research-card-inner {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  text-align: center;
-  transition: transform 0.6s;
-  transform-style: preserve-3d;
-  background: rgba(248, 250, 252, 0.95);
-  border-radius: 15px;
-  box-shadow: 0 8px 25px rgba(148, 163, 184, 0.15);
-  overflow: hidden;
-  cursor: pointer;
-  border: 1px solid rgba(226, 232, 240, 0.4);
-}
-
-.research-card:hover .research-card-inner {
-  transform: rotateY(180deg);
-}
-
-.research-card-inner::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%);
-  opacity: 0;
-  transition: opacity 0.3s;
-  z-index: 1;
-}
-
-.research-card:hover .research-card-inner::before {
-  opacity: 0.9;
-}
-
-.research-icon {
-  font-size: 3rem;
-  color: #64748b;
-  margin: 40px 0 20px;
-  transition: all 0.3s ease;
-}
-
-.research-card:hover .research-icon {
-  transform: scale(1.2) rotateY(360deg);
-  color: #f8fafc;
-}
-
-.research-card-title {
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: #1e293b;
-  margin-bottom: 15px;
-  transition: color 0.3s;
-}
-
-.research-card:hover .research-card-title {
-  color: #f8fafc;
-}
-
-.research-card-desc {
-  font-size: 0.95rem;
-  color: #475569;
-  line-height: 1.6;
-  padding: 0 20px;
-  transition: color 0.3s;
-}
-
-.research-card:hover .research-card-desc {
-  color: rgba(248, 250, 252, 0.9);
-}
-
-.research-card-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%);
-  color: #f8fafc;
+/* 横向滚动容器 */
+.research-scroll-container {
   display: flex;
+  gap: 0;
+  margin-top: 40px;
+  height: 400px;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 10px 40px rgba(30, 58, 138, 0.15);
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+}
+
+/* 研究方向项目 */
+.research-item {
+  position: relative;
+  flex: 1;
+  transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  overflow: hidden;
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.1));
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    opacity: 0.3;
+    transform: rotate(5deg) scale(1.1);
+    transition: all 0.8s ease;
+    z-index: 1;
+  }
+  
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 2;
+  }
+  
+  &.expanded {
+    flex: 3;
+    
+    &::before {
+      opacity: 0.6;
+      transform: rotate(0deg) scale(1.05);
+    }
+  }
+  
+  &:not(.expanded):hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+    
+    &::before {
+      opacity: 0.5;
+      transform: rotate(3deg) scale(1.08);
+    }
+  }
+  
+  /* 知识图谱 - 紫色主题 */
+  &.research-item-0 {
+    &::before {
+      background-image: url('@/assets/lab/知识图谱.png');
+    }
+    
+    &::after {
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.3), rgba(168, 85, 247, 0.2));
+    }
+    
+    &.expanded::after {
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(168, 85, 247, 0.1));
+    }
+    
+    &:hover::after {
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.25), rgba(168, 85, 247, 0.15));
+    }
+  }
+  
+  /* 时序数据分析 - 蓝绿色主题 */
+  &.research-item-1 {
+    &::before {
+      background-image: url('@/assets/lab/时序数据分析.jpg');
+    }
+    
+    &::after {
+      background: linear-gradient(135deg, rgba(6, 182, 212, 0.3), rgba(14, 165, 233, 0.2));
+    }
+    
+    &.expanded::after {
+      background: linear-gradient(135deg, rgba(6, 182, 212, 0.15), rgba(14, 165, 233, 0.1));
+    }
+    
+    &:hover::after {
+      background: linear-gradient(135deg, rgba(6, 182, 212, 0.25), rgba(14, 165, 233, 0.15));
+    }
+  }
+  
+  /* 计算机视觉 - 绿色主题 */
+  &.research-item-2 {
+    &::before {
+      background-image: url('@/assets/lab/计算机视觉.png');
+    }
+    
+    &::after {
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.3), rgba(34, 197, 94, 0.2));
+    }
+    
+    &.expanded::after {
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(34, 197, 94, 0.1));
+    }
+    
+    &:hover::after {
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.25), rgba(34, 197, 94, 0.15));
+    }
+  }
+  
+  /* 边缘计算 - 橙色主题 */
+  &.research-item-3 {
+    &::before {
+      background-image: url('@/assets/lab/边缘计算.jpg');
+    }
+    
+    &::after {
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.3), rgba(251, 146, 60, 0.2));
+    }
+    
+    &.expanded::after {
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(251, 146, 60, 0.1));
+    }
+    
+    &:hover::after {
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.25), rgba(251, 146, 60, 0.15));
+    }
+  }
+  
+  /* 虚拟现实 - 粉红色主题 */
+  &.research-item-4 {
+    &::before {
+      background-image: url('@/assets/lab/虚拟现实.jpeg');
+    }
+    
+    &::after {
+      background: linear-gradient(135deg, rgba(236, 72, 153, 0.3), rgba(219, 39, 119, 0.2));
+    }
+    
+    &.expanded::after {
+      background: linear-gradient(135deg, rgba(236, 72, 153, 0.15), rgba(219, 39, 119, 0.1));
+    }
+    
+    &:hover::after {
+      background: linear-gradient(135deg, rgba(236, 72, 153, 0.25), rgba(219, 39, 119, 0.15));
+    }
+  }
+}
+
+/* 折叠状态的标题卡片 */
+.research-tab {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  opacity: 0;
-  transform: rotateY(180deg);
-  transition: opacity 0.3s;
-  backface-visibility: hidden;
-  border-radius: 15px;
-}
-
-.research-card:hover .research-card-overlay {
-  opacity: 1;
-}
-
-.overlay-content {
-  padding: 30px;
+  padding: 20px;
   text-align: center;
+  color: white;
+  transition: all 0.5s ease;
+  z-index: 3;
+  
+  .research-item.expanded & {
+    opacity: 0;
+    transform: translateX(-100%);
+  }
 }
 
-.overlay-content h4 {
-  font-size: 1.5rem;
+.tab-icon {
+  font-size: 3rem;
   margin-bottom: 15px;
-  font-weight: 600;
+  transition: all 0.3s ease;
+  
+  i {
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+  }
+  
+  .research-item:hover & {
+    transform: scale(1.1) rotateY(10deg);
+  }
 }
 
-.overlay-content p {
-  font-size: 0.95rem;
-  line-height: 1.6;
-  opacity: 0.9;
+.tab-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin: 0;
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  letter-spacing: 2px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  
+  @media (max-width: 768px) {
+    writing-mode: horizontal-tb;
+    font-size: 1rem;
+  }
+}
+
+/* 展开状态的详细内容 */
+.research-content {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  opacity: 0;
+  transform: translateX(100%);
+  transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  background: linear-gradient(135deg, rgba(248, 250, 252, 0.95), rgba(226, 232, 240, 0.95));
+  backdrop-filter: blur(15px);
+  z-index: 4;
+  
+  .research-item.expanded & {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.content-inner {
+  padding: 40px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  animation: slideInContent 0.8s ease-out 0.3s both;
+  
+  .research-item.expanded & {
+    animation: slideInContent 0.8s ease-out 0.3s both;
+  }
+}
+
+.content-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 30px;
+  
+  .content-icon {
+    font-size: 2.5rem;
+    color: #1e3a8a;
+    margin-right: 20px;
+    
+    i {
+      filter: drop-shadow(0 2px 4px rgba(30, 58, 138, 0.3));
+    }
+  }
+  
+  .content-title {
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0;
+    background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+}
+
+.content-body {
+  flex: 1;
+  
+  .content-description {
+    font-size: 1.1rem;
+    color: #374151;
+    line-height: 1.8;
+    margin-bottom: 20px;
+    font-weight: 500;
+  }
+  
+  .content-detail {
+    font-size: 1rem;
+    color: #6b7280;
+    line-height: 1.7;
+    margin: 0;
+    padding: 20px;
+    background: rgba(30, 58, 138, 0.05);
+    border-radius: 12px;
+    border-left: 4px solid #3b82f6;
+  }
 }
 
 /* 动画定义 */
@@ -274,12 +472,15 @@ withDefaults(defineProps<Props>(), {
   }
 }
 
-.research-card:nth-child(even) {
-  animation-delay: 0.2s;
-}
-
-.research-card:nth-child(3n) {
-  animation-delay: 0.4s;
+@keyframes slideInContent {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* 响应式调整 */
@@ -292,13 +493,16 @@ withDefaults(defineProps<Props>(), {
     font-size: 2.2rem;
   }
   
-  .research-cards {
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 25px;
+  .research-scroll-container {
+    height: 350px;
   }
   
-  .research-card {
-    height: 300px;
+  .content-inner {
+    padding: 30px;
+  }
+  
+  .content-header .content-title {
+    font-size: 1.6rem;
   }
 }
 
@@ -311,31 +515,60 @@ withDefaults(defineProps<Props>(), {
     font-size: 2rem;
   }
   
-  .research-cards {
-    grid-template-columns: 1fr;
-    gap: 20px;
+  .research-scroll-container {
+    flex-direction: column;
+    height: auto;
+    gap: 10px;
   }
   
-  .research-card {
-    height: 280px;
+  .research-item {
+    flex: none;
+    height: 80px;
+    
+    &.expanded {
+      height: 300px;
+    }
   }
   
-  .research-card-inner {
+  .research-tab {
+    flex-direction: row;
+    padding: 15px;
+    
+    .tab-icon {
+      font-size: 2rem;
+      margin-right: 15px;
+      margin-bottom: 0;
+    }
+  }
+  
+  .content-inner {
     padding: 20px;
   }
   
-  .research-icon {
-    font-size: 2.5rem;
-    margin: 30px 0 15px;
+  .content-header {
+    flex-direction: column;
+    align-items: flex-start;
+    margin-bottom: 20px;
+    
+    .content-icon {
+      margin-right: 0;
+      margin-bottom: 10px;
+    }
+    
+    .content-title {
+      font-size: 1.4rem;
+    }
   }
   
-  .research-card-title {
-    font-size: 1.3rem;
-  }
-  
-  .research-card-desc {
-    font-size: 0.9rem;
-    padding: 0 15px;
+  .content-body {
+    .content-description {
+      font-size: 1rem;
+    }
+    
+    .content-detail {
+      font-size: 0.9rem;
+      padding: 15px;
+    }
   }
 }
 </style>
