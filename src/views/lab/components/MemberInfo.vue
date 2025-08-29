@@ -280,7 +280,8 @@ onUnmounted(() => {
   width: 100%;
   min-height: 100vh;
   background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #cbd5e1 100%);
-  padding: 0px 20px;
+  padding: 80px 20px;
+  box-sizing: border-box;
 }
 
 /* 加载状态样式 */
@@ -369,11 +370,12 @@ onUnmounted(() => {
 
 .main-content {
   display: flex;
-  gap: 0px;
-  max-width: 1300px;
+  gap: 30px;
+  max-width: 100%;
+  width: 100%;
   margin: 0 auto;
   align-items: flex-start;
-  padding-left: 0px;
+  padding: 0 20px;
 }
 
 .info-sidebar {
@@ -458,11 +460,13 @@ onUnmounted(() => {
 .content-area {
   flex: 1;
   padding: 0;
+  min-width: 0;
+  width: 100%;
 }
 
 .member-detail-card {
-  max-width: 900px;
-  margin: 0 auto;
+  width: 100%;
+  margin: 0;
   background: rgba(248, 250, 252, 0.95);
   backdrop-filter: blur(15px);
   border-radius: 20px;
@@ -581,8 +585,8 @@ onUnmounted(() => {
 
 .info-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 16px;
 }
 
 .info-item {
@@ -689,10 +693,22 @@ onUnmounted(() => {
 }
 
 /* 响应式设计 */
+@media (max-width: 1200px) {
+  .main-content {
+    gap: 20px;
+    padding: 0 15px;
+  }
+  
+  .info-sidebar {
+    width: 260px;
+  }
+}
+
 @media (max-width: 1024px) {
   .main-content {
     flex-direction: column;
     gap: 20px;
+    padding: 0 15px;
   }
   
   .info-sidebar {
@@ -712,15 +728,21 @@ onUnmounted(() => {
       justify-content: center;
     }
   }
+  
+  .info-grid {
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 14px;
+  }
 }
 
 @media (max-width: 768px) {
   .member-info-container {
-    padding: 60px 15px;
+    padding: 60px 10px;
   }
   
   .main-content {
     gap: 15px;
+    padding: 0 10px;
   }
   
   .info-sidebar {
@@ -753,10 +775,182 @@ onUnmounted(() => {
   
   .info-grid {
     grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  
+  .info-item {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 14px 16px;
+    
+    .label {
+      margin-bottom: 6px;
+      margin-right: 0;
+      min-width: auto;
+      font-size: 13px;
+    }
+    
+    .value {
+      font-size: 14px;
+    }
   }
   
   .basic-info h1 {
     font-size: 24px;
+  }
+}
+
+@media (max-width: 480px) {
+  .member-info-container {
+    padding: 40px 8px;
+  }
+  
+  .main-content {
+    padding: 0 8px;
+  }
+  
+  .info-sidebar {
+    padding: 12px;
+    
+    .sidebar-header {
+      h3 {
+        font-size: 1.1rem;
+      }
+      
+      .back-button {
+        font-size: 11px;
+        padding: 6px 10px;
+      }
+    }
+    
+    .nav-item {
+      padding: 10px 12px;
+      font-size: 14px;
+    }
+  }
+  
+  .member-header {
+    padding: 20px 16px;
+  }
+  
+  .member-avatar {
+    width: 100px;
+    height: 125px;
+  }
+  
+  .basic-info {
+    h1 {
+      font-size: 20px;
+    }
+    
+    p {
+      font-size: 14px;
+    }
+  }
+  
+  .detail-sections {
+    padding: 16px;
+  }
+  
+  .section-title {
+    font-size: 1.3rem;
+    margin-bottom: 16px;
+  }
+  
+  .info-item {
+    padding: 12px 14px;
+    
+    .label {
+      font-size: 12px;
+    }
+    
+    .value {
+      font-size: 13px;
+    }
+  }
+  
+  .project-item, .publication-item {
+    padding: 16px;
+  }
+  
+  .research-tag {
+    font-size: 12px;
+    padding: 6px 12px;
+  }
+}
+
+@media (max-width: 360px) {
+  .member-info-container {
+    padding: 30px 6px;
+  }
+  
+  .main-content {
+    padding: 0 6px;
+  }
+  
+  .info-sidebar {
+    padding: 10px;
+    
+    .sidebar-header {
+      .back-button {
+        font-size: 10px;
+        padding: 5px 8px;
+      }
+    }
+    
+    .nav-item {
+      padding: 8px 10px;
+      font-size: 13px;
+    }
+  }
+  
+  .member-header {
+    padding: 16px 12px;
+  }
+  
+  .member-avatar {
+    width: 80px;
+    height: 100px;
+  }
+  
+  .basic-info {
+    h1 {
+      font-size: 18px;
+    }
+    
+    p {
+      font-size: 13px;
+    }
+  }
+  
+  .detail-sections {
+    padding: 12px;
+  }
+  
+  .section-title {
+    font-size: 1.2rem;
+    margin-bottom: 14px;
+  }
+  
+  .info-item {
+    padding: 10px 12px;
+    
+    .label {
+      font-size: 11px;
+    }
+    
+    .value {
+      font-size: 12px;
+    }
+  }
+  
+  .project-item, .publication-item {
+    padding: 14px;
+  }
+  
+  .research-tag {
+    font-size: 11px;
+    padding: 5px 10px;
   }
 }
 </style>

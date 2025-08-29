@@ -17,7 +17,7 @@
           <span>横向</span>
         </el-menu-item>
         <el-menu-item index="nsfc_general">
-          <span>国自然而上</span>
+          <span>国自然面上</span>
         </el-menu-item>
         <el-menu-item index="nsfc_youth">
           <span>国自然青年</span>
@@ -122,7 +122,8 @@
           v-model:page-size="pageSize"
           :page-sizes="[10, 20, 50, 100]"
           :total="filteredProjects.length"
-          layout="total, sizes, prev, pager, next, jumper"
+          :layout="paginationLayout"
+          :small="isSmallScreen"
           @size-change="handleSizeChange"
           @current-change="handleCurrentChange"
         />
@@ -132,7 +133,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { Search } from '@element-plus/icons-vue'
 
 // 项目类型定义
@@ -154,6 +155,28 @@ const searchKeyword = ref('')
 const currentPage = ref(1)
 const pageSize = ref(20)
 const projects = ref<Project[]>([])
+
+// 响应式屏幕尺寸检测
+const screenWidth = ref(window.innerWidth)
+const updateScreenWidth = () => {
+  screenWidth.value = window.innerWidth
+}
+
+// 根据屏幕尺寸判断是否为小屏幕
+const isSmallScreen = computed(() => screenWidth.value <= 768)
+
+// 根据屏幕尺寸动态调整分页布局
+const paginationLayout = computed(() => {
+  if (screenWidth.value <= 480) {
+    return 'prev, pager, next'
+  } else if (screenWidth.value <= 768) {
+    return 'total, prev, pager, next'
+  } else if (screenWidth.value <= 1024) {
+    return 'total, sizes, prev, pager, next'
+  } else {
+    return 'total, sizes, prev, pager, next, jumper'
+  }
+})
 
 // 计算属性
 const availableYears = computed(() => {
@@ -200,7 +223,7 @@ const getCategoryTitle = (category: string) => {
   const titles = {
     all: '全部项目',
     horizontal: '横向项目',
-    nsfc_general: '国自然而上项目',
+    nsfc_general: '国自然面上项目',
     nsfc_youth: '国自然青年项目',
     other_vertical: '其它纵向项目',
     beijing_edu: '北京市教委科技一般项目',
@@ -214,7 +237,7 @@ const getCategoryTitle = (category: string) => {
 const getTypeLabel = (type: string) => {
   const labels = {
     horizontal: '横向',
-    nsfc_general: '国自然而上',
+    nsfc_general: '国自然面上',
     nsfc_youth: '国自然青年',
     other_vertical: '其它纵向',
     beijing_edu: '北京市教委科技一般',
@@ -530,6 +553,11 @@ const loadProjects = async () => {
 // 生命周期
 onMounted(() => {
   loadProjects()
+  window.addEventListener('resize', updateScreenWidth)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', updateScreenWidth)
 })
 </script>
 
@@ -706,5 +734,177 @@ onMounted(() => {
   background: white;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  overflow-x: auto;
+}
+
+/* 响应式设计 */
+@media (max-width: 1024px) {
+  .projects-page {
+    flex-direction: column;
+  }
+  
+  .sidebar {
+    width: 100%;
+    height: auto;
+    position: static;
+    border-right: none;
+    border-bottom: 1px solid #e4e7ed;
+  }
+  
+  .sidebar-header {
+    padding: 15px 20px;
+  }
+  
+  .category-menu {
+    display: flex;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+  
+  .category-menu .el-menu-item {
+    flex-shrink: 0;
+    min-width: 120px;
+    text-align: center;
+    height: 40px;
+    line-height: 40px;
+  }
+  
+  .main-content {
+    padding: 15px;
+  }
+}
+
+@media (max-width: 768px) {
+  .filter-bar {
+    flex-direction: column;
+    gap: 15px;
+    align-items: stretch;
+    padding: 15px;
+  }
+  
+  .filter-left {
+    text-align: center;
+  }
+  
+  .filter-left h2 {
+    font-size: 20px;
+    margin-bottom: 5px;
+  }
+  
+  .filter-right {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .year-select,
+  .search-input {
+    width: 100%;
+  }
+  
+  .project-item {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 15px;
+    gap: 8px;
+  }
+  
+  .project-number {
+    align-self: flex-start;
+    margin-right: 0;
+    margin-bottom: 5px;
+  }
+  
+  .project-type-tag {
+    align-self: flex-start;
+    margin-right: 0;
+    margin-bottom: 8px;
+  }
+  
+  .project-content {
+    line-height: 1.6;
+  }
+  
+  .pagination {
+    padding: 15px 10px;
+    overflow-x: auto;
+  }
+  
+  .pagination :deep(.el-pagination) {
+    flex-wrap: nowrap;
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 480px) {
+  .projects-page {
+    min-height: calc(100vh - 60px);
+  }
+  
+  .sidebar-header {
+    padding: 10px 15px;
+  }
+  
+  .sidebar-header h3 {
+    font-size: 16px;
+  }
+  
+  .category-menu .el-menu-item {
+    min-width: 100px;
+    font-size: 13px;
+    height: 36px;
+    line-height: 36px;
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+  
+  .main-content {
+    padding: 10px;
+  }
+  
+  .filter-bar {
+    padding: 12px;
+  }
+  
+  .filter-left h2 {
+    font-size: 18px;
+  }
+  
+  .project-item {
+    padding: 12px;
+  }
+  
+  .project-content {
+    font-size: 13px;
+  }
+  
+  .project-title {
+    font-size: 13px;
+    font-weight: 600;
+  }
+  
+  .project-leader,
+  .project-funding,
+  .project-year {
+    font-size: 12px;
+  }
+  
+  .pagination {
+    padding: 10px 5px;
+    overflow-x: auto;
+  }
+  
+  .pagination :deep(.el-pagination) {
+    justify-content: center;
+    min-width: max-content;
+  }
+  
+  .pagination :deep(.el-pagination .el-pager) {
+    margin: 0 2px;
+  }
+  
+  .pagination :deep(.el-pagination .btn-prev),
+  .pagination :deep(.el-pagination .btn-next) {
+    margin: 0 2px;
+  }
 }
 </style>

@@ -361,10 +361,11 @@ const getCategoryName = (categoryKey: string) => {
 .members-container {
   display: flex;
   gap: 30px;
-  max-width: 1600px;
+  max-width: 100%;
+  width: 100%;
   margin: 0 auto;
   align-items: flex-start;
-  padding-left: 20px;
+  padding: 0 20px;
 }
 
 /* 左侧导航栏样式 */
@@ -428,9 +429,112 @@ const getCategoryName = (categoryKey: string) => {
   }
 }
 
+@media (max-width: 480px) {
+  .members-page {
+    padding: 40px 12px;
+  }
+  
+  .members-container {
+    padding-left: 0;
+  }
+  
+  .members-sidebar {
+    padding: 12px;
+    
+    .sidebar-header h3 {
+      font-size: 1.1rem;
+    }
+    
+    .nav-item {
+      padding: 10px 12px;
+      font-size: 14px;
+      
+      .nav-count {
+        font-size: 12px;
+      }
+    }
+  }
+  
+  .members-content {
+    .category-header {
+      h3 {
+        font-size: 1.3rem;
+      }
+    }
+  }
+  
+  .member-card {
+    padding: 12px;
+    
+    .member-info {
+      gap: 6px;
+      margin-bottom: 10px;
+      
+      .member-name {
+        font-size: 15px;
+      }
+      
+      .member-title {
+        font-size: 13px;
+      }
+      
+      .member-graduation {
+        font-size: 12px;
+      }
+    }
+    
+    .member-action {
+      .view-detail {
+        font-size: 12px;
+      }
+    }
+  }
+}
+
+@media (max-width: 360px) {
+  .members-page {
+    padding: 30px 8px;
+  }
+  
+  .members-sidebar {
+    .nav-item {
+      padding: 8px 10px;
+      font-size: 13px;
+    }
+  }
+  
+  .members-content {
+    .category-header {
+      h3 {
+        font-size: 1.2rem;
+      }
+    }
+  }
+  
+  .member-card {
+    padding: 10px;
+    
+    .member-info {
+      .member-name {
+        font-size: 14px;
+      }
+      
+      .member-title {
+        font-size: 12px;
+      }
+      
+      .member-graduation {
+        font-size: 11px;
+      }
+    }
+  }
+}
+
 /* 右侧内容区域样式 */
 .members-content {
   flex: 1;
+  width: 100%;
+  min-width: 0;
   
   .category-section {
     margin-bottom: 50px;
@@ -473,6 +577,8 @@ const getCategoryName = (categoryKey: string) => {
     display: flex;
     flex-direction: column;
     gap: 12px;
+    width: 100%;
+    max-width: none;
   }
 }
 
@@ -487,6 +593,8 @@ const getCategoryName = (categoryKey: string) => {
   border: 1px solid rgba(226, 232, 240, 0.3);
   transition: all 0.3s ease;
   cursor: pointer;
+  width: 100%;
+  min-height: 60px;
   
   &:hover {
     transform: translateX(4px);
@@ -518,33 +626,49 @@ const getCategoryName = (categoryKey: string) => {
   .member-name {
     font-weight: 600;
     color: #2c3e50;
-    width: 35%;
-    padding-right: 10px;
+    flex: 0 0 25%;
+    min-width: 120px;
+    padding-right: 15px;
   }
   
   .member-title {
     color: #7f8c8d;
-    width: 35%;
-    padding-right: 10px;
+    flex: 1;
+    min-width: 150px;
+    padding-right: 15px;
   }
   
   .member-graduation {
     color: #27ae60;
     font-size: 13px;
-    width: 30%;
+    flex: 0 0 30%;
+    min-width: 150px;
+    background: rgba(39, 174, 96, 0.1);
+    padding: 4px 8px;
+    border-radius: 6px;
+    text-align: center;
   }
 }
 
 .member-action {
+  flex: 0 0 auto;
+  margin-left: 15px;
+  
   .view-detail {
     font-size: 0.9rem;
     color: #64748b;
     opacity: 0.7;
-    transition: opacity 0.3s ease;
+    transition: all 0.3s ease;
+    padding: 6px 12px;
+    border-radius: 6px;
+    background: rgba(100, 116, 139, 0.1);
+    white-space: nowrap;
   }
   
   .member-card:hover & .view-detail {
     opacity: 1;
+    background: rgba(59, 130, 246, 0.1);
+    color: #3b82f6;
   }
 }
 
@@ -580,9 +704,8 @@ const getCategoryName = (categoryKey: string) => {
   }
   
   .members-content {
-    .members-grid {
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 20px;
+    .members-list {
+      gap: 10px;
     }
   }
   
@@ -616,24 +739,61 @@ const getCategoryName = (categoryKey: string) => {
   }
   
   .members-content {
-    .category-header h3 {
-      font-size: 1.5rem;
-    }
-    
-    .members-grid {
-      grid-template-columns: 1fr;
+    .category-header {
+      flex-direction: column;
+      align-items: flex-start;
       gap: 15px;
+      
+      h3 {
+        font-size: 1.5rem;
+      }
+      
+      .search-container {
+        width: 100%;
+        
+        .search-input {
+          width: 100%;
+        }
+      }
     }
   }
   
   .member-card {
-    padding: 20px;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 16px;
+    
+    .member-info {
+      width: 100%;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+      margin-bottom: 12px;
+      
+      .member-field {
+        width: 100%;
+        white-space: normal;
+        padding-right: 0;
+      }
+      
+      .member-name {
+        font-size: 16px;
+        margin-bottom: 4px;
+      }
+      
+      .member-title {
+        font-size: 14px;
+        margin-bottom: 4px;
+      }
+      
+      .member-graduation {
+        font-size: 13px;
+      }
+    }
+    
+    .member-action {
+      align-self: flex-end;
+    }
   }
-  
-  .member-avatar {
-    font-size: 3rem;
-  }
-  
-
 }
 </style>
