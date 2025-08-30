@@ -524,9 +524,20 @@ withDefaults(defineProps<Props>(), {
   .research-item {
     flex: none;
     height: 80px;
+    border-radius: 12px;
     
     &.expanded {
-      height: 300px;
+      height: auto;
+      min-height: 350px;
+    }
+    
+    /* 确保点击区域足够大 */
+    &:not(.expanded) {
+      cursor: pointer;
+      
+      &:active {
+        transform: scale(0.98);
+      }
     }
   }
   
@@ -539,20 +550,52 @@ withDefaults(defineProps<Props>(), {
       margin-right: 15px;
       margin-bottom: 0;
     }
+    
+    .tab-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+  }
+  
+  /* 展开内容在手机端的优化 */
+  .research-content {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    opacity: 0;
+    transform: translateY(100%);
+    transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    background: rgba(248, 250, 252, 0.98);
+    backdrop-filter: blur(20px);
+    border-radius: 12px;
+    z-index: 10;
+    
+    .research-item.expanded & {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
   
   .content-inner {
     padding: 20px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    overflow-y: auto;
   }
   
   .content-header {
-    flex-direction: column;
-    align-items: flex-start;
+    flex-direction: row;
+    align-items: center;
     margin-bottom: 20px;
     
     .content-icon {
-      margin-right: 0;
-      margin-bottom: 10px;
+      margin-right: 15px;
+      margin-bottom: 0;
+      font-size: 2rem;
     }
     
     .content-title {
@@ -561,13 +604,96 @@ withDefaults(defineProps<Props>(), {
   }
   
   .content-body {
+    flex: 1;
+    overflow-y: auto;
+    
     .content-description {
       font-size: 1rem;
+      line-height: 1.6;
+      margin-bottom: 15px;
+      color: #374151;
+      font-weight: 500;
     }
     
     .content-detail {
       font-size: 0.9rem;
       padding: 15px;
+      line-height: 1.6;
+      background: rgba(59, 130, 246, 0.08);
+      border-radius: 8px;
+      border-left: 3px solid #3b82f6;
+      color: #4b5563;
+      margin: 0;
+    }
+  }
+}
+
+/* 更小屏幕的额外优化 */
+@media (max-width: 480px) {
+  .research-container {
+    padding: 0 15px;
+  }
+  
+  .research-title {
+    font-size: 1.8rem;
+  }
+  
+  .research-item {
+    height: 70px;
+    
+    &.expanded {
+      height: 280px;
+    }
+  }
+  
+  .research-tab {
+    padding: 12px;
+    
+    .tab-icon {
+      font-size: 1.8rem;
+      margin-right: 12px;
+    }
+    
+    .tab-title {
+      font-size: 1rem;
+    }
+  }
+  
+  .content-inner {
+    padding: 15px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .content-header {
+    .content-icon {
+      font-size: 1.8rem;
+      margin-right: 12px;
+    }
+    
+    .content-title {
+      font-size: 1.2rem;
+    }
+  }
+  
+  .content-body {
+    flex: 1;
+    overflow-y: auto;
+    
+    .content-description {
+      font-size: 0.95rem;
+      line-height: 1.5;
+      margin-bottom: 12px;
+    }
+    
+    .content-detail {
+      font-size: 0.85rem;
+      padding: 12px;
+      line-height: 1.5;
+      background: rgba(59, 130, 246, 0.06);
+      border-radius: 6px;
+      border-left: 2px solid #3b82f6;
     }
   }
 }

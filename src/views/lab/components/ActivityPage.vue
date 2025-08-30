@@ -175,7 +175,8 @@
           v-model:page-size="pageSize"
           :page-sizes="[12, 24, 48]"
           :total="filteredNews.length"
-          layout="total, sizes, prev, pager, next, jumper"
+          :layout="paginationLayout"
+          :small="isSmallScreen"
           @size-change="handleSizeChange"
           @current-change="handleCurrentChange"
         />
@@ -186,7 +187,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { Search, View, Calendar, Location, User } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import defaultImage from '@/assets/lab/default.jpg'
@@ -210,6 +211,29 @@ const searchKeyword = ref('')
 const currentPage = ref(1)
 const pageSize = ref(12)
 const news = ref<News[]>([])
+
+// 响应式屏幕尺寸检测
+const screenWidth = ref(window.innerWidth)
+const updateScreenWidth = () => {
+  screenWidth.value = window.innerWidth
+}
+
+// 根据屏幕尺寸判断是否为小屏幕
+const isSmallScreen = computed(() => screenWidth.value <= 768)
+
+// 根据屏幕尺寸动态调整分页布局
+const paginationLayout = computed(() => {
+  if (screenWidth.value <= 480) {
+    return 'prev, pager, next'
+  } else if (screenWidth.value <= 768) {
+    return 'total, prev, pager, next'
+  } else if (screenWidth.value <= 1024) {
+    return 'total, sizes, prev, pager, next'
+  } else {
+    return 'total, sizes, prev, pager, next, jumper'
+  }
+})
+
 // 详情页面状态管理
 const showDetail = ref(false)
 const selectedNewsId = ref<number>(0)
@@ -630,6 +654,12 @@ const loadNews = async () => {
 // 组件挂载时加载数据
 onMounted(() => {
   loadNews()
+  window.addEventListener('resize', updateScreenWidth)
+})
+
+// 组件卸载时清理事件监听器
+onUnmounted(() => {
+  window.removeEventListener('resize', updateScreenWidth)
 })
 
 // 监听搜索关键词变化
@@ -914,7 +944,7 @@ watch(paginatedNews, () => {
   justify-content: center;
 }
 
-.pagination {
+.pagination-container {
   display: flex;
   justify-content: center;
   margin-top: 20px;
@@ -922,6 +952,7 @@ watch(paginatedNews, () => {
   background: white;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  overflow-x: auto;
 }
 
 /* 响应式设计 */
@@ -931,7 +962,7 @@ watch(paginatedNews, () => {
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
   .activities-page {
     flex-direction: column;
   }
@@ -940,24 +971,174 @@ watch(paginatedNews, () => {
     width: 100%;
     height: auto;
     position: static;
+    border-right: none;
+    border-bottom: 1px solid #e4e7ed;
   }
   
-  .filter-bar {
-    flex-direction: column;
-    gap: 16px;
-    align-items: stretch;
+  .sidebar-header {
+    padding: 15px 20px;
   }
   
-  .filter-right {
-    justify-content: space-between;
+  .category-menu {
+    display: flex;
+    overflow-x: auto;
+    white-space: nowrap;
   }
   
-  .search-input {
-    width: 200px;
+  .category-menu .el-menu-item {
+    flex-shrink: 0;
+    min-width: 120px;
+    text-align: center;
+    height: 40px;
+    line-height: 40px;
+  }
+  
+  .main-content {
+    padding: 15px;
   }
   
   .grid-container {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .filter-bar {
+    flex-direction: column;
+    gap: 15px;
+    align-items: stretch;
+    padding: 15px;
+  }
+  
+  .filter-left {
+    text-align: center;
+  }
+  
+  .filter-left h2 {
+    font-size: 20px;
+    margin-bottom: 5px;
+  }
+  
+  .filter-right {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .time-select,
+  .search-input {
+    width: 100%;
+  }
+
+  .grid-container {
     grid-template-columns: 1fr;
+    gap: 15px;
+  }
+  
+  .news-grid {
+    padding: 15px;
+  }
+  
+  .pagination-container {
+    padding: 15px;
+    flex-wrap: nowrap;
+    white-space: nowrap;
+  }
+  
+  .pagination-container :deep(.el-pagination) {
+    justify-content: center;
+  }
+  
+  .pagination-container :deep(.el-pagination > *) {
+    margin: 0 2px;
+  }
+}
+
+@media (max-width: 480px) {
+  .main-content {
+    padding: 10px;
+  }
+  
+  .filter-bar {
+    padding: 12px;
+  }
+  
+  .filter-left h2 {
+    font-size: 18px;
+  }
+  
+  .news-grid {
+    padding: 12px;
+  }
+  
+  .grid-container {
+    gap: 12px;
+  }
+  
+  .pagination-container {
+    padding: 10px;
+    justify-content: center;
+  }
+  
+  .pagination-container :deep(.el-pagination) {
+    min-width: max-content;
+  }
+  
+  .pagination-container :deep(.el-pagination > *) {
+    margin: 0 2px;
+  }
+  
+  .sidebar-header {
+    padding: 12px 15px;
+  }
+  
+  .sidebar-header h3 {
+    font-size: 16px;
+  }
+  
+  .category-menu .el-menu-item {
+    padding: 0 12px;
+    font-size: 14px;
+    min-width: 100px;
+  }
+}
+
+@media (max-width: 360px) {
+  .main-content {
+    padding: 8px;
+  }
+  
+  .filter-bar {
+    padding: 10px;
+  }
+  
+  .filter-left h2 {
+    font-size: 16px;
+  }
+  
+  .news-grid {
+    padding: 10px;
+  }
+  
+  .grid-container {
+    gap: 10px;
+  }
+  
+  .pagination-container {
+    padding: 8px;
+  }
+  
+  .sidebar-header {
+    padding: 10px 12px;
+  }
+  
+  .sidebar-header h3 {
+    font-size: 14px;
+  }
+  
+  .category-menu .el-menu-item {
+    padding: 0 10px;
+    font-size: 13px;
+    min-width: 90px;
   }
 }
 </style>

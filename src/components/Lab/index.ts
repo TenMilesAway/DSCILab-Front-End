@@ -8,7 +8,7 @@ import AchievementsPage from '../../views/lab/components/AchievementsPage.vue';
 import ProjectsPage from '../../views/lab/components/ProjectsPage.vue'
 import ActivityPage from '../../views/lab/components/ActivityPage.vue'
 import ActivityDetail from '../../views/lab/components/ActivityDetail.vue'
-import ContactPage from '../../views/lab/components/ContactPage.vue'
+
 
 export {
   LabNavbar,
@@ -21,7 +21,7 @@ export {
   ProjectsPage,
   ActivityPage,
   ActivityDetail,
-  ContactPage
+
 };
 
 export default {
@@ -35,5 +35,5 @@ export default {
   ProjectsPage,
   ActivityPage,
   ActivityDetail,
-  ContactPage
+
 };

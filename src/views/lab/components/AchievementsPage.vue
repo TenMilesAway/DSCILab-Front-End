@@ -90,23 +90,62 @@
             :key="achievement.id"
             class="achievement-item"
           >
-            <span class="achievement-number">{{ (currentPage - 1) * pageSize + index + 1 }}.</span>
-            <el-tag 
-              :type="getTypeTagType(achievement.type)" 
-              size="small" 
-              class="achievement-type-tag"
-            >
-              {{ getTypeLabel(achievement.type) }}
-            </el-tag>
-            <div class="achievement-content">
-              <span class="achievement-authors">{{ achievement.authors.join(', ') }}</span>
-              <span class="achievement-separator">.</span>
-              <span class="achievement-title">{{ achievement.title }}</span>
-              <span class="achievement-separator">,</span>
-              <span class="achievement-institution">{{ achievement.institution }}</span>
-              <span class="achievement-separator">,</span>
-              <span class="achievement-year">{{ achievement.year }}</span>
-              <span class="achievement-separator">.</span>
+            <div class="achievement-main">
+              <span class="achievement-number">{{ (currentPage - 1) * pageSize + index + 1 }}.</span>
+              <el-tag 
+                :type="getTypeTagType(achievement.type)" 
+                size="small" 
+                class="achievement-type-tag"
+              >
+                {{ getTypeLabel(achievement.type) }}
+              </el-tag>
+              <div class="achievement-content">
+                <span class="achievement-authors">{{ achievement.authors.join(', ') }}</span>
+                <span class="achievement-separator">.</span>
+                <span class="achievement-title">{{ achievement.title }}</span>
+                <span class="achievement-separator">,</span>
+                <span class="achievement-institution">{{ achievement.institution }}</span>
+                <span class="achievement-separator">,</span>
+                <span class="achievement-year">{{ achievement.year }}</span>
+                <span class="achievement-separator">.</span>
+              </div>
+            </div>
+            <div class="achievement-actions-container">
+              <div class="achievement-actions">
+                <el-tooltip :content="achievement.githubUrl ? 'Github 仓库' : '暂无 Github 仓库'" placement="top">
+                  <el-button 
+                    plain 
+                    :icon="Link" 
+                    size="small" 
+                    circle 
+                    class="action-btn"
+                    :disabled="!achievement.githubUrl"
+                    @click="achievement.githubUrl && handleGithubClick(achievement.githubUrl)"
+                  />
+                </el-tooltip>
+                <el-tooltip :content="achievement.projectUrl ? '项目主页' : '暂无项目主页'" placement="top">
+                  <el-button 
+                    plain 
+                    :icon="House" 
+                    size="small" 
+                    circle 
+                    class="action-btn"
+                    :disabled="!achievement.projectUrl"
+                    @click="achievement.projectUrl && handleProjectClick(achievement.projectUrl)"
+                  />
+                </el-tooltip>
+                <el-tooltip :content="achievement.pdfUrl ? '下载 PDF' : '暂无 PDF 文件'" placement="top">
+                  <el-button 
+                    plain 
+                    :icon="Download" 
+                    size="small" 
+                    circle 
+                    class="action-btn"
+                    :disabled="!achievement.pdfUrl"
+                    @click="achievement.pdfUrl && handlePdfDownload(achievement.pdfUrl)"
+                  />
+                </el-tooltip>
+              </div>
             </div>
           </div>
         </div>
@@ -119,7 +158,8 @@
           v-model:page-size="pageSize"
           :page-sizes="[10, 20, 50, 100]"
           :total="filteredAchievements.length"
-          layout="total, sizes, prev, pager, next, jumper"
+          :layout="paginationLayout"
+          :small="isSmallScreen"
           @size-change="handleSizeChange"
           @current-change="handleCurrentChange"
         />
@@ -129,8 +169,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import { Search } from '@element-plus/icons-vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { Search, Link, House, Download } from '@element-plus/icons-vue'
+import { ElMessage } from 'element-plus'
 
 // 成果类型定义
 interface Achievement {
@@ -140,6 +181,9 @@ interface Achievement {
   type: 'journal' | 'conference' | 'preprint' | 'patent' | 'software' | 'standard' | 'monograph'
   year: number
   institution: string
+  githubUrl?: string
+  projectUrl?: string
+  pdfUrl?: string
 }
 
 // 响应式数据
@@ -150,6 +194,28 @@ const searchKeyword = ref('')
 const currentPage = ref(1)
 const pageSize = ref(20)
 const achievements = ref<Achievement[]>([])
+
+// 响应式屏幕尺寸检测
+const screenWidth = ref(window.innerWidth)
+const updateScreenWidth = () => {
+  screenWidth.value = window.innerWidth
+}
+
+// 根据屏幕尺寸判断是否为小屏幕
+const isSmallScreen = computed(() => screenWidth.value <= 768)
+
+// 根据屏幕尺寸动态调整分页布局
+const paginationLayout = computed(() => {
+  if (screenWidth.value <= 480) {
+    return 'prev, pager, next'
+  } else if (screenWidth.value <= 768) {
+    return 'total, prev, pager, next'
+  } else if (screenWidth.value <= 1024) {
+    return 'total, sizes, prev, pager, next'
+  } else {
+    return 'total, sizes, prev, pager, next, jumper'
+  }
+})
 
 // 计算属性
 const availableYears = computed(() => {
@@ -248,6 +314,30 @@ const handleCurrentChange = (val: number) => {
   currentPage.value = val
 }
 
+// 操作按钮事件处理
+const handleGithubClick = (url: string) => {
+  // 打开Github仓库链接
+  window.open(url, '_blank')
+  ElMessage.success('正在跳转到 Github 仓库')
+}
+
+const handleProjectClick = (url: string) => {
+  // 打开项目主页链接
+  window.open(url, '_blank')
+  ElMessage.success('正在跳转到项目主页')
+}
+
+const handlePdfDownload = (url: string) => {
+  // 下载PDF文件
+  const link = document.createElement('a')
+  link.href = url
+  link.download = ''
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+  ElMessage.success('PDF 下载已开始')
+}
+
 // 模拟数据加载
 const loadAchievements = async () => {
   loading.value = true
@@ -265,7 +355,10 @@ const loadAchievements = async () => {
         authors: ['Zhang Wei', 'Li Ming', 'Wang Xiaoli', 'Chen Hao'],
         type: 'journal',
         year: 2024,
-        institution: 'IEEE Transactions on Neural Networks'
+        institution: 'IEEE Transactions on Neural Networks',
+        githubUrl: 'https://github.com/example/attention-gnn',
+        projectUrl: 'https://ai-lab.example.com/projects/attention-gnn',
+        pdfUrl: 'https://example.com/papers/attention-gnn-2024.pdf'
       },
       {
         id: 2,
@@ -273,7 +366,9 @@ const loadAchievements = async () => {
         authors: ['Liu Jian', 'Zhao Yun', 'Ma Qing'],
         type: 'conference',
         year: 2024,
-        institution: 'ICML 2024'
+        institution: 'ICML 2024',
+        githubUrl: 'https://github.com/example/federated-privacy',
+        pdfUrl: 'https://example.com/papers/federated-privacy-2024.pdf'
       },
       {
         id: 3,
@@ -281,7 +376,9 @@ const loadAchievements = async () => {
         authors: ['Sun Lei', 'Xu Ting', 'Yang Feng', 'Zhou Bin'],
         type: 'journal',
         year: 2024,
-        institution: 'Nature Machine Intelligence'
+        institution: 'Nature Machine Intelligence',
+        projectUrl: 'https://multimodal-lab.example.com/transformer',
+        pdfUrl: 'https://example.com/papers/multimodal-transformer-2024.pdf'
       },
       {
         id: 4,
@@ -289,7 +386,10 @@ const loadAchievements = async () => {
         authors: ['Huang Gang', 'Wu Peng', 'Li Xuan'],
         type: 'conference',
         year: 2024,
-        institution: 'CVPR 2024'
+        institution: 'CVPR 2024',
+        githubUrl: 'https://github.com/example/realtime-detection',
+        projectUrl: 'https://autonomous-lab.example.com/detection',
+        pdfUrl: 'https://example.com/papers/realtime-detection-2024.pdf'
       },
       {
         id: 5,
@@ -297,7 +397,8 @@ const loadAchievements = async () => {
         authors: ['陈建国', '王丽华', '张明'],
         type: 'patent',
         year: 2024,
-        institution: '中国专利局'
+        institution: '中国专利局',
+        githubUrl: 'https://github.com/example/blockchain-data-management'
       },
       
       // 2023年成果
@@ -307,7 +408,9 @@ const loadAchievements = async () => {
         authors: ['Gao Hui', 'Lin Jie', 'Deng Kai', 'Shi Rui'],
         type: 'journal',
         year: 2023,
-        institution: 'IEEE Communications Magazine'
+        institution: 'IEEE Communications Magazine',
+        githubUrl: 'https://github.com/example/5g-resource-allocation',
+        pdfUrl: 'https://example.com/papers/5g-resource-2023.pdf'
       },
       {
         id: 7,
@@ -315,7 +418,9 @@ const loadAchievements = async () => {
         authors: ['Fan Yu', 'Qin Mei', 'Luo Xiang'],
         type: 'conference',
         year: 2023,
-        institution: 'NeurIPS 2023'
+        institution: 'NeurIPS 2023',
+        projectUrl: 'https://quantum-lab.example.com/ml-algorithms',
+        pdfUrl: 'https://example.com/papers/quantum-ml-2023.pdf'
       },
       {
         id: 8,
@@ -323,7 +428,10 @@ const loadAchievements = async () => {
         authors: ['Tan Li', 'He Jun', 'Cao Ning', 'Jiang Wei'],
         type: 'journal',
         year: 2023,
-        institution: 'Medical Image Analysis'
+        institution: 'Medical Image Analysis',
+        githubUrl: 'https://github.com/example/explainable-medical-ai',
+        projectUrl: 'https://medical-ai.example.com/explainable',
+        pdfUrl: 'https://example.com/papers/explainable-medical-2023.pdf'
       },
       {
         id: 9,
@@ -331,7 +439,9 @@ const loadAchievements = async () => {
         authors: ['李强', '赵敏', '孙涛'],
         type: 'software',
         year: 2023,
-        institution: '国家版权局'
+        institution: '国家版权局',
+        githubUrl: 'https://github.com/example/recommendation-platform',
+        projectUrl: 'https://ai-lab.example.com/recommendation'
       },
       {
         id: 10,
@@ -339,7 +449,9 @@ const loadAchievements = async () => {
         authors: ['Xu Dan', 'Zhu Hao', 'Song Yan'],
         type: 'conference',
         year: 2023,
-        institution: 'INFOCOM 2023'
+        institution: 'INFOCOM 2023',
+        githubUrl: 'https://github.com/example/edge-iot-architecture',
+        pdfUrl: 'https://example.com/papers/edge-iot-2023.pdf'
       },
       
       // 2022年成果
@@ -349,7 +461,9 @@ const loadAchievements = async () => {
         authors: ['Kong Fei', 'Meng Jia', 'Bai Xin', 'Cui Yang'],
         type: 'journal',
         year: 2022,
-        institution: 'Journal of Machine Learning Research'
+        institution: 'Journal of Machine Learning Research',
+        githubUrl: 'https://github.com/example/adversarial-training',
+        pdfUrl: 'https://example.com/papers/adversarial-training-2022.pdf'
       },
       {
         id: 12,
@@ -357,7 +471,9 @@ const loadAchievements = async () => {
         authors: ['Ding Lu', 'Feng Qian', 'Guo Shan'],
         type: 'conference',
         year: 2022,
-        institution: 'ICCV 2022'
+        institution: 'ICCV 2022',
+        projectUrl: 'https://blockchain-health.example.com/secure-sharing',
+        pdfUrl: 'https://example.com/papers/blockchain-healthcare-2022.pdf'
       },
       {
         id: 13,
@@ -365,7 +481,10 @@ const loadAchievements = async () => {
         authors: ['Hu Tao', 'Jin Mei', 'Liang Bo', 'Nie Kun'],
         type: 'journal',
         year: 2022,
-        institution: 'ACM Transactions on Software Engineering'
+        institution: 'ACM Transactions on Software Engineering',
+        githubUrl: 'https://github.com/example/nlp-code-generation',
+        projectUrl: 'https://nlp-lab.example.com/code-generation',
+        pdfUrl: 'https://example.com/papers/nlp-code-2022.pdf'
       },
       {
         id: 14,
@@ -373,7 +492,8 @@ const loadAchievements = async () => {
         authors: ['王志强', '刘晓东', '张华'],
         type: 'patent',
         year: 2022,
-        institution: '中国专利局'
+        institution: '中国专利局',
+        projectUrl: 'https://security-lab.example.com/ai-protection'
       },
       {
         id: 15,
@@ -381,7 +501,9 @@ const loadAchievements = async () => {
         authors: ['Pan Wei', 'Shi Jing', 'Yu Heng'],
         type: 'conference',
         year: 2022,
-        institution: 'IROS 2022'
+        institution: 'IROS 2022',
+        githubUrl: 'https://github.com/example/cv-autonomous-robotics',
+        pdfUrl: 'https://example.com/papers/cv-robotics-2022.pdf'
       },
       
       // 2021年成果
@@ -391,7 +513,9 @@ const loadAchievements = async () => {
         authors: ['Yao Ming', 'Qiu Ling', 'Ren Fang', 'Shen Kai'],
         type: 'journal',
         year: 2021,
-        institution: 'IEEE Transactions on Parallel and Distributed Systems'
+        institution: 'IEEE Transactions on Parallel and Distributed Systems',
+        githubUrl: 'https://github.com/example/distributed-ml-privacy',
+        pdfUrl: 'https://example.com/papers/distributed-ml-2021.pdf'
       },
       {
         id: 17,
@@ -399,7 +523,10 @@ const loadAchievements = async () => {
         authors: ['Cai Jun', 'Du Xin', 'Huang Ping'],
         type: 'conference',
         year: 2021,
-        institution: 'ICLR 2021'
+        institution: 'ICLR 2021',
+        githubUrl: 'https://github.com/example/gnn-social-analysis',
+        projectUrl: 'https://social-lab.example.com/gnn-analysis',
+        pdfUrl: 'https://example.com/papers/gnn-social-2021.pdf'
       },
       {
         id: 18,
@@ -407,7 +534,8 @@ const loadAchievements = async () => {
         authors: ['郑海涛', '林雅芳', '吴建华'],
         type: 'monograph',
         year: 2021,
-        institution: '科学出版社'
+        institution: '科学出版社',
+        pdfUrl: 'https://example.com/books/cloud-scheduling-2021.pdf'
       },
       {
         id: 19,
@@ -415,7 +543,9 @@ const loadAchievements = async () => {
         authors: ['Zheng Hao', 'Liu Yan', 'Chen Xu'],
         type: 'journal',
         year: 2021,
-        institution: 'IEEE Transactions on Neural Networks and Learning Systems'
+        institution: 'IEEE Transactions on Neural Networks and Learning Systems',
+        githubUrl: 'https://github.com/example/time-series-forecasting',
+        pdfUrl: 'https://example.com/papers/time-series-2021.pdf'
       },
       {
         id: 20,
@@ -423,7 +553,9 @@ const loadAchievements = async () => {
         authors: ['何建军', '苏丽娜', '马志远'],
         type: 'software',
         year: 2025,
-        institution: '国家版权局'
+        institution: '国家版权局',
+        githubUrl: 'https://github.com/example/bigdata-analysis-system',
+        projectUrl: 'https://bigdata-lab.example.com/analysis-system'
       },
       
       // 2020年成果
@@ -433,7 +565,9 @@ const loadAchievements = async () => {
         authors: ['Xu Lei', 'Wang Jie', 'Zhang Qi', 'Li Nan'],
         type: 'journal',
         year: 2020,
-        institution: 'IEEE Transactions on Mobile Computing'
+        institution: 'IEEE Transactions on Mobile Computing',
+        githubUrl: 'https://github.com/example/federated-edge-computing',
+        pdfUrl: 'https://example.com/papers/federated-edge-2020.pdf'
       },
       {
         id: 22,
@@ -441,7 +575,9 @@ const loadAchievements = async () => {
         authors: ['Song Mei', 'Zhao Bin', 'Fu Gang'],
         type: 'conference',
         year: 2020,
-        institution: 'ACL 2020'
+        institution: 'ACL 2020',
+        projectUrl: 'https://nlp-lab.example.com/attention-mechanisms',
+        pdfUrl: 'https://example.com/papers/attention-nlp-2020.pdf'
       },
       {
         id: 23,
@@ -449,7 +585,8 @@ const loadAchievements = async () => {
         authors: ['陈志华', '王美玲', '李国强'],
         type: 'standard',
         year: 2020,
-        institution: '国家标准化管理委员会'
+        institution: '国家标准化管理委员会',
+        pdfUrl: 'https://example.com/standards/iot-protocol-2020.pdf'
       },
       {
         id: 24,
@@ -457,7 +594,9 @@ const loadAchievements = async () => {
         authors: ['Peng Xiao', 'Gu Hua', 'Dai Lin'],
         type: 'journal',
         year: 2020,
-        institution: 'Medical Image Analysis'
+        institution: 'Medical Image Analysis',
+        githubUrl: 'https://github.com/example/medical-image-segmentation',
+        pdfUrl: 'https://example.com/papers/medical-segmentation-2020.pdf'
       },
       {
         id: 25,
@@ -465,7 +604,8 @@ const loadAchievements = async () => {
         authors: ['黄志明', '徐丽萍', '周建国'],
         type: 'patent',
         year: 2020,
-        institution: '中国专利局'
+        institution: '中国专利局',
+        projectUrl: 'https://manufacturing-lab.example.com/intelligent-system'
       }
     ]
   } catch (error) {
@@ -478,6 +618,11 @@ const loadAchievements = async () => {
 // 生命周期
 onMounted(() => {
   loadAchievements()
+  window.addEventListener('resize', updateScreenWidth)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', updateScreenWidth)
 })
 </script>
 
@@ -486,6 +631,8 @@ onMounted(() => {
   display: flex;
   min-height: calc(100vh - 70px);
   background-color: #f5f7fa;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .sidebar {
@@ -497,6 +644,7 @@ onMounted(() => {
   top: 0;
   height: 100vh;
   overflow-y: auto;
+  flex-shrink: 0;
 }
 
 .sidebar-header {
@@ -527,6 +675,8 @@ onMounted(() => {
 .main-content {
   flex: 1;
   padding: 20px;
+  min-width: 0;
+  width: 100%;
 }
 
 .filter-bar {
@@ -538,6 +688,8 @@ onMounted(() => {
   background: white;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  flex-wrap: wrap;
+  gap: 16px;
 }
 
 .filter-left h2 {
@@ -556,6 +708,7 @@ onMounted(() => {
   display: flex;
   gap: 12px;
   align-items: center;
+  flex-wrap: wrap;
 }
 
 .year-select {
@@ -564,6 +717,9 @@ onMounted(() => {
 
 .search-input {
   width: 300px;
+  min-width: 200px;
+  flex: 1;
+  max-width: 400px;
 }
 
 .achievements-list {
@@ -580,12 +736,14 @@ onMounted(() => {
 }
 
 .achievement-item {
-  padding: 8px 20px;
+  padding: 16px 24px;
   border-bottom: 1px solid #e4e7ed;
   transition: background-color 0.3s;
   display: flex;
-  align-items: flex-start;
+  align-items: center;
+  justify-content: space-between;
   line-height: 1.6;
+  min-height: 60px;
 }
 
 .achievement-item:hover {
@@ -594,6 +752,67 @@ onMounted(() => {
 
 .achievement-item:last-child {
   border-bottom: none;
+}
+
+.achievement-main {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  margin-right: 16px;
+  gap: 12px;
+}
+
+.achievement-actions-container {
+  background-color: #fafbfc;
+  border: 1px solid #e8eaed;
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin-left: 16px;
+  flex-shrink: 0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.achievement-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  opacity: 1;
+}
+
+.action-btn {
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 1px solid #d1d5db;
+  color: #6b7280;
+  background-color: #ffffff;
+  transition: all 0.2s ease;
+}
+
+.action-btn:hover {
+  color: #374151;
+  border-color: #9ca3af;
+  background-color: #f9fafb;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.action-btn:disabled {
+  color: #d1d5db;
+  border-color: #e5e7eb;
+  background-color: #f9fafb;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.action-btn:disabled:hover {
+  color: #d1d5db;
+  border-color: #e5e7eb;
+  background-color: #f9fafb;
+  transform: none;
+  box-shadow: none;
 }
 
 .achievement-number {
@@ -606,7 +825,6 @@ onMounted(() => {
 }
 
 .achievement-type-tag {
-  margin-right: 12px;
   flex-shrink: 0;
 }
 
@@ -662,5 +880,263 @@ onMounted(() => {
   background: white;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  overflow-x: auto;
+}
+
+/* 响应式设计 */
+@media (max-width: 1024px) {
+  .sidebar {
+    width: 220px;
+  }
+  
+  .main-content {
+    padding: 15px;
+  }
+  
+  .filter-bar {
+    padding: 15px;
+  }
+  
+  .search-input {
+    flex: 1;
+    min-width: 200px;
+    max-width: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .achievements-page {
+    flex-direction: column;
+  }
+  
+  .sidebar {
+    width: 100%;
+    height: auto;
+    position: relative;
+    border-right: none;
+    border-bottom: 1px solid #e4e7ed;
+  }
+  
+  .sidebar-header {
+    padding: 15px 20px;
+  }
+  
+  .category-menu {
+    display: flex;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+  
+  .category-menu .el-menu-item {
+    flex-shrink: 0;
+    height: 40px;
+    line-height: 40px;
+    padding: 0 16px;
+    min-width: auto;
+  }
+  
+  .main-content {
+    padding: 10px;
+  }
+  
+  .filter-bar {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 15px;
+    gap: 12px;
+  }
+  
+  .filter-left {
+    text-align: center;
+  }
+  
+  .filter-left h2 {
+    font-size: 20px;
+    margin-bottom: 5px;
+  }
+  
+  .filter-right {
+    justify-content: center;
+    gap: 10px;
+  }
+  
+  .search-input {
+    width: 100%;
+    flex: 1;
+  }
+  
+  .year-select {
+    width: 100px;
+  }
+  
+  .achievement-item {
+    padding: 12px 15px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .achievement-main {
+    flex-direction: column;
+    margin-right: 0;
+    width: 100%;
+  }
+  
+  .achievement-actions-container {
+    margin-left: 0;
+    margin-top: 8px;
+    align-self: flex-end;
+    padding: 6px 10px;
+  }
+  
+  .achievement-actions {
+    opacity: 1;
+    justify-content: flex-end;
+    align-items: center;
+  }
+  
+  .action-btn {
+    width: 30px;
+    height: 30px;
+  }
+  
+  .achievement-number {
+    margin-bottom: 8px;
+  }
+  
+  .achievement-type-tag {
+    margin-bottom: 8px;
+    margin-right: 0;
+  }
+  
+  .achievement-content {
+    line-height: 1.6;
+  }
+}
+
+@media (max-width: 480px) {
+  .main-content {
+    padding: 8px;
+  }
+  
+  .filter-bar {
+    padding: 12px;
+  }
+  
+  .filter-left h2 {
+    font-size: 18px;
+  }
+  
+  .filter-right {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .search-input {
+    width: 100%;
+  }
+  
+  .year-select {
+    width: 100%;
+  }
+  
+  .achievement-item {
+    padding: 10px 12px;
+  }
+  
+  .achievement-content {
+    font-size: 13px;
+  }
+  
+  .achievement-authors,
+  .achievement-title,
+  .achievement-institution,
+  .achievement-year {
+    font-size: 13px;
+  }
+  
+  .pagination {
+    padding: 15px 10px;
+    overflow-x: auto;
+  }
+  
+  .pagination :deep(.el-pagination) {
+    flex-wrap: nowrap;
+    white-space: nowrap;
+  }
+  
+  .sidebar-header h3 {
+    font-size: 16px;
+  }
+  
+  .category-menu .el-menu-item {
+    padding: 0 12px;
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 360px) {
+  .main-content {
+    padding: 6px;
+  }
+  
+  .filter-bar {
+    padding: 10px;
+  }
+  
+  .filter-left h2 {
+    font-size: 16px;
+  }
+  
+  .achievement-item {
+    padding: 8px 10px;
+  }
+  
+  .achievement-content {
+    font-size: 12px;
+  }
+  
+  .achievement-authors,
+  .achievement-title,
+  .achievement-institution,
+  .achievement-year {
+    font-size: 12px;
+  }
+  
+  .achievement-number {
+    font-size: 12px;
+  }
+  
+  .pagination {
+    padding: 10px 5px;
+    overflow-x: auto;
+  }
+  
+  .pagination :deep(.el-pagination) {
+    justify-content: center;
+    min-width: max-content;
+  }
+  
+  .pagination :deep(.el-pagination .el-pager) {
+    margin: 0 2px;
+  }
+  
+  .pagination :deep(.el-pagination .btn-prev),
+  .pagination :deep(.el-pagination .btn-next) {
+    margin: 0 2px;
+  }
+  
+  .sidebar-header {
+    padding: 12px 15px;
+  }
+  
+  .sidebar-header h3 {
+    font-size: 14px;
+  }
+  
+  .category-menu .el-menu-item {
+    padding: 0 10px;
+    font-size: 13px;
+  }
 }
 </style>

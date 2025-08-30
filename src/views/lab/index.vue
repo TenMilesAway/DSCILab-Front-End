@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, nextTick } from 'vue';
 import { useRouter } from 'vue-router';
-import { LabNavbar, LabBanner, LabIntroCard, ResearchSection, BlankPage, MembersPage, AchievementsPage, ProjectsPage, ActivityPage, ContactPage }from '@/components/Lab';
+import { LabNavbar, LabBanner, LabIntroCard, ResearchSection, BlankPage, MembersPage, AchievementsPage, ProjectsPage, ActivityPage }from '@/components/Lab';
 
 defineOptions({
   name: "LabHomepage"
@@ -22,7 +22,7 @@ const pageTitles: Record<string, { title: string; subtitle: string }> = {
   'achievements': { title: '成果', subtitle: '学术成果展示' },
   'projects': { title: '项目', subtitle: '研究项目展示' },
   'activities': { title: '活动', subtitle: '学术活动与会议' },
-  'contact': { title: '联系我们', subtitle: '联系方式与地址' }
+
 };
 
 // 处理菜单选择事件
@@ -46,9 +46,7 @@ const handleSelect = (key: string) => {
     case '5': // 活动
       currentPage.value = 'activities';
       break;
-    case '8': // 联系我们
-      currentPage.value = 'contact';
-      break;
+
     default:
       currentPage.value = 'home';
   }
@@ -109,10 +107,7 @@ const getCurrentPageInfo = () => {
         <ActivityPage />
       </template>
       
-      <!-- 联系我们页面 -->
-      <template v-else-if="currentPage === 'contact'">
-        <ContactPage />
-      </template>
+
       
       <!-- 其他页面使用空白组件 -->
       <template v-else>
