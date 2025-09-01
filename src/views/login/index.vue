@@ -88,7 +88,7 @@ const onLogin = async (formEl: FormInstance | undefined) => {
           setTokenFromBackend(data);
           // 获取后端路由
           initRouter().then(() => {
-            router.push(getTopMenu(true).path);
+            router.push("/newsystem/profile");
             message("登录成功", { type: "success" });
           });
           if (isRememberMe.value) {
@@ -154,24 +154,26 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="select-none">
-    <img :src="bg" class="wave" />
-    <div class="absolute flex-c right-5 top-3">
+  <div class="select-none" style="background-color: white;">
+    <!-- 注释掉背景图片，改为纯白色背景 -->
+    <!-- <img :src="bg" class="wave" /> -->
+    <!-- 注释掉日夜模式切换按钮 -->
+    <!-- <div class="absolute flex-c right-5 top-3">
       <!-- 主题 -->
-      <el-switch
+      <!-- <el-switch
         v-model="dataTheme"
         :active-icon="dayIcon"
         :inactive-icon="darkIcon"
         inline-prompt
         @change="dataThemeChange"
-      />
-    </div>
+      /> -->
+    <!-- </div> -->
     <div class="login-container">
-      <div class="img">
-        <!-- 登录页面的背景图 -->
+      <!-- 注释掉左侧图案 -->
+      <!-- <div class="img">
         <component :is="toRaw(illustration)" />
-      </div>
-      <div class="login-box">
+      </div> -->
+      <div class="login-box login-box-center">
         <div class="login-form">
           <!-- 登录窗口上面的LOGO -->
           <avatar class="avatar" />
@@ -251,9 +253,10 @@ onBeforeUnmount(() => {
               <el-form-item>
                 <div class="w-full h-[20px] flex justify-between items-center">
                   <el-checkbox v-model="isRememberMe"> 记住密码</el-checkbox>
-                  <el-button link type="primary" @click="currentPage = 4">
+                  <!-- 注释掉忘记密码按钮 -->
+                  <!-- <el-button link type="primary" @click="currentPage = 4">
                     忘记密码
-                  </el-button>
+                  </el-button> -->
                 </div>
                 <el-button
                   :loading="loading"
@@ -267,7 +270,8 @@ onBeforeUnmount(() => {
               </el-form-item>
             </Motion>
 
-            <Motion :delay="300">
+            <!-- 注释掉其他登录方式按钮 -->
+            <!-- <Motion :delay="300">
               <el-form-item>
                 <div class="w-full h-[20px] flex justify-between items-center">
                   <el-button
@@ -281,10 +285,11 @@ onBeforeUnmount(() => {
                   </el-button>
                 </div>
               </el-form-item>
-            </Motion>
+            </Motion> -->
           </el-form>
 
-          <Motion v-if="currentPage === 0" :delay="350">
+          <!-- 注释掉第三方登录 -->
+          <!-- <Motion v-if="currentPage === 0" :delay="350">
             <el-form-item>
               <el-divider>
                 <p class="text-xs text-gray-500">{{ "第三方登录" }}</p>
@@ -303,21 +308,22 @@ onBeforeUnmount(() => {
                 </span>
               </div>
             </el-form-item>
-          </Motion>
+          </Motion> -->
+          <!-- 注释掉其他登录组件 -->
           <!-- 手机号登录 -->
-          <phone v-if="currentPage === 1" v-model:current-page="currentPage" />
+          <!-- <phone v-if="currentPage === 1" v-model:current-page="currentPage" /> -->
           <!-- 二维码登录 -->
-          <qrCode v-if="currentPage === 2" v-model:current-page="currentPage" />
+          <!-- <qrCode v-if="currentPage === 2" v-model:current-page="currentPage" /> -->
           <!-- 注册 -->
-          <register
+          <!-- <register
             v-if="currentPage === 3"
             v-model:current-page="currentPage"
-          />
+          /> -->
           <!-- 忘记密码 -->
-          <resetPassword
+          <!-- <resetPassword
             v-if="currentPage === 4"
             v-model:current-page="currentPage"
-          />
+          /> -->
         </div>
       </div>
     </div>

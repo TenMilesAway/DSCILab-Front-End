@@ -6,6 +6,8 @@ export interface UserQuery extends BasePageQuery {
   status?: number;
   userId?: number;
   username?: string;
+  nickname?: string;
+  userType?: number;
 }
 
 /**
@@ -60,11 +62,16 @@ export interface UserRequest {
  * UpdateProfileCommand
  */
 export interface UserProfileRequest {
-  email?: string;
-  nickName?: string;
-  phoneNumber?: string;
-  sex?: number;
-  userId?: number;
+  user_id?: number;
+  real_name: string;        // 姓名（必填）
+  student_number?: number;  // 学号（学生必填）
+  academic_status: string;  // 教授副教授，硕士博士（必填）
+  research_area?: string;   // 研究方向（可选）
+  phone?: number;           // 手机号（可选）
+  email: string;            // 邮箱（必填）
+  enrollment_year: number;  // 入学年份（必填）
+  graduation_year?: number; // 毕业年份（可选）
+  graduation_dest?: string; // 毕业去向（可选）
 }
 
 /**
@@ -73,6 +80,7 @@ export interface UserProfileRequest {
 export interface ResetPasswordRequest {
   newPassword?: string;
   oldPassword?: string;
+  confirmPassword?: string;
   userId?: number;
 }
 

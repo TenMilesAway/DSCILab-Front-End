@@ -3,16 +3,18 @@ import { reactive, ref, toRaw } from "vue";
 import {
   updateCurrentUserPasswordApi,
   ResetPasswordRequest
-} from "@/api/system/user";
-import { FormInstance } from "element-plus";
+} from "@/api/newsystem/user";
+import { FormInstance, FormRules } from "element-plus";
 import { message } from "@/utils/message";
 
-// const { proxy } = getCurrentInstance();
+defineOptions({
+  name: "NewSystemResetPwd"
+});
 
 const user = reactive<ResetPasswordRequest>({
-  oldPassword: undefined,
-  newPassword: undefined,
-  confirmPassword: undefined
+  oldPassword: "",
+  newPassword: "",
+  confirmPassword: ""
 });
 
 const pwdRef = ref<FormInstance>();
@@ -24,12 +26,12 @@ const equalToPassword = (rule, value, callback) => {
     callback();
   }
 };
-const rules = ref({
+const rules = ref<FormRules>({
   oldPassword: [{ required: true, message: "旧密码不能为空", trigger: "blur" }],
   newPassword: [
     { required: true, message: "新密码不能为空", trigger: "blur" },
     {
-      pattern: /^[a-zA-Z0-9!@#$%^&*()_+\-=[]{}';:"\\|,.<>?]{6,20}$/,
+      pattern: /^[a-zA-Z0-9!@#$%^&*()_+=|[\]{};':"\\,.<>?-]{6,20}$/,
       message: "新密码格式应为6-20位数字、字母、符号",
       trigger: "blur"
     }
