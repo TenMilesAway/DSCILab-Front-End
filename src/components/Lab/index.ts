@@ -4,6 +4,11 @@ import LabIntroCard from '../../views/lab/components/intro.vue';
 import ResearchSection from '../../views/lab/components/research.vue';
 import BlankPage from '../../views/lab/components/BlankPage.vue';
 import MembersPage from '../../views/lab/components/MembersPage.vue';
+import AchievementsPage from '../../views/lab/components/AchievementsPage.vue';
+import ProjectsPage from '../../views/lab/components/ProjectsPage.vue'
+import ActivityPage from '../../views/lab/components/ActivityPage.vue'
+import ActivityDetail from '../../views/lab/components/ActivityDetail.vue'
+
 
 export {
   LabNavbar,
@@ -11,7 +16,12 @@ export {
   LabIntroCard,
   ResearchSection,
   BlankPage,
-  MembersPage
+  MembersPage,
+  AchievementsPage,
+  ProjectsPage,
+  ActivityPage,
+  ActivityDetail,
+
 };
 
 export default {
@@ -20,5 +30,10 @@ export default {
   LabIntroCard,
   ResearchSection,
   BlankPage,
-  MembersPage
+  MembersPage,
+  AchievementsPage,
+  ProjectsPage,
+  ActivityPage,
+  ActivityDetail,
+
 };

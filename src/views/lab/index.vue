@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, nextTick } from 'vue';
 import { useRouter } from 'vue-router';
-import { LabNavbar, LabBanner, LabIntroCard, ResearchSection, BlankPage, MembersPage }from '@/components/Lab';
+import { LabNavbar, LabBanner, LabIntroCard, ResearchSection, BlankPage, MembersPage, AchievementsPage, ProjectsPage, ActivityPage }from '@/components/Lab';
 
 defineOptions({
   name: "LabHomepage"
@@ -19,10 +19,10 @@ const currentPage = ref('home');
 const pageTitles: Record<string, { title: string; subtitle: string }> = {
   'home': { title: '首页', subtitle: '实验室主页' },
   'members': { title: '成员', subtitle: '团队成员介绍' },
-  'publications': { title: '论著', subtitle: '学术论文与著作' },
+  'achievements': { title: '成果', subtitle: '学术成果展示' },
   'projects': { title: '项目', subtitle: '研究项目展示' },
   'activities': { title: '活动', subtitle: '学术活动与会议' },
-  'contact': { title: '联系我们', subtitle: '联系方式与地址' }
+
 };
 
 // 处理菜单选择事件
@@ -37,8 +37,8 @@ const handleSelect = (key: string) => {
     case '2': // 成员
       currentPage.value = 'members';
       break;
-    case '3': // 论著
-      currentPage.value = 'publications';
+    case '3': // 成果
+      currentPage.value = 'achievements';
       break;
     case '4': // 项目
       currentPage.value = 'projects';
@@ -46,12 +46,15 @@ const handleSelect = (key: string) => {
     case '5': // 活动
       currentPage.value = 'activities';
       break;
-    case '8': // 联系我们
-      currentPage.value = 'contact';
-      break;
+
     default:
       currentPage.value = 'home';
   }
+  
+  // 页面切换后重置滚动位置到顶部
+  nextTick(() => {
+    window.scrollTo({ top: 0 });
+  });
 };
 
 // 获取当前页面信息
@@ -89,6 +92,23 @@ const getCurrentPageInfo = () => {
         <MembersPage />
       </template>
       
+      <!-- 成果页面 -->
+      <template v-else-if="currentPage === 'achievements'">
+        <AchievementsPage />
+      </template>
+      
+      <!-- 项目页面 -->
+      <template v-else-if="currentPage === 'projects'">
+        <ProjectsPage />
+      </template>
+      
+      <!-- 活动页面 -->
+      <template v-else-if="currentPage === 'activities'">
+        <ActivityPage />
+      </template>
+      
+
+      
       <!-- 其他页面使用空白组件 -->
       <template v-else>
         <BlankPage 
@@ -105,7 +125,7 @@ const getCurrentPageInfo = () => {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: linear-gradient(135deg, #f7f8fc 0%, #e8eaf6 50%, #f5f5f7 100%);
+  background: #f8fafc;
 }
 
 /* 内容区域样式 */
