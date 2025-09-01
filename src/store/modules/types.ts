@@ -43,4 +43,6 @@ export type userType = {
   dictionaryList: Map<String, Array<DictionaryData>>;
   /** 字典MapMap 用于匹配值展示 */
   dictionaryMap: Record<string, Record<string, DictionaryData>>;
+  /** 当前用户信息 */
+  currentUserInfo?: any;
 };

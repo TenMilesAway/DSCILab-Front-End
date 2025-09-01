@@ -15,6 +15,11 @@
   padding: 0 2rem;
 }
 
+.login-container:has(.login-box-center) {
+  grid-template-columns: 1fr;
+  grid-gap: 0;
+}
+
 .img {
   display: flex;
   justify-content: flex-end;
@@ -31,6 +36,11 @@
   text-align: center;
 }
 
+.login-box-center {
+  justify-content: center;
+  grid-column: 1 / -1;
+}
+
 .login-form {
   width: 360px;
 }
@@ -41,7 +51,7 @@
 }
 
 .login-form h2 {
-  text-transform: uppercase;
+  /* text-transform: uppercase; */
   margin: 15px 0;
   color: #999;
   font: bold 200% Consolas, Monaco, monospace;

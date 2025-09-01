@@ -84,10 +84,22 @@ function isOneOfArray(a: Array<string>, b: Array<string>) {
 
 /** 从sessionStorage里取出当前登陆用户的角色roles，过滤无权限的菜单 */
 function filterNoPermissionTree(data: RouteComponent[]) {
-  const roleKey =
-    storageSession().getItem<TokenDTO>(sessionKey).currentUser.roleKey;
-  const currentRoles = roleKey ? [roleKey] : [];
-  const newTree = cloneDeep(data).filter((v: any) =>
+  const userId =
+    storageSession().getItem<TokenDTO>(sessionKey).currentUser.userInfo.user_id;
+  const currentRoles = userId ? [userId.toString()] : [];
+
+  // 自定义过滤：只显示个人中心相关菜单
+  const allowedPaths = ['/newsystem', '/newsystem/user', '/newsystem/paper'];
+  const customFilteredData = data.filter((v: any) => {
+    // 如果是个人中心相关路径，直接允许
+    if (allowedPaths.some(path => v.path?.startsWith(path))) {
+      return true;
+    }
+    // 其他菜单一律过滤掉
+    return false;
+  });
+
+  const newTree = cloneDeep(customFilteredData).filter((v: any) =>
     isOneOfArray(v.meta?.roles, currentRoles)
   );
   newTree.forEach(

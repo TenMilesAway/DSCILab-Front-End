@@ -20,8 +20,8 @@ export const useUserStore = defineStore({
       storageSession().getItem<TokenDTO>(sessionKey)?.currentUser.userInfo
         .username ?? "",
     // 页面级别权限
-    roles: storageSession().getItem<TokenDTO>(sessionKey)?.currentUser.roleKey
-      ? [storageSession().getItem<TokenDTO>(sessionKey)?.currentUser.roleKey]
+    roles: storageSession().getItem<TokenDTO>(sessionKey)?.currentUser.userInfo.user_id
+      ? [storageSession().getItem<TokenDTO>(sessionKey)?.currentUser.userInfo.user_id.toString()]
       : [],
     dictionaryList:
       storageLocal().getItem<Map<String, Array<DictionaryData>>>(

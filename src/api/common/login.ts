@@ -36,40 +36,29 @@ export type TokenDTO = {
   currentUser: CurrentLoginUserDTO;
 };
 
-export type CurrentLoginUserDTO = {
+export interface CurrentLoginUserDTO {
   userInfo: CurrentUserInfoDTO;
-  roleKey: string;
-  permissions: Set<string>;
+  user_id: number;
+  username: string;
+  identity: string; // ENUM: 'student', 'teacher', 'admin'
+  status: string; // ENUM: 'active', 'inactive', 'banned'
 };
 
 /**
- * 当前User
+ * 当前User详细信息
  */
 export interface CurrentUserInfoDTO {
-  avatar?: string;
-  createTime?: Date;
-  creatorId?: number;
-  creatorName?: string;
-  deptId?: number;
-  deptName?: string;
+  student_number?: string;
+  real_name?: string;
+  gender?: string; // ENUM: 'male', 'female', 'other'
+  academic_status?: string; // ENUM
+  phone?: string;
   email?: string;
-  loginDate?: Date;
-  loginIp?: string;
-  nickName?: string;
-  phoneNumber?: string;
-  postId?: number;
-  postName?: string;
-  remark?: string;
-  roleId?: number;
-  roleName?: string;
-  sex?: number;
-  status?: number;
-  updaterId?: number;
-  updaterName?: string;
-  updateTime?: Date;
-  userId?: number;
-  username?: string;
-  userType?: number;
+  enrollment_year?: number;
+  graduation_year?: number;
+  photo?: string;
+  graduation_dest?: string;
+  research_area?: string;
 }
 
 export type DictionaryData = {
