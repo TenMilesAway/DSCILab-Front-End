@@ -586,7 +586,6 @@ const loadAchievements = async () => {
         type: 'standard',
         year: 2020,
         institution: '国家标准化管理委员会',
-        pdfUrl: 'https://example.com/standards/iot-protocol-2020.pdf'
       },
       {
         id: 24,

@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import { ref, computed, nextTick } from 'vue';
+import { ref, computed, nextTick, onMounted } from 'vue';
 import { Search } from '@element-plus/icons-vue';
 import MemberInfo from './MemberInfo.vue';
+import { ElMessage } from 'element-plus';
+import { getMembersListApi, type ApiUser } from '@/api/lab/members';
 
 defineOptions({
   name: "MembersPage"
@@ -15,6 +17,8 @@ interface Member {
   category: string; // 新增分类字段
 }
 
+// API相关接口定义已移至 @/api/lab/members
+
 interface Props {
   title?: string;
   subtitle?: string;
@@ -27,156 +31,7 @@ interface CategoryGroup {
   members: Member[];
 }
 
-const defaultMembers: Member[] = [
-  {
-    id: 1,
-    name: '刘秀磊',
-    title: '实验室负责人',
-    category: 'directors'
-  },
-  {
-    id: 3,
-    name: '李宁',
-    title: '教授',
-    category: 'teachers'
-  },
-  {
-    id: 4,
-    name: '佟强',
-    title: '副教授',
-    category: 'teachers'
-  },
-  {
-    id: 5,
-    name: '侯守璐',
-    title: '副教授',
-    category: 'teachers'
-  },
-  {
-    id: 6,
-    name: '李硕',
-    title: '2023 级硕士研究生',
-    category: 'master_students'
-  },
-  {
-    id: 8,
-    name: '邹凌龙',
-    title: '2023 级硕士研究生',
-    category: 'master_students'
-  },
-  {
-    id: 10,
-    name: '褚延浩',
-    title: '2022 级硕士毕业生',
-    graduation: '美团',
-    category: 'graduates'
-  },
-  {
-    id: 11,
-    name: '罗迩遐',
-    title: '2022 级硕士毕业生',
-    graduation: '北京邮电大学',
-    category: 'graduates'
-  },
-  {
-    id: 12,
-    name: '王博士',
-    title: '已毕业博士',
-    graduation: '阿里巴巴达摩院',
-    category: 'graduates'
-  },
-  {
-    id: 13,
-    name: '李硕士',
-    title: '已毕业硕士',
-    graduation: '华为技术有限公司',
-    category: 'graduates'
-  },
-  {
-    id: 14,
-    name: '张博士',
-    title: '已毕业博士',
-    graduation: '百度研究院',
-    category: 'graduates'
-  },
-  {
-    id: 15,
-    name: '陈硕士',
-    title: '已毕业硕士',
-    graduation: '美团技术团队',
-    category: 'graduates'
-  },
-  {
-    id: 16,
-    name: '刘博士',
-    title: '已毕业博士',
-    graduation: '京东AI研究院',
-    category: 'graduates'
-  },
-  {
-    id: 17,
-    name: '周硕士',
-    title: '已毕业硕士',
-    graduation: '滴滴出行',
-    category: 'graduates'
-  },
-  {
-    id: 18,
-    name: '吴博士',
-    title: '已毕业博士',
-    graduation: '小米AI实验室',
-    category: 'graduates'
-  },
-  {
-    id: 19,
-    name: '赵硕士',
-    title: '已毕业硕士',
-    graduation: '网易有道',
-    category: 'graduates'
-  },
-  {
-    id: 20,
-    name: '孙博士',
-    title: '已毕业博士',
-    graduation: '商汤科技',
-    category: 'graduates'
-  },
-  {
-    id: 21,
-    name: '钱硕士',
-    title: '已毕业硕士',
-    graduation: '快手科技',
-    category: 'graduates'
-  },
-  {
-    id: 22,
-    name: '郑博士',
-    title: '已毕业博士',
-    graduation: '旷视科技',
-    category: 'graduates'
-  },
-  {
-    id: 23,
-    name: '林硕士',
-    title: '已毕业硕士',
-    graduation: '拼多多',
-    category: 'graduates'
-  },
-  {
-    id: 24,
-    name: '何博士',
-    title: '已毕业博士',
-    graduation: '科大讯飞',
-    category: 'graduates'
-  },
-  {
-    id: 25,
-    name: '高硕士',
-    title: '已毕业硕士',
-    graduation: '新浪微博',
-    category: 'graduates'
-  }
-];
+
 
 const props = withDefaults(defineProps<Props>(), {
   title: '团队成员',
@@ -187,7 +42,104 @@ const activeCategory = ref<string>('directors'); // 默认选中负责人
 const searchKeyword = ref<string>(''); // 搜索关键词
 
 // 获取实际使用的成员数据
-const actualMembers = computed(() => props.members || defaultMembers);
+// API获取的成员数据
+const apiMembers = ref<Member[]>([]);
+const loading = ref(false);
+
+// 获取实际使用的成员数据
+const actualMembers = computed(() => {
+  if (apiMembers.value.length > 0) {
+    return apiMembers.value;
+  }
+  return props.members || [];
+});
+
+// 学术状态映射
+const getAcademicStatusTitle = (academicStatus: number | null, enrollmentYear?: number): string => {
+  const statusMap: Record<number, string> = {
+    0: '实验室负责人',
+    1: '教授',
+    2: '副教授',
+    3: '讲师',
+    4: '博士生',
+    5: '硕士生',
+    6: '本科生'
+  };
+  
+  if (academicStatus === null) return '其他';
+  
+  const baseTitle = statusMap[academicStatus] || '其他';
+  
+  // 对于学生身份（博士生、硕士生、本科生），如果有入学年份则加上年级
+  if ((academicStatus === 4 || academicStatus === 5 || academicStatus === 6) && enrollmentYear) {
+    return `${enrollmentYear} 级${baseTitle}`;
+  }
+  
+  return baseTitle;
+};
+
+// 根据学术状态确定分类
+const getCategoryByAcademicStatus = (academicStatus: number | null, graduationDest: string): string => {
+  // 如果有毕业去向，归类为已毕业学生
+  if (graduationDest && graduationDest.trim()) {
+    return 'graduates';
+  }
+  
+  if (academicStatus === null) return 'teachers';
+  
+  switch (academicStatus) {
+    case 0: return 'directors'; // 实验室负责人
+    case 1:
+    case 2:
+    case 3: return 'teachers'; // 教授、副教授、讲师
+    case 4: return 'phd_students'; // 博士生
+    case 5: return 'master_students'; // 硕士生
+    case 6: return 'undergraduate_students'; // 本科生
+  }
+};
+
+// 从API获取成员数据
+const fetchMembersFromApi = async () => {
+  loading.value = true;
+  try {
+    const result = await getMembersListApi();
+    
+    if (result.code === 0 && result.data && result.data.rows) {
+      // 处理所有用户数据，过滤掉教师中身份为"其他"的数据
+      const processedMembers = result.data.rows.map((user: ApiUser) => {
+        const category = getCategoryByAcademicStatus(user.academicStatus, user.graduationDest);
+        const title = getAcademicStatusTitle(user.academicStatus, user.enrollmentYear);
+        
+        return {
+          id: user.id,
+          name: user.realName,
+          title: user.graduationDest && user.graduationDest.trim() 
+            ? `${title}` 
+            : title,
+          graduation: user.graduationDest && user.graduationDest.trim() 
+            ? user.graduationDest
+            : undefined,
+          category,
+          originalTitle: title
+        };
+      });
+      
+      // 过滤掉教师分类中身份为"其他"的数据
+      apiMembers.value = processedMembers.filter(member => 
+        !(member.category === 'teachers' && member.originalTitle === '其他')
+      );
+      ElMessage.success('成员数据加载成功');
+    } else {
+      throw new Error('API返回数据格式错误');
+    }
+  } catch (error) {
+    console.error('获取成员数据失败:', error);
+    ElMessage.error('获取成员数据失败');
+    // 如果API请求失败，显示空列表
+  } finally {
+    loading.value = false;
+  }
+}
 
 // 分类配置
 const categories = [
@@ -195,8 +147,14 @@ const categories = [
   { key: 'teachers', name: '教师'},
   { key: 'phd_students', name: '博士生'},
   { key: 'master_students', name: '硕士生'},
+  { key: 'undergraduate_students', name: '本科生'},
   { key: 'graduates', name: '已毕业学生'}
 ];
+
+// 组件挂载时获取API数据
+onMounted(() => {
+  fetchMembersFromApi();
+});
 
 // 获取当前选中分类的成员
 const currentCategoryMembers = computed(() => {
@@ -295,7 +253,7 @@ const getCategoryName = (categoryKey: string) => {
           <div class="search-container">
             <el-input
               v-model="searchKeyword"
-              placeholder="搜索成员姓名、职位或毕业去向"
+              placeholder="搜索成员姓名、身份或毕业去向"
               :prefix-icon="Search"
               clearable
               class="search-input"
@@ -304,7 +262,15 @@ const getCategoryName = (categoryKey: string) => {
         </div>
         
         <div class="members-list">
+          <!-- 加载状态 -->
+          <div v-if="loading" class="loading-container">
+            <el-loading-spinner />
+            <p>正在加载成员数据...</p>
+          </div>
+          
+          <!-- 成员列表 -->
           <div 
+            v-else
             v-for="member in currentCategoryMembers" 
             :key="member.id" 
             class="member-card"
@@ -318,6 +284,11 @@ const getCategoryName = (categoryKey: string) => {
             <div class="member-action">
               <span class="view-detail">查看详情</span>
             </div>
+          </div>
+          
+          <!-- 空状态 -->
+          <div v-if="!loading && currentCategoryMembers.length === 0" class="empty-state">
+            <p>暂无{{ getCategoryName(activeCategory) }}数据</p>
           </div>
         </div>
       </div>
@@ -669,6 +640,37 @@ const getCategoryName = (categoryKey: string) => {
     opacity: 1;
     background: rgba(59, 130, 246, 0.1);
     color: #3b82f6;
+  }
+}
+
+/* 加载状态样式 */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+  
+  p {
+    margin-top: 16px;
+    color: #64748b;
+    font-size: 1rem;
+  }
+}
+
+/* 空状态样式 */
+.empty-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+  
+  p {
+    color: #94a3b8;
+    font-size: 1rem;
+    opacity: 0.8;
   }
 }
 
