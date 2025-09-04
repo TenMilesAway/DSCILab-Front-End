@@ -2,24 +2,34 @@
 import { ref } from "vue";
 import ReCol from "@/components/ReCol";
 import { formRules } from "./rule";
+import { ElButton, ElIcon } from "element-plus";
+import { Plus, Delete } from "@element-plus/icons-vue";
+
+interface FormAuthor {
+  userId?: number | null; // 内部作者userId；外部作者为null
+  name: string; // 作者姓名
+  nameEn?: string | null; // 英文姓名
+  affiliation?: string | null; // 单位
+  authorOrder: number; // 作者顺序
+  isCorresponding: boolean; // 是否通讯作者
+  role?: string | null; // 角色
+  visible?: boolean; // 是否可见（仅内部作者）
+}
 
 interface FormInlineData {
   id?: number;
-  title: string; // 论文标题
-  author: string; // 作者
-  coAuthors?: string; // 合作作者
-  journal: string; // 期刊名称
-  volume?: string; // 卷号
-  issue?: string; // 期号
-  pages?: string; // 页码
-  publishYear: number; // 发表年份
+  title: string; // 成果标题
+  authors: FormAuthor[]; // 作者列表
+  achievementType: string; // 成果类型：paper/project
+  paperType?: number; // 论文类型：1=期刊,2=会议,3=预印本,4=专利,5=软著,6=标准,7=专著
+  projectType?: number; // 项目类型：1=横向,2=国自然面上,3=国自然青年,4=北京市教委科技一般,5=国家级教改,6=省部级教改,7=其他教改,8=其他纵向
+  journal?: string; // 期刊名称（论文）
+  publishDate?: string; // 发表日期
+  projectStartDate?: string; // 项目开始日期（项目）
+  projectEndDate?: string; // 项目结束日期（项目）
   doi?: string; // DOI
-  abstract?: string; // 摘要
-  keywords?: string; // 关键词
-  status: number; // 状态
-  impactFactor?: number; // 影响因子
-  citationCount?: number; // 引用次数
-  pdfUrl?: string; // PDF链接
+  projectUrl?: string; // 项目链接（项目）
+  githubUrl?: string; // GitHub链接（项目）
 }
 
 interface FormProps {
@@ -30,20 +40,27 @@ const props = withDefaults(defineProps<FormProps>(), {
   formInline: () => ({
     id: 0,
     title: "",
-    author: "",
-    coAuthors: "",
+    authors: [
+      {
+        name: "",
+        nameEn: null,
+        affiliation: null,
+        authorOrder: 1,
+        isCorresponding: true,
+        role: null,
+        visible: true,
+        userId: null
+      }
+    ],
+    achievementType: "paper",
+    paperType: undefined,
+    projectType: undefined,
     journal: "",
-    volume: "",
-    issue: "",
-    pages: "",
-    publishYear: new Date().getFullYear(),
+    publishDate: "",
+    projectEndDate: "",
     doi: "",
-    abstract: "",
-    keywords: "",
-    status: 2,
-    impactFactor: undefined,
-    citationCount: 0,
-    pdfUrl: ""
+    projectUrl: "",
+    githubUrl: ""
   })
 });
 
@@ -53,6 +70,53 @@ const formRuleRef = ref();
 function getFormRuleRef() {
   return formRuleRef.value;
 }
+
+// 作者管理方法
+const addAuthor = () => {
+  const newOrder = newFormInline.value.authors.length + 1;
+  newFormInline.value.authors.push({
+    name: "",
+    nameEn: null,
+    affiliation: null,
+    authorOrder: newOrder,
+    isCorresponding: false,
+    role: null,
+    visible: true,
+    userId: null
+  });
+};
+
+const removeAuthor = (index: number) => {
+  if (newFormInline.value.authors.length > 1) {
+    newFormInline.value.authors.splice(index, 1);
+    // 重新排序
+    newFormInline.value.authors.forEach((author, idx) => {
+      author.authorOrder = idx + 1;
+    });
+  }
+};
+
+const moveAuthorUp = (index: number) => {
+  if (index > 0) {
+    const authors = newFormInline.value.authors;
+    [authors[index], authors[index - 1]] = [authors[index - 1], authors[index]];
+    // 重新排序
+    authors.forEach((author, idx) => {
+      author.authorOrder = idx + 1;
+    });
+  }
+};
+
+const moveAuthorDown = (index: number) => {
+  const authors = newFormInline.value.authors;
+  if (index < authors.length - 1) {
+    [authors[index], authors[index + 1]] = [authors[index + 1], authors[index]];
+    // 重新排序
+    authors.forEach((author, idx) => {
+      author.authorOrder = idx + 1;
+    });
+  }
+};
 
 defineExpose({ getFormRuleRef });
 </script>
@@ -67,11 +131,11 @@ defineExpose({ getFormRuleRef });
     <el-row :gutter="30">
       <!-- 基本信息 -->
       <re-col :value="24">
-        <el-form-item label="论文标题" prop="title">
+        <el-form-item label="成果标题" prop="title">
           <el-input
             v-model="newFormInline.title"
             clearable
-            placeholder="请输入论文标题"
+            placeholder="请输入成果标题"
             type="textarea"
             :rows="2"
           />
@@ -79,26 +143,197 @@ defineExpose({ getFormRuleRef });
       </re-col>
 
       <re-col :value="12">
-        <el-form-item label="第一作者" prop="author">
-          <el-input
-            v-model="newFormInline.author"
-            clearable
-            placeholder="请输入第一作者"
-          />
+        <el-form-item label="成果类型" prop="achievementType">
+          <el-select
+            class="w-full"
+            v-model="newFormInline.achievementType"
+            placeholder="请选择成果类型"
+          >
+            <el-option label="论文" value="paper" />
+            <el-option label="项目" value="project" />
+          </el-select>
         </el-form-item>
       </re-col>
 
-      <re-col :value="12">
-        <el-form-item label="合作作者" prop="coAuthors">
-          <el-input
-            v-model="newFormInline.coAuthors"
-            clearable
-            placeholder="请输入合作作者，多个作者用逗号分隔"
-          />
+      <re-col :value="12" v-if="newFormInline.achievementType === 'paper'">
+        <el-form-item label="论文类型" prop="paperType">
+          <el-select
+            class="w-full"
+            v-model="newFormInline.paperType"
+            placeholder="请选择论文类型"
+          >
+            <el-option label="期刊" :value="1" />
+            <el-option label="会议" :value="2" />
+            <el-option label="预印本" :value="3" />
+            <el-option label="专利" :value="4" />
+            <el-option label="软著" :value="5" />
+            <el-option label="标准" :value="6" />
+            <el-option label="专著" :value="7" />
+          </el-select>
         </el-form-item>
       </re-col>
 
-      <re-col :value="12">
+      <re-col :value="12" v-if="newFormInline.achievementType === 'project'">
+        <el-form-item label="项目类型" prop="projectType">
+          <el-select
+            class="w-full"
+            v-model="newFormInline.projectType"
+            placeholder="请选择项目类型"
+          >
+            <el-option label="横向" :value="1" />
+            <el-option label="国自然面上" :value="2" />
+            <el-option label="国自然青年" :value="3" />
+            <el-option label="北京市教委科技一般" :value="4" />
+            <el-option label="国家级教改" :value="5" />
+            <el-option label="省部级教改" :value="6" />
+            <el-option label="其他教改" :value="7" />
+            <el-option label="其他纵向" :value="8" />
+          </el-select>
+        </el-form-item>
+      </re-col>
+
+      <!-- 作者管理 -->
+      <re-col :value="24">
+        <el-form-item
+          :label="
+            newFormInline.achievementType === 'paper'
+              ? '作者信息'
+              : '参与人信息'
+          "
+          class="author-form-item"
+        >
+          <div class="authors-container">
+            <div
+              v-for="(author, index) in newFormInline.authors"
+              :key="index"
+              class="author-item"
+            >
+              <div class="author-header">
+                <span class="author-order">
+                  <span v-if="newFormInline.achievementType === 'paper'">
+                    第{{ index + 1 }}作者
+                  </span>
+                  <span v-else>
+                    {{ index === 0 ? "负责人" : "参与人" }}
+                  </span>
+                </span>
+                <div class="author-actions">
+                  <el-button
+                    v-if="index > 0"
+                    size="small"
+                    type="text"
+                    @click="moveAuthorUp(index)"
+                  >
+                    ↑
+                  </el-button>
+                  <el-button
+                    v-if="index < newFormInline.authors.length - 1"
+                    size="small"
+                    type="text"
+                    @click="moveAuthorDown(index)"
+                  >
+                    ↓
+                  </el-button>
+                  <el-button
+                    v-if="newFormInline.authors.length > 1"
+                    size="small"
+                    type="danger"
+                    @click="removeAuthor(index)"
+                  >
+                    <el-icon><Delete /></el-icon>
+                  </el-button>
+                </div>
+              </div>
+              <div class="author-fields">
+                <el-row :gutter="16">
+                  <el-col :span="8">
+                    <el-form-item
+                      :prop="`authors.${index}.name`"
+                      :rules="[
+                        {
+                          required: true,
+                          message: '请输入作者姓名',
+                          trigger: 'blur'
+                        }
+                      ]"
+                    >
+                      <el-input
+                        v-model="author.name"
+                        placeholder="作者姓名"
+                        clearable
+                      />
+                    </el-form-item>
+                  </el-col>
+                  <el-col
+                    :span="8"
+                    v-if="newFormInline.achievementType === 'paper'"
+                  >
+                    <el-form-item>
+                      <el-input
+                        v-model="author.nameEn"
+                        placeholder="英文姓名（可选）"
+                        clearable
+                      />
+                    </el-form-item>
+                  </el-col>
+                  <el-col :span="8">
+                    <el-form-item>
+                      <el-input
+                        v-model="author.affiliation"
+                        placeholder="单位（可选）"
+                        clearable
+                      />
+                    </el-form-item>
+                  </el-col>
+                </el-row>
+                <el-row
+                  :gutter="16"
+                  v-if="newFormInline.achievementType === 'paper'"
+                >
+                  <el-col :span="8">
+                    <el-form-item>
+                      <el-input
+                        v-model="author.role"
+                        placeholder="角色（可选）"
+                        clearable
+                      />
+                    </el-form-item>
+                  </el-col>
+                  <el-col :span="8">
+                    <el-form-item>
+                      <el-checkbox v-model="author.isCorresponding">
+                        通讯作者
+                      </el-checkbox>
+                    </el-form-item>
+                  </el-col>
+                  <el-col :span="8">
+                    <el-form-item>
+                      <el-checkbox v-model="author.visible">
+                        公开显示
+                      </el-checkbox>
+                    </el-form-item>
+                  </el-col>
+                </el-row>
+              </div>
+            </div>
+            <el-button
+              type="primary"
+              plain
+              @click="addAuthor"
+              class="add-author-btn"
+            >
+              <el-icon><Plus /></el-icon>
+              {{
+                newFormInline.achievementType === "paper"
+                  ? "添加作者"
+                  : "添加参与人"
+              }}
+            </el-button>
+          </div>
+        </el-form-item>
+      </re-col>
+
+      <re-col :value="12" v-if="newFormInline.achievementType === 'paper'">
         <el-form-item label="期刊名称" prop="journal">
           <el-input
             v-model="newFormInline.journal"
@@ -109,48 +344,47 @@ defineExpose({ getFormRuleRef });
       </re-col>
 
       <re-col :value="12">
-        <el-form-item label="发表年份" prop="publishYear">
-          <el-input-number
-            v-model="newFormInline.publishYear"
-            :min="1900"
-            :max="2100"
-            placeholder="请输入发表年份"
+        <el-form-item
+          :label="
+            newFormInline.achievementType === 'paper' ? '发表年份' : '开始日期'
+          "
+          prop="publishDate"
+        >
+          <el-date-picker
+            v-if="newFormInline.achievementType === 'paper'"
+            v-model="newFormInline.publishDate"
+            type="year"
+            placeholder="请选择年份"
+            format="YYYY"
+            value-format="YYYY"
+            class="w-full"
+          />
+          <el-date-picker
+            v-else
+            v-model="newFormInline.publishDate"
+            type="month"
+            placeholder="请选择年月"
+            format="YYYY-MM"
+            value-format="YYYY-MM"
             class="w-full"
           />
         </el-form-item>
       </re-col>
 
-      <re-col :value="8">
-        <el-form-item label="卷号" prop="volume">
-          <el-input
-            v-model="newFormInline.volume"
-            clearable
-            placeholder="请输入卷号"
+      <re-col :value="12" v-if="newFormInline.achievementType === 'project'">
+        <el-form-item label="结束日期" prop="projectEndDate">
+          <el-date-picker
+            v-model="newFormInline.projectEndDate"
+            type="month"
+            placeholder="请选择年月"
+            format="YYYY-MM"
+            value-format="YYYY-MM"
+            class="w-full"
           />
         </el-form-item>
       </re-col>
 
-      <re-col :value="8">
-        <el-form-item label="期号" prop="issue">
-          <el-input
-            v-model="newFormInline.issue"
-            clearable
-            placeholder="请输入期号"
-          />
-        </el-form-item>
-      </re-col>
-
-      <re-col :value="8">
-        <el-form-item label="页码" prop="pages">
-          <el-input
-            v-model="newFormInline.pages"
-            clearable
-            placeholder="如：123-135"
-          />
-        </el-form-item>
-      </re-col>
-
-      <re-col :value="12">
+      <re-col :value="12" v-if="newFormInline.achievementType === 'paper'">
         <el-form-item label="DOI" prop="doi">
           <el-input
             v-model="newFormInline.doi"
@@ -160,72 +394,12 @@ defineExpose({ getFormRuleRef });
         </el-form-item>
       </re-col>
 
-      <re-col :value="12">
-        <el-form-item label="状态" prop="status">
-          <el-select
-            class="w-full"
-            v-model="newFormInline.status"
-            placeholder="请选择论文状态"
-          >
-            <el-option label="已发表" :value="1" />
-            <el-option label="待发表" :value="2" />
-            <el-option label="审稿中" :value="3" />
-            <el-option label="已拒绝" :value="4" />
-          </el-select>
-        </el-form-item>
-      </re-col>
-
-      <re-col :value="12">
-        <el-form-item label="影响因子" prop="impactFactor">
-          <el-input-number
-            v-model="newFormInline.impactFactor"
-            :min="0"
-            :precision="3"
-            placeholder="请输入影响因子"
-            class="w-full"
-          />
-        </el-form-item>
-      </re-col>
-
-      <re-col :value="12">
-        <el-form-item label="引用次数" prop="citationCount">
-          <el-input-number
-            v-model="newFormInline.citationCount"
-            :min="0"
-            placeholder="请输入引用次数"
-            class="w-full"
-          />
-        </el-form-item>
-      </re-col>
-
-      <re-col :value="24">
-        <el-form-item label="PDF链接" prop="pdfUrl">
+      <re-col :value="12" v-if="newFormInline.achievementType === 'project'">
+        <el-form-item label="项目链接" prop="projectUrl">
           <el-input
-            v-model="newFormInline.pdfUrl"
+            v-model="newFormInline.projectUrl"
             clearable
-            placeholder="请输入PDF文件链接"
-          />
-        </el-form-item>
-      </re-col>
-
-      <re-col :value="24">
-        <el-form-item label="关键词" prop="keywords">
-          <el-input
-            v-model="newFormInline.keywords"
-            clearable
-            placeholder="请输入关键词，多个关键词用逗号分隔"
-          />
-        </el-form-item>
-      </re-col>
-
-      <re-col :value="24">
-        <el-form-item label="摘要" prop="abstract">
-          <el-input
-            v-model="newFormInline.abstract"
-            clearable
-            placeholder="请输入论文摘要"
-            type="textarea"
-            :rows="4"
+            placeholder="请输入项目链接"
           />
         </el-form-item>
       </re-col>
@@ -236,5 +410,57 @@ defineExpose({ getFormRuleRef });
 <style scoped lang="scss">
 :deep(.el-input-number) {
   width: 100%;
+}
+
+.authors-container {
+  width: 100%;
+}
+
+.author-item {
+  padding: 16px;
+  margin-bottom: 16px;
+  background-color: #fafafa;
+  border: 1px solid #e4e7ed;
+  border-radius: 6px;
+}
+
+.author-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 8px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid #e4e7ed;
+}
+
+.author-order {
+  font-size: 14px;
+  font-weight: 600;
+  color: #409eff;
+}
+
+.author-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.author-fields {
+  margin-top: 12px;
+}
+
+.add-author-btn {
+  width: 100%;
+  margin-top: 8px;
+  border-style: dashed;
+}
+
+.add-author-btn:hover {
+  color: #409eff;
+  border-color: #409eff;
+}
+
+/* 确保作者信息标签字体加粗，与其他表单标签保持一致 */
+.author-form-item :deep(.el-form-item__label) {
+  font-weight: 700 !important;
 }
 </style>

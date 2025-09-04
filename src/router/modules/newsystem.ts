@@ -52,7 +52,7 @@ export default [
     component: Layout,
     redirect: "/newsystem/paper/index",
     meta: {
-      title: "论文管理",
+      title: "成果管理",
       rank: 3
     },
     children: [
@@ -61,7 +61,7 @@ export default [
         name: "NewSystemPaper",
         component: () => import("@/views/newsystem/paper/index.vue"),
         meta: {
-          title: "论文管理",
+          title: "成果管理",
           showLink: true,
           showParent: false
         }

@@ -37,41 +37,34 @@ const {
       :model="searchFormParams"
       class="search-form bg-bg_color w-full pl-8 pt-[12px]"
     >
-      <el-form-item label="论文标题：" prop="title">
+      <el-form-item label="关键词：" prop="keyword">
         <el-input
-          v-model="searchFormParams.title"
-          placeholder="请输入论文标题"
+          v-model="searchFormParams.keyword"
+          placeholder="请输入关键词搜索标题或关键词"
           clearable
-          class="!w-[160px]"
+          class="!w-[200px]"
         />
       </el-form-item>
-      <el-form-item label="作者：" prop="author">
-        <el-input
-          v-model="searchFormParams.author"
-          placeholder="请输入作者"
-          clearable
-          class="!w-[160px]"
-        />
-      </el-form-item>
-      <el-form-item label="期刊：" prop="journal">
-        <el-input
-          v-model="searchFormParams.journal"
-          placeholder="请输入期刊名称"
-          clearable
-          class="!w-[160px]"
-        />
-      </el-form-item>
-      <el-form-item label="状态：" prop="status">
+      <el-form-item label="成果类型：" prop="type">
         <el-select
-          v-model="searchFormParams.status"
-          placeholder="请选择状态"
+          v-model="searchFormParams.type"
+          placeholder="请选择成果类型"
           clearable
           class="!w-[160px]"
         >
-          <el-option label="已发表" :value="1" />
-          <el-option label="待发表" :value="2" />
-          <el-option label="审稿中" :value="3" />
-          <el-option label="已拒绝" :value="4" />
+          <el-option label="论文" :value="1" />
+          <el-option label="项目" :value="2" />
+        </el-select>
+      </el-form-item>
+      <el-form-item label="发布状态：" prop="published">
+        <el-select
+          v-model="searchFormParams.published"
+          placeholder="请选择发布状态"
+          clearable
+          class="!w-[160px]"
+        >
+          <el-option label="已发布" :value="true" />
+          <el-option label="未发布" :value="false" />
         </el-select>
       </el-form-item>
       <el-form-item>
@@ -90,7 +83,7 @@ const {
     </el-form>
 
     <PureTableBar
-      title="论文管理"
+      title="成果管理"
       :columns="columns"
       :showDensity="false"
       :showColumnSetting="false"
@@ -102,7 +95,7 @@ const {
           :icon="useRenderIcon(AddFill)"
           @click="openDialog('新增')"
         >
-          新增论文
+          新增成果
         </el-button>
       </template>
       <template v-slot="{ dynamicColumns }">

@@ -24,6 +24,7 @@ export const sessionKey = "user-info";
 export const tokenKey = "authorized-token";
 export const isRememberMeKey = "ag-is-remember-me";
 export const passwordKey = "ag-password";
+export const usernameKey = "ag-username";
 
 /** 获取`token` */
 export function getToken(): TokenDTO {
@@ -82,6 +83,22 @@ export function saveIsRememberMe(isRememberMe: boolean) {
 export function getIsRememberMe() {
   const value = Cookies.get(isRememberMeKey);
   return value === "true";
+}
+
+/** 将用户名存入cookies中 */
+export function saveUsername(username: string) {
+  Cookies.set(usernameKey, username);
+}
+
+/** 将用户名从cookies中删除 */
+export function removeUsername() {
+  Cookies.remove(usernameKey);
+}
+
+/** 获取用户名 */
+export function getUsername(): string {
+  const username = Cookies.get(usernameKey);
+  return username || "";
 }
 
 /** 格式化token（jwt格式） */
