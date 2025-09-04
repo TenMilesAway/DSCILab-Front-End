@@ -266,7 +266,7 @@ export const updateUserApi = (userId: number, data?: UpdateUserRequest) => {
 export const updateUserPasswordApi = (data?: PasswordRequest) => {
   return http.request<ResponseData<void>>(
     "put",
-    `/system/users/${data.user_id}/password`,
+    `/lab/users/crud/${data.user_id}/password`,
     {
       data
     }

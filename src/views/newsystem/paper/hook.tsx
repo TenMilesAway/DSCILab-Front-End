@@ -3,87 +3,27 @@ import editForm from "./form.vue";
 import { type PaginationProps } from "@pureadmin/table";
 import { reactive, ref, onMounted, h } from "vue";
 import { addDialog } from "@/components/ReDialog";
+import {
+  getAchievementListApi,
+  createAchievementApi,
+  updateAchievementApi,
+  deleteAchievementApi,
+  type AchievementListQuery,
+  type LabAchievementDTO,
+  type CreateAchievementRequest,
+  type UpdateAchievementRequest
+} from "@/api/newsystem/paper";
 
-// 论文查询参数接口
-interface PaperListQuery {
-  pageNum: number;
-  pageSize: number;
-  title?: string; // 论文标题
-  author?: string; // 作者
-  journal?: string; // 期刊
-  status?: number; // 状态：1=已发表,2=待发表,3=审稿中,4=已拒绝
-  keyword?: string; // 关键词搜索
-}
-
-// 论文列表项接口
-interface PaperListItem {
-  id: number;
-  title: string; // 论文标题
-  author: string; // 作者
-  coAuthors?: string; // 合作作者
-  journal: string; // 期刊名称
-  volume?: string; // 卷号
-  issue?: string; // 期号
-  pages?: string; // 页码
-  publishYear: number; // 发表年份
-  doi?: string; // DOI
-  abstract?: string; // 摘要
-  keywords?: string; // 关键词
-  status: number; // 状态
-  impactFactor?: number; // 影响因子
-  citationCount?: number; // 引用次数
-  pdfUrl?: string; // PDF链接
-  createdAt?: string; // 创建时间
-  updatedAt?: string; // 更新时间
-}
-
-// 创建论文请求接口
-interface CreatePaperRequest {
-  title: string;
-  author: string;
-  coAuthors?: string;
-  journal: string;
-  volume?: string;
-  issue?: string;
-  pages?: string;
-  publishYear: number;
-  doi?: string;
-  abstract?: string;
-  keywords?: string;
-  status: number;
-  impactFactor?: number;
-  citationCount?: number;
-  pdfUrl?: string;
-}
-
-// 更新论文请求接口
-interface UpdatePaperRequest {
-  title: string;
-  author: string;
-  coAuthors?: string;
-  journal: string;
-  volume?: string;
-  issue?: string;
-  pages?: string;
-  publishYear: number;
-  doi?: string;
-  abstract?: string;
-  keywords?: string;
-  status: number;
-  impactFactor?: number;
-  citationCount?: number;
-  pdfUrl?: string;
-}
+// 使用从paper.ts导入的接口类型
+// AchievementListQuery, LabAchievementDTO, CreateAchievementRequest, UpdateAchievementRequest
 
 export function useHook() {
-  const searchFormParams = reactive<PaperListQuery>({
+  const searchFormParams = reactive<AchievementListQuery>({
     pageNum: 1,
     pageSize: 10,
-    title: undefined,
-    author: undefined,
-    journal: undefined,
-    status: undefined,
-    keyword: undefined
+    keyword: undefined,
+    type: undefined,
+    published: undefined
   });
 
   const formRef = ref();
@@ -98,38 +38,89 @@ export function useHook() {
 
   const columns: TableColumnList = [
     {
-      label: "论文ID",
+      label: "成果ID",
       prop: "id",
       width: 90,
       fixed: "left"
     },
     {
-      label: "论文标题",
+      label: "成果标题",
       prop: "title",
       minWidth: 200,
       showOverflowTooltip: true
     },
     {
       label: "作者",
-      prop: "author",
-      minWidth: 120
+      prop: "authors",
+      minWidth: 200,
+      showOverflowTooltip: true,
+      cellRenderer: ({ row }) => {
+        if (!row.authors || row.authors.length === 0) return "-";
+        return row.authors.map(author => author.name).join(", ");
+      }
     },
     {
-      label: "合作作者",
-      prop: "coAuthors",
-      minWidth: 150,
-      showOverflowTooltip: true
+      label: "类型",
+      prop: "combinedType",
+      minWidth: 120,
+      cellRenderer: ({ row }) => {
+        if (row.type === 1 && row.paperType) {
+          const paperTypeMap = {
+            1: "期刊",
+            2: "会议",
+            3: "预印本",
+            4: "专利",
+            5: "软著",
+            6: "标准",
+            7: "专著"
+          };
+          const paperTypeName = paperTypeMap[row.paperType];
+          if (paperTypeName === "期刊" || paperTypeName === "会议") {
+            return `${paperTypeName}论文`;
+          }
+          return paperTypeName || "-";
+        } else if (row.type === 2 && row.projectType) {
+          const projectTypeMap = {
+            1: "横向",
+            2: "国自然面上",
+            3: "国自然青年",
+            4: "北京市教委科技一般",
+            5: "国家级教改",
+            6: "省部级教改",
+            7: "其他教改",
+            8: "其他纵向"
+          };
+          const projectTypeName = projectTypeMap[row.projectType];
+          return projectTypeName ? `${projectTypeName}项目` : "-";
+        }
+        return "-";
+      }
     },
     {
-      label: "期刊",
-      prop: "journal",
-      minWidth: 150,
-      showOverflowTooltip: true
-    },
-    {
-      label: "发表年份",
-      prop: "publishYear",
-      minWidth: 100
+      label: "时间",
+      prop: "timeDisplay",
+      minWidth: 100,
+      cellRenderer: ({ row }) => {
+        if (row.type === 2) {
+          // 项目显示年月
+          if (row.projectStartDate) {
+            const date = new Date(row.projectStartDate);
+            return `${date.getFullYear()}-${String(
+              date.getMonth() + 1
+            ).padStart(2, "0")}`;
+          }
+          return "-";
+        } else {
+          // 论文显示年份
+          if (row.publishYear) {
+            return row.publishYear;
+          } else if (row.publishDate) {
+            const date = new Date(row.publishDate);
+            return date.getFullYear().toString();
+          }
+          return "-";
+        }
+      }
     },
     {
       label: "状态",
@@ -151,124 +142,36 @@ export function useHook() {
       }
     },
     {
-      label: "影响因子",
-      prop: "impactFactor",
-      minWidth: 100,
-      cellRenderer: ({ row }) => row.impactFactor || "-"
-    },
-    {
-      label: "引用次数",
-      prop: "citationCount",
-      minWidth: 100,
-      cellRenderer: ({ row }) => row.citationCount || "0"
-    },
-    {
       label: "操作",
-      fixed: "right",
       width: 180,
       slot: "operation"
+    },
+    {
+      label: "是否显示",
+      prop: "visible",
+      fixed: "right",
+      width: 90,
+      cellRenderer: scope => (
+        <el-switch
+          size={scope.props.size === "small" ? "small" : "default"}
+          v-model={scope.row.visible}
+          active-value={true}
+          inactive-value={false}
+          active-text="显示"
+          inactive-text="隐藏"
+          inline-prompt
+          onChange={() => onVisibilityChange(scope as any)}
+        />
+      )
     }
   ];
 
-  // 模拟API调用 - 获取论文列表
-  async function getPaperListApi(params: PaperListQuery) {
-    // 模拟数据
-    const mockData = [
-      {
-        id: 1,
-        title: "基于深度学习的图像识别算法研究",
-        author: "张三",
-        coAuthors: "李四, 王五",
-        journal: "计算机学报",
-        volume: "45",
-        issue: "3",
-        pages: "123-135",
-        publishYear: 2023,
-        doi: "10.1234/example.2023.001",
-        abstract: "本文提出了一种基于深度学习的图像识别算法...",
-        keywords: "深度学习, 图像识别, 神经网络",
-        status: 1,
-        impactFactor: 3.5,
-        citationCount: 15,
-        pdfUrl: "https://example.com/paper1.pdf"
-      },
-      {
-        id: 2,
-        title: "机器学习在自然语言处理中的应用",
-        author: "李四",
-        coAuthors: "张三",
-        journal: "软件学报",
-        volume: "34",
-        issue: "2",
-        pages: "45-58",
-        publishYear: 2023,
-        doi: "10.1234/example.2023.002",
-        abstract: "本文探讨了机器学习技术在自然语言处理领域的应用...",
-        keywords: "机器学习, 自然语言处理, 文本分析",
-        status: 2,
-        impactFactor: 2.8,
-        citationCount: 8,
-        pdfUrl: "https://example.com/paper2.pdf"
-      }
-    ];
-
-    // 模拟分页和筛选
-    let filteredData = mockData;
-    if (params.title) {
-      filteredData = filteredData.filter(item =>
-        item.title.includes(params.title!)
-      );
-    }
-    if (params.author) {
-      filteredData = filteredData.filter(
-        item =>
-          item.author.includes(params.author!) ||
-          (item.coAuthors && item.coAuthors.includes(params.author!))
-      );
-    }
-    if (params.journal) {
-      filteredData = filteredData.filter(item =>
-        item.journal.includes(params.journal!)
-      );
-    }
-    if (params.status) {
-      filteredData = filteredData.filter(item => item.status === params.status);
-    }
-
-    const total = filteredData.length;
-    const start = (params.pageNum - 1) * params.pageSize;
-    const end = start + params.pageSize;
-    const rows = filteredData.slice(start, end);
-
-    return Promise.resolve({
-      data: {
-        rows,
-        total
-      }
-    });
-  }
-
-  // 模拟API调用 - 添加论文
-  async function addPaperApi(data: CreatePaperRequest) {
-    console.log("添加论文:", data);
-    return Promise.resolve({ success: true });
-  }
-
-  // 模拟API调用 - 更新论文
-  async function updatePaperApi(id: number, data: UpdatePaperRequest) {
-    console.log("更新论文:", id, data);
-    return Promise.resolve({ success: true });
-  }
-
-  // 模拟API调用 - 删除论文
-  async function deletePaperApi(id: number) {
-    console.log("删除论文:", id);
-    return Promise.resolve({ success: true });
-  }
+  // 使用真实的API调用
+  // getAchievementListApi, createAchievementApi, updateAchievementApi, deleteAchievementApi 已从 paper.ts 导入
 
   async function handleAdd(row, done) {
-    await addPaperApi(row as CreatePaperRequest).then(() => {
-      message(`您新增了论文《${row.title}》`, {
+    await createAchievementApi(row as CreateAchievementRequest).then(() => {
+      message(`您新增了成果《${row.title}》`, {
         type: "success"
       });
       done();
@@ -276,21 +179,34 @@ export function useHook() {
     });
   }
 
-  async function handleUpdate(row, done) {
-    await updatePaperApi(row.id, row as UpdatePaperRequest).then(() => {
-      message(`您修改了论文《${row.title}》`, {
-        type: "success"
-      });
-      done();
-      getList();
-    });
+  async function handleUpdate({ id, data }, done) {
+    await updateAchievementApi(id, data as UpdateAchievementRequest).then(
+      () => {
+        message(`您修改了成果《${data.title}》`, {
+          type: "success"
+        });
+        done();
+        getList();
+      }
+    );
   }
 
   async function handleDelete(row) {
-    await deletePaperApi(row.id).then(() => {
-      message(`您删除了论文《${row.title}》`, { type: "success" });
+    await deleteAchievementApi(row.id).then(() => {
+      message(`您删除了成果《${row.title}》`, { type: "success" });
       getList();
     });
+  }
+
+  function onVisibilityChange({ row }) {
+    // TODO: 接口还没写好，先空着
+    // 这里将来需要调用API来更新成果的显示状态
+    message(
+      `成果《${row.title}》的显示状态已${row.visible ? "开启" : "关闭"}`,
+      {
+        type: "success"
+      }
+    );
   }
 
   async function onSearch() {
@@ -298,27 +214,49 @@ export function useHook() {
     getList();
   }
 
-  async function openDialog(title = "新增", row?: PaperListItem) {
+  async function openDialog(title = "新增", row?: LabAchievementDTO) {
+    // 处理作者数据回显
+    const authors =
+      row?.authors?.length > 0
+        ? row.authors.map((author, index) => ({
+            userId: author.userId || null,
+            name: author.name,
+            nameEn: author.nameEn || null,
+            affiliation: author.affiliation || null,
+            authorOrder: index + 1,
+            isCorresponding: author.isCorresponding || false,
+            role: author.role || null,
+            visible: author.visible !== false
+          }))
+        : [
+            {
+              userId: null,
+              name: "",
+              nameEn: null,
+              affiliation: null,
+              authorOrder: 1,
+              isCorresponding: true,
+              role: null,
+              visible: true
+            }
+          ];
+
     addDialog({
-      title: `${title}论文`,
+      title: `${title}成果`,
       props: {
         formInline: {
           id: row?.id ?? 0,
           title: row?.title ?? "",
-          author: row?.author ?? "",
-          coAuthors: row?.coAuthors ?? "",
-          journal: row?.journal ?? "",
-          volume: row?.volume ?? "",
-          issue: row?.issue ?? "",
-          pages: row?.pages ?? "",
-          publishYear: row?.publishYear ?? new Date().getFullYear(),
+          authors: authors,
+          journal: row?.venue ?? "",
+          publishDate: row?.publishDate ?? "",
+          projectEndDate: row?.projectEndDate ?? "",
           doi: row?.doi ?? "",
-          abstract: row?.abstract ?? "",
-          keywords: row?.keywords ?? "",
-          status: row?.status ?? 2,
-          impactFactor: row?.impactFactor ?? undefined,
-          citationCount: row?.citationCount ?? 0,
-          pdfUrl: row?.pdfUrl ?? ""
+          achievementType: row?.type === 1 ? "paper" : "project",
+          paperType: row?.paperType ?? undefined,
+          projectType: row?.projectType ?? undefined,
+          projectUrl: row?.linkUrl ?? "",
+          githubUrl: row?.type === 1 ? row?.gitUrl ?? "" : ""
         }
       },
       width: "50%",
@@ -334,22 +272,61 @@ export function useHook() {
         const formRuleRef = formRef.value.getFormRuleRef();
         const formData = options.props.formInline;
 
-        const curData: CreatePaperRequest | UpdatePaperRequest = {
+        // 处理作者数据提交
+        const authorsData = formData.authors
+          .filter(author => author.name.trim() !== "")
+          .map((author, index) => {
+            const baseAuthor = {
+              userId: author.userId,
+              name: author.name.trim(),
+              affiliation: author.affiliation?.trim() || null,
+              authorOrder: index + 1,
+              visible: author.visible
+            };
+
+            // 论文类型包含所有字段，项目类型只包含基础字段
+            if (formData.achievementType === "paper") {
+              return {
+                ...baseAuthor,
+                nameEn: author.nameEn?.trim() || null,
+                isCorresponding: author.isCorresponding,
+                role: author.role?.trim() || null
+              };
+            } else {
+              return {
+                ...baseAuthor,
+                nameEn: null,
+                isCorresponding: false,
+                role: null
+              };
+            }
+          });
+
+        const curData: CreateAchievementRequest | UpdateAchievementRequest = {
           title: formData.title,
-          author: formData.author,
-          coAuthors: formData.coAuthors,
-          journal: formData.journal,
-          volume: formData.volume,
-          issue: formData.issue,
-          pages: formData.pages,
-          publishYear: formData.publishYear,
+          type: formData.achievementType === "paper" ? 1 : 2,
+          paperType:
+            formData.achievementType === "paper" ? formData.paperType : null,
+          projectType:
+            formData.achievementType === "project"
+              ? formData.projectType
+              : null,
+          venue: formData.journal,
+          publishDate:
+            formData.achievementType === "paper" ? formData.publishDate : null,
+          projectStartDate:
+            formData.achievementType === "project"
+              ? formData.publishDate
+              : null,
+          projectEndDate:
+            formData.achievementType === "project"
+              ? formData.projectEndDate
+              : null,
           doi: formData.doi,
-          abstract: formData.abstract,
-          keywords: formData.keywords,
-          status: formData.status,
-          impactFactor: formData.impactFactor,
-          citationCount: formData.citationCount,
-          pdfUrl: formData.pdfUrl
+          linkUrl: formData.projectUrl,
+          gitUrl:
+            formData.achievementType === "project" ? null : formData.githubUrl,
+          authors: authorsData
         };
 
         formRuleRef.validate(valid => {
@@ -359,11 +336,10 @@ export function useHook() {
             } else {
               const userId = formData.id;
               if (!userId || userId === 0) {
-                message("论文ID不能为空", { type: "error" });
+                message("成果ID不能为空", { type: "error" });
                 return;
               }
-              curData.id = userId;
-              handleUpdate(curData, done);
+              handleUpdate({ id: userId, data: curData }, done);
             }
           }
         });
@@ -376,8 +352,12 @@ export function useHook() {
     searchFormParams.pageNum = pagination.currentPage;
     searchFormParams.pageSize = pagination.pageSize;
 
-    const { data } = await getPaperListApi({ ...searchFormParams });
-    dataList.value = data.rows;
+    const { data } = await getAchievementListApi({ ...searchFormParams });
+    // 为每个成果初始化visible字段，默认为true（显示）
+    dataList.value = data.rows.map(item => ({
+      ...item,
+      visible: item.visible !== undefined ? item.visible : true
+    }));
     pagination.total = data.total;
 
     setTimeout(() => {
