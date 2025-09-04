@@ -5,38 +5,36 @@ import {
   onMounted,
   reactive,
   ref,
-  toRaw,
   watch
 } from "vue";
 import Motion from "./utils/motion";
 import { useRouter } from "vue-router";
 import { message } from "@/utils/message";
 import { loginRules } from "./utils/rule";
-import phone from "./components/phone.vue";
 import TypeIt from "@/components/ReTypeit";
-import qrCode from "./components/qrCode.vue";
-import register from "./components/register.vue";
-import resetPassword from "./components/resetPassword.vue";
 import { useNav } from "@/layout/hooks/useNav";
 import type { FormInstance } from "element-plus";
-import { operates, thirdParty } from "./utils/enums";
+// import { operates, thirdParty } from "./utils/enums";
 import { useLayout } from "@/layout/hooks/useLayout";
 import { rsaEncrypt } from "@/utils/crypt";
-import { getTopMenu, initRouter } from "@/router/utils";
-import { avatar, bg, illustration } from "./utils/static";
+import { initRouter } from "@/router/utils";
+import { avatar } from "./utils/static";
 import { useRenderIcon } from "@/components/ReIcon/src/hooks";
 import { useDataThemeChange } from "@/layout/hooks/useDataThemeChange";
 import {
   getIsRememberMe,
   getPassword,
+  getUsername,
   removePassword,
+  removeUsername,
   saveIsRememberMe,
   savePassword,
+  saveUsername,
   setTokenFromBackend
 } from "@/utils/auth";
 
-import dayIcon from "@/assets/svg/day.svg?component";
-import darkIcon from "@/assets/svg/dark.svg?component";
+// import dayIcon from "@/assets/svg/day.svg?component";
+// import darkIcon from "@/assets/svg/dark.svg?component";
 import Lock from "@iconify-icons/ri/lock-fill";
 import User from "@iconify-icons/ri/user-3-fill";
 import * as CommonAPI from "@/api/common/login";
@@ -60,13 +58,13 @@ const currentPage = ref(0);
 
 const { initStorage } = useLayout();
 initStorage();
-const { dataTheme, dataThemeChange } = useDataThemeChange();
+const { dataTheme: _dataTheme, dataThemeChange } = useDataThemeChange();
 dataThemeChange();
 // const { title, getDropdownItemStyle, getDropdownItemClass } = useNav();
 const { title } = useNav();
 
 const ruleForm = reactive({
-  username: "admin",
+  username: getUsername() || "admin",
   password: getPassword(),
   captchaCode: "",
   captchaCodeKey: ""
@@ -93,6 +91,7 @@ const onLogin = async (formEl: FormInstance | undefined) => {
           });
           if (isRememberMe.value) {
             savePassword(ruleForm.password);
+            saveUsername(ruleForm.username);
           }
         })
         .catch(() => {
@@ -127,6 +126,7 @@ watch(isRememberMe, newVal => {
   saveIsRememberMe(newVal);
   if (newVal === false) {
     removePassword();
+    removeUsername();
   }
 });
 
@@ -141,6 +141,7 @@ onBeforeMount(async () => {
   isRememberMe.value = getIsRememberMe();
   if (isRememberMe.value) {
     ruleForm.password = getPassword();
+    ruleForm.username = getUsername() || "admin";
   }
 });
 
@@ -154,20 +155,20 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="select-none" style="background-color: white;">
+  <div class="select-none" style="background-color: white">
     <!-- 注释掉背景图片，改为纯白色背景 -->
     <!-- <img :src="bg" class="wave" /> -->
-    <!-- 注释掉日夜模式切换按钮 -->
-    <!-- <div class="absolute flex-c right-5 top-3">
-      <!-- 主题 -->
-      <!-- <el-switch
+    <!-- 注释掉日夜模式切换按钮
+    <div class="absolute flex-c right-5 top-3">
+      主题
+      <el-switch
         v-model="dataTheme"
         :active-icon="dayIcon"
         :inactive-icon="darkIcon"
         inline-prompt
         @change="dataThemeChange"
-      /> -->
-    <!-- </div> -->
+      />
+    </div> -->
     <div class="login-container">
       <!-- 注释掉左侧图案 -->
       <!-- <div class="img">
