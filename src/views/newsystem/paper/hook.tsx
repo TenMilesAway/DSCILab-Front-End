@@ -3,12 +3,20 @@ import editForm from "./form.vue";
 import { type PaginationProps } from "@pureadmin/table";
 import { reactive, ref, onMounted, h } from "vue";
 import { addDialog } from "@/components/ReDialog";
+import { useRenderIcon } from "@/components/ReIcon/src/hooks";
+import Delete from "@iconify-icons/ep/delete";
+import EditPen from "@iconify-icons/ep/edit-pen";
+import { useUserStoreHook } from "@/store/modules/user";
+
 import {
   getAchievementListApi,
+  getMyAchievementsApi,
   createAchievementApi,
   updateAchievementApi,
   deleteAchievementApi,
+  toggleMyAchievementVisibilityApi,
   type AchievementListQuery,
+  type MyAchievementQuery,
   type LabAchievementDTO,
   type CreateAchievementRequest,
   type UpdateAchievementRequest
@@ -23,7 +31,9 @@ export function useHook() {
     pageSize: 10,
     keyword: undefined,
     type: undefined,
-    published: undefined
+    published: undefined,
+    dateStart: undefined,
+    dateEnd: undefined
   });
 
   const formRef = ref();
@@ -124,45 +134,89 @@ export function useHook() {
     },
     {
       label: "状态",
-      prop: "status",
+      prop: "published",
       minWidth: 90,
       cellRenderer: ({ row }) => {
-        const statusMap = {
-          1: { text: "已发表", type: "success" },
-          2: { text: "待发表", type: "warning" },
-          3: { text: "审稿中", type: "info" },
-          4: { text: "已拒绝", type: "danger" }
-        };
-        const status = statusMap[row.status] || { text: "未知", type: "info" };
+        // 根据成果类型和published字段显示不同状态
+        const isPaper = row.type === 1; // 1=论文, 2=项目
+        const isPublished = row.published;
+
+        let text: string;
+
+        if (isPaper) {
+          text = isPublished ? "已发表" : "在投";
+        } else {
+          text = isPublished ? "已结项" : "未结项";
+        }
+
+        const type = isPublished ? "success" : "warning";
+
         return (
-          <el-tag type={status.type} size="small">
-            {status.text}
+          <el-tag type={type} size="small">
+            {text}
           </el-tag>
         );
       }
     },
     {
       label: "操作",
-      width: 180,
-      slot: "operation"
-    },
-    {
-      label: "是否显示",
       prop: "visible",
+      width: 250,
       fixed: "right",
-      width: 90,
-      cellRenderer: scope => (
-        <el-switch
-          size={scope.props.size === "small" ? "small" : "default"}
-          v-model={scope.row.visible}
-          active-value={true}
-          inactive-value={false}
-          active-text="显示"
-          inactive-text="隐藏"
-          inline-prompt
-          onChange={() => onVisibilityChange(scope as any)}
-        />
-      )
+      cellRenderer: scope => {
+        const currentUser = useUserStoreHook().currentUserInfo;
+        // 根据调试信息，currentUser对象中identity字段在userInfo中
+        const isTeacher = currentUser?.userInfo?.identity === 2;
+
+        return (
+          <div
+            style={`display: flex; align-items: center; ${
+              !isTeacher ? "justify-content: center;" : ""
+            }`}
+          >
+            <el-button
+              link
+              type="primary"
+              size="default"
+              icon={useRenderIcon(EditPen)}
+              onClick={() => openDialog("编辑", scope.row)}
+              style="margin-right: 3px;"
+            >
+              修改
+            </el-button>
+            <el-popconfirm
+              title="是否确认删除?"
+              onConfirm={() => handleDelete(scope.row)}
+            >
+              {{
+                reference: () => (
+                  <el-button
+                    link
+                    type="danger"
+                    size="default"
+                    icon={useRenderIcon(Delete)}
+                    style={isTeacher ? "margin-right: 12px;" : ""}
+                  >
+                    删除
+                  </el-button>
+                )
+              }}
+            </el-popconfirm>
+            {isTeacher && (
+              <el-switch
+                size={scope.props.size === "small" ? "small" : "default"}
+                v-model={scope.row.myVisibility}
+                active-value={true}
+                inactive-value={false}
+                active-text="显示"
+                inactive-text="隐藏"
+                inline-prompt
+                onChange={() => onVisibilityChange(scope as any)}
+              />
+            )}
+          </div>
+        );
+      }
     }
   ];
 
@@ -198,15 +252,24 @@ export function useHook() {
     });
   }
 
-  function onVisibilityChange({ row }) {
-    // TODO: 接口还没写好，先空着
-    // 这里将来需要调用API来更新成果的显示状态
-    message(
-      `成果《${row.title}》的显示状态已${row.visible ? "开启" : "关闭"}`,
-      {
-        type: "success"
-      }
-    );
+  async function onVisibilityChange({ row }) {
+    try {
+      await toggleMyAchievementVisibilityApi(row.id, row.myVisibility);
+      message(
+        `成果《${row.title}》的显示状态已${row.myVisibility ? "开启" : "关闭"}`,
+        {
+          type: "success"
+        }
+      );
+      // 刷新列表以确保数据同步
+      getList();
+    } catch (error) {
+      // 如果API调用失败，恢复原来的状态
+      row.myVisibility = !row.myVisibility;
+      message(`更新成果《${row.title}》的显示状态失败`, {
+        type: "error"
+      });
+    }
   }
 
   async function onSearch() {
@@ -249,14 +312,27 @@ export function useHook() {
           title: row?.title ?? "",
           authors: authors,
           journal: row?.venue ?? "",
-          publishDate: row?.publishDate ?? "",
-          projectEndDate: row?.projectEndDate ?? "",
+          publishDate: row?.publishDate
+            ? row.type === 1
+              ? // 论文类型：提取年份
+                new Date(row.publishDate).getFullYear().toString()
+              : // 项目类型：提取年月
+                new Date(row.publishDate).toISOString().slice(0, 7)
+            : "",
+          projectEndDate: row?.projectEndDate
+            ? new Date(row.projectEndDate).toISOString().slice(0, 7)
+            : "",
           doi: row?.doi ?? "",
           achievementType: row?.type === 1 ? "paper" : "project",
           paperType: row?.paperType ?? undefined,
           projectType: row?.projectType ?? undefined,
-          projectUrl: row?.linkUrl ?? "",
-          githubUrl: row?.type === 1 ? row?.gitUrl ?? "" : ""
+
+          githubUrl: row?.type === 1 ? row?.gitUrl ?? "" : "",
+          published: row?.published ?? false,
+          gitUrl: row?.gitUrl ?? "",
+          linkUrl: row?.linkUrl ?? "",
+          pdfUrl: row?.pdfUrl ?? "",
+          fundingAmount: row?.fundingAmount ?? undefined
         }
       },
       width: "50%",
@@ -323,9 +399,11 @@ export function useHook() {
               ? formData.projectEndDate
               : null,
           doi: formData.doi,
-          linkUrl: formData.projectUrl,
-          gitUrl:
-            formData.achievementType === "project" ? null : formData.githubUrl,
+          linkUrl: formData.linkUrl,
+          gitUrl: formData.gitUrl,
+          pdfUrl: formData.pdfUrl,
+          fundingAmount: formData.fundingAmount,
+          published: formData.published,
           authors: authorsData
         };
 
@@ -352,11 +430,34 @@ export function useHook() {
     searchFormParams.pageNum = pagination.currentPage;
     searchFormParams.pageSize = pagination.pageSize;
 
-    const { data } = await getAchievementListApi({ ...searchFormParams });
-    // 为每个成果初始化visible字段，默认为true（显示）
+    // 获取当前用户信息
+    const currentUser = useUserStoreHook().currentUserInfo;
+    const userIdentity = currentUser?.userInfo?.identity; // 1=管理员, 2=教师, 3=学生
+
+    let data;
+    if (userIdentity === 1) {
+      // 管理员使用原接口
+      const result = await getAchievementListApi({ ...searchFormParams });
+      data = result.data;
+    } else {
+      // 教师和学生使用my-achievements接口
+      const myParams: MyAchievementQuery = {
+        pageNum: searchFormParams.pageNum,
+        pageSize: searchFormParams.pageSize,
+        keyword: searchFormParams.keyword,
+        type: searchFormParams.type,
+        published: searchFormParams.published,
+        dateStart: searchFormParams.dateStart,
+        dateEnd: searchFormParams.dateEnd
+      };
+      const result = await getMyAchievementsApi(myParams);
+      data = result.data;
+    }
+
+    // 为每个成果初始化myVisibility字段，默认为true（显示）
     dataList.value = data.rows.map(item => ({
       ...item,
-      visible: item.visible !== undefined ? item.visible : true
+      myVisibility: item.myVisibility !== undefined ? item.myVisibility : true
     }));
     pagination.total = data.total;
 

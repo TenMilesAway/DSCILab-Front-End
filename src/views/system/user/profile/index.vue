@@ -53,17 +53,22 @@ getUser();
                   currentUserInfo.username
                 }}</el-descriptions-item>
                 <el-descriptions-item label="手机号码">{{
-                  currentUserInfo.phoneNumber
+                  currentUserInfo.phone
                 }}</el-descriptions-item>
                 <el-descriptions-item label="用户邮箱">{{
                   currentUserInfo.email
                 }}</el-descriptions-item>
-                <el-descriptions-item label="部门 / 职位">
-                  {{ currentUserInfo.deptName }} /
-                  {{ currentUserInfo.postName }}
+                <el-descriptions-item label="身份">
+                  {{
+                    currentUserInfo.identity === 1
+                      ? "管理员"
+                      : currentUserInfo.identity === 2
+                      ? "教师"
+                      : "学生"
+                  }}
                 </el-descriptions-item>
                 <el-descriptions-item label="角色">
-                  {{ currentUserInfo.roleName }}
+                  {{ currentUserInfo.roleKey }}
                 </el-descriptions-item>
                 <el-descriptions-item label="创建日期">
                   {{

@@ -84,12 +84,22 @@ function isOneOfArray(a: Array<string>, b: Array<string>) {
 
 /** 从sessionStorage里取出当前登陆用户的角色roles，过滤无权限的菜单 */
 function filterNoPermissionTree(data: RouteComponent[]) {
-  const userId =
-    storageSession().getItem<TokenDTO>(sessionKey).currentUser.userInfo.user_id;
-  const currentRoles = userId ? [userId.toString()] : [];
+  const currentUser =
+    storageSession().getItem<TokenDTO>(sessionKey)?.currentUser;
+  const identity = currentUser?.userInfo?.identity;
+
+  // 根据identity设置角色：1-管理员，2-教师，3-学生
+  let currentRoles: string[] = [];
+  if (identity === 1) {
+    currentRoles = ["admin"];
+  } else if (identity === 2) {
+    currentRoles = ["teacher"];
+  } else if (identity === 3) {
+    currentRoles = ["student"];
+  }
 
   // 自定义过滤：只显示个人中心相关菜单
-  const allowedPaths = ['/newsystem', '/newsystem/user', '/newsystem/paper'];
+  const allowedPaths = ["/newsystem", "/newsystem/user", "/newsystem/paper"];
   const customFilteredData = data.filter((v: any) => {
     // 如果是个人中心相关路径，直接允许
     if (allowedPaths.some(path => v.path?.startsWith(path))) {

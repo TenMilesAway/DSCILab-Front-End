@@ -41,7 +41,8 @@ export default [
         meta: {
           title: "用户管理",
           showLink: true,
-          showParent: false
+          showParent: false,
+          roles: ["admin"]
         }
       }
     ]
@@ -62,6 +63,28 @@ export default [
         component: () => import("@/views/newsystem/paper/index.vue"),
         meta: {
           title: "成果管理",
+          showLink: true,
+          showParent: false
+        }
+      }
+    ]
+  },
+  {
+    path: "/newsystem/news",
+    name: "NewSystemNewsManagement",
+    component: Layout,
+    redirect: "/newsystem/news/index",
+    meta: {
+      title: "新闻活动",
+      rank: 4
+    },
+    children: [
+      {
+        path: "/newsystem/news/index",
+        name: "NewSystemNews",
+        component: () => import("@/views/newsystem/news/index.vue"),
+        meta: {
+          title: "新闻活动",
           showLink: true,
           showParent: false
         }
