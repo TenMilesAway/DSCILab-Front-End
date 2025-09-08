@@ -27,25 +27,37 @@ export type LoginByPasswordDTO = {
 };
 
 /**
- * 后端token实现
+ * 统一登录接口返回的Token信息
  */
 export type TokenDTO = {
-  /** token */
+  /** JWT token */
   token: string;
-  /** 当前登录的用户 */
+  /** 当前登录的用户信息 */
   currentUser: CurrentLoginUserDTO;
 };
 
+/**
+ * 统一登录返回的用户信息（lab-only 模式）
+ */
 export interface CurrentLoginUserDTO {
-  userInfo: CurrentUserInfoDTO;
-  user_id: number;
+  id: number;
   username: string;
-  identity: string; // ENUM: 'student', 'teacher', 'admin'
-  status: string; // ENUM: 'active', 'inactive', 'banned'
-};
+  realName: string;
+  gender: number; // 0未知 1男 2女
+  genderDesc: string;
+  identity: number; // 1管理员 2教师 3学生
+  email: string;
+  phone: string;
+  photo: string;
+  isActive: boolean;
+  createTime: string;
+  updateTime: string;
+  roleKey: string; // 根据identity映射的角色：lab:admin, lab:teacher, lab:student
+}
 
 /**
- * 当前User详细信息
+ * 当前User详细信息（保持兼容性）
+ * @deprecated 使用 CurrentLoginUserDTO 替代
  */
 export interface CurrentUserInfoDTO {
   student_number?: string;

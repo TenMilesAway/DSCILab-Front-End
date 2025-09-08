@@ -1,5 +1,5 @@
 import { RouteRecordName } from "vue-router";
-import { DictionaryData } from "../../api/common/login";
+import { DictionaryData, CurrentLoginUserDTO } from "../../api/common/login";
 
 export type cacheType = {
   mode: string;
@@ -44,5 +44,5 @@ export type userType = {
   /** 字典MapMap 用于匹配值展示 */
   dictionaryMap: Record<string, Record<string, DictionaryData>>;
   /** 当前用户信息 */
-  currentUserInfo?: any;
+  currentUserInfo?: CurrentLoginUserDTO;
 };

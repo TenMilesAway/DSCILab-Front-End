@@ -17,11 +17,11 @@ export const useUserStore = defineStore({
   state: (): userType => ({
     // 用户名
     username:
-      storageSession().getItem<TokenDTO>(sessionKey)?.currentUser.userInfo
-        .username ?? "",
+      storageSession().getItem<TokenDTO>(sessionKey)?.currentUser.username ??
+      "",
     // 页面级别权限
-    roles: storageSession().getItem<TokenDTO>(sessionKey)?.currentUser.userInfo.user_id
-      ? [storageSession().getItem<TokenDTO>(sessionKey)?.currentUser.userInfo.user_id.toString()]
+    roles: storageSession().getItem<TokenDTO>(sessionKey)?.currentUser.roleKey
+      ? [storageSession().getItem<TokenDTO>(sessionKey)?.currentUser.roleKey]
       : [],
     dictionaryList:
       storageLocal().getItem<Map<String, Array<DictionaryData>>>(
@@ -32,7 +32,7 @@ export const useUserStore = defineStore({
         dictionaryMapKey
       ) ?? new Map(),
     currentUserInfo:
-      storageSession().getItem<TokenDTO>(sessionKey)?.currentUser.userInfo ?? {}
+      storageSession().getItem<TokenDTO>(sessionKey)?.currentUser ?? {}
   }),
   actions: {
     /** 存储用户名 */
@@ -43,6 +43,10 @@ export const useUserStore = defineStore({
     /** 存储角色 */
     SET_ROLES(roles: Array<string>) {
       this.roles = roles;
+    },
+    /** 存储当前用户信息 */
+    SET_CURRENT_USER_INFO(userInfo: any) {
+      this.currentUserInfo = userInfo;
     },
     /** 存储系统内的字典值 并拆分为Map形式和List形式 */
     SET_DICTIONARY(dictionary: Map<String, Array<DictionaryData>>) {
