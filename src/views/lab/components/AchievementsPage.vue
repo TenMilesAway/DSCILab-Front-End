@@ -172,6 +172,7 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { Search, Link, House, Download } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
+import { getAchievementsListApi, type ApiAchievement } from '@/api/lab/achievements'
 
 // 成果类型定义
 interface Achievement {
@@ -338,280 +339,53 @@ const handlePdfDownload = (url: string) => {
   ElMessage.success('PDF 下载已开始')
 }
 
-// 模拟数据加载
+// 数据转换函数
+const convertApiDataToAchievement = (apiData: ApiAchievement): Achievement => {
+  // 根据 paperType 数字映射到字符串类型
+  const typeMap: Record<number, Achievement['type']> = {
+    1: 'journal',    // 期刊
+    2: 'conference', // 会议
+    3: 'preprint',   // 预印本
+    4: 'patent',     // 专利
+    5: 'software',   // 软著
+    6: 'standard',   // 标准
+    7: 'monograph'   // 专著
+  }
+  
+  // 从 publishDate 中提取年份
+  const year = apiData.publishDate ? new Date(apiData.publishDate).getFullYear() : new Date().getFullYear()
+  
+  return {
+    id: apiData.id,
+    title: apiData.title,
+    authors: apiData.authors ? apiData.authors.map(author => author.name) : [],
+    type: typeMap[apiData.paperType],
+    year: year,
+    institution: apiData.venue || '', // venue 字段映射为 institution
+    githubUrl: apiData.gitUrl,
+    projectUrl: apiData.linkUrl,
+    pdfUrl: apiData.pdfUrl
+  }
+}
+
+// 数据加载
 const loadAchievements = async () => {
   loading.value = true
   try {
-    // 这里应该调用API获取数据
-    // const response = await achievementApi.getList()
-    // achievements.value = response.data
-    
-    // 模拟数据
-    achievements.value = [
-      // 2024年成果
-      {
-        id: 1,
-        title: 'Attention-Enhanced Graph Neural Networks for Large-Scale Social Network Analysis',
-        authors: ['Zhang Wei', 'Li Ming', 'Wang Xiaoli', 'Chen Hao'],
-        type: 'journal',
-        year: 2024,
-        institution: 'IEEE Transactions on Neural Networks',
-        githubUrl: 'https://github.com/example/attention-gnn',
-        projectUrl: 'https://ai-lab.example.com/projects/attention-gnn',
-        pdfUrl: 'https://example.com/papers/attention-gnn-2024.pdf'
-      },
-      {
-        id: 2,
-        title: 'Federated Learning with Differential Privacy for Healthcare Data',
-        authors: ['Liu Jian', 'Zhao Yun', 'Ma Qing'],
-        type: 'conference',
-        year: 2024,
-        institution: 'ICML 2024',
-        githubUrl: 'https://github.com/example/federated-privacy',
-        pdfUrl: 'https://example.com/papers/federated-privacy-2024.pdf'
-      },
-      {
-        id: 3,
-        title: 'Multimodal Transformer for Cross-Domain Knowledge Transfer',
-        authors: ['Sun Lei', 'Xu Ting', 'Yang Feng', 'Zhou Bin'],
-        type: 'journal',
-        year: 2024,
-        institution: 'Nature Machine Intelligence',
-        projectUrl: 'https://multimodal-lab.example.com/transformer',
-        pdfUrl: 'https://example.com/papers/multimodal-transformer-2024.pdf'
-      },
-      {
-        id: 4,
-        title: 'Real-time Object Detection in Autonomous Driving Systems',
-        authors: ['Huang Gang', 'Wu Peng', 'Li Xuan'],
-        type: 'conference',
-        year: 2024,
-        institution: 'CVPR 2024',
-        githubUrl: 'https://github.com/example/realtime-detection',
-        projectUrl: 'https://autonomous-lab.example.com/detection',
-        pdfUrl: 'https://example.com/papers/realtime-detection-2024.pdf'
-      },
-      {
-        id: 5,
-        title: '基于区块链的分布式数据管理系统',
-        authors: ['陈建国', '王丽华', '张明'],
-        type: 'patent',
-        year: 2024,
-        institution: '中国专利局',
-        githubUrl: 'https://github.com/example/blockchain-data-management'
-      },
-      
-      // 2023年成果
-      {
-        id: 6,
-        title: 'Deep Reinforcement Learning for Resource Allocation in 5G Networks',
-        authors: ['Gao Hui', 'Lin Jie', 'Deng Kai', 'Shi Rui'],
-        type: 'journal',
-        year: 2023,
-        institution: 'IEEE Communications Magazine',
-        githubUrl: 'https://github.com/example/5g-resource-allocation',
-        pdfUrl: 'https://example.com/papers/5g-resource-2023.pdf'
-      },
-      {
-        id: 7,
-        title: 'Quantum Machine Learning: Algorithms and Applications',
-        authors: ['Fan Yu', 'Qin Mei', 'Luo Xiang'],
-        type: 'conference',
-        year: 2023,
-        institution: 'NeurIPS 2023',
-        projectUrl: 'https://quantum-lab.example.com/ml-algorithms',
-        pdfUrl: 'https://example.com/papers/quantum-ml-2023.pdf'
-      },
-      {
-        id: 8,
-        title: 'Explainable AI for Medical Image Diagnosis',
-        authors: ['Tan Li', 'He Jun', 'Cao Ning', 'Jiang Wei'],
-        type: 'journal',
-        year: 2023,
-        institution: 'Medical Image Analysis',
-        githubUrl: 'https://github.com/example/explainable-medical-ai',
-        projectUrl: 'https://medical-ai.example.com/explainable',
-        pdfUrl: 'https://example.com/papers/explainable-medical-2023.pdf'
-      },
-      {
-        id: 9,
-        title: '智能推荐系统软件平台V2.0',
-        authors: ['李强', '赵敏', '孙涛'],
-        type: 'software',
-        year: 2023,
-        institution: '国家版权局',
-        githubUrl: 'https://github.com/example/recommendation-platform',
-        projectUrl: 'https://ai-lab.example.com/recommendation'
-      },
-      {
-        id: 10,
-        title: 'Edge Computing Architecture for IoT Applications',
-        authors: ['Xu Dan', 'Zhu Hao', 'Song Yan'],
-        type: 'conference',
-        year: 2023,
-        institution: 'INFOCOM 2023',
-        githubUrl: 'https://github.com/example/edge-iot-architecture',
-        pdfUrl: 'https://example.com/papers/edge-iot-2023.pdf'
-      },
-      
-      // 2022年成果
-      {
-        id: 11,
-        title: 'Adversarial Training for Robust Neural Networks',
-        authors: ['Kong Fei', 'Meng Jia', 'Bai Xin', 'Cui Yang'],
-        type: 'journal',
-        year: 2022,
-        institution: 'Journal of Machine Learning Research',
-        githubUrl: 'https://github.com/example/adversarial-training',
-        pdfUrl: 'https://example.com/papers/adversarial-training-2022.pdf'
-      },
-      {
-        id: 12,
-        title: 'Blockchain-based Secure Data Sharing in Healthcare',
-        authors: ['Ding Lu', 'Feng Qian', 'Guo Shan'],
-        type: 'conference',
-        year: 2022,
-        institution: 'ICCV 2022',
-        projectUrl: 'https://blockchain-health.example.com/secure-sharing',
-        pdfUrl: 'https://example.com/papers/blockchain-healthcare-2022.pdf'
-      },
-      {
-        id: 13,
-        title: 'Natural Language Processing for Code Generation',
-        authors: ['Hu Tao', 'Jin Mei', 'Liang Bo', 'Nie Kun'],
-        type: 'journal',
-        year: 2022,
-        institution: 'ACM Transactions on Software Engineering',
-        githubUrl: 'https://github.com/example/nlp-code-generation',
-        projectUrl: 'https://nlp-lab.example.com/code-generation',
-        pdfUrl: 'https://example.com/papers/nlp-code-2022.pdf'
-      },
-      {
-        id: 14,
-        title: '基于人工智能的网络安全防护系统',
-        authors: ['王志强', '刘晓东', '张华'],
-        type: 'patent',
-        year: 2022,
-        institution: '中国专利局',
-        projectUrl: 'https://security-lab.example.com/ai-protection'
-      },
-      {
-        id: 15,
-        title: 'Computer Vision for Autonomous Robotics',
-        authors: ['Pan Wei', 'Shi Jing', 'Yu Heng'],
-        type: 'conference',
-        year: 2022,
-        institution: 'IROS 2022',
-        githubUrl: 'https://github.com/example/cv-autonomous-robotics',
-        pdfUrl: 'https://example.com/papers/cv-robotics-2022.pdf'
-      },
-      
-      // 2021年成果
-      {
-        id: 16,
-        title: 'Distributed Machine Learning with Privacy Preservation',
-        authors: ['Yao Ming', 'Qiu Ling', 'Ren Fang', 'Shen Kai'],
-        type: 'journal',
-        year: 2021,
-        institution: 'IEEE Transactions on Parallel and Distributed Systems',
-        githubUrl: 'https://github.com/example/distributed-ml-privacy',
-        pdfUrl: 'https://example.com/papers/distributed-ml-2021.pdf'
-      },
-      {
-        id: 17,
-        title: 'Graph Neural Networks for Social Network Analysis',
-        authors: ['Cai Jun', 'Du Xin', 'Huang Ping'],
-        type: 'conference',
-        year: 2021,
-        institution: 'ICLR 2021',
-        githubUrl: 'https://github.com/example/gnn-social-analysis',
-        projectUrl: 'https://social-lab.example.com/gnn-analysis',
-        pdfUrl: 'https://example.com/papers/gnn-social-2021.pdf'
-      },
-      {
-        id: 18,
-        title: '云计算资源调度优化算法研究',
-        authors: ['郑海涛', '林雅芳', '吴建华'],
-        type: 'monograph',
-        year: 2021,
-        institution: '科学出版社',
-        pdfUrl: 'https://example.com/books/cloud-scheduling-2021.pdf'
-      },
-      {
-        id: 19,
-        title: 'Time Series Forecasting with Deep Learning',
-        authors: ['Zheng Hao', 'Liu Yan', 'Chen Xu'],
-        type: 'journal',
-        year: 2021,
-        institution: 'IEEE Transactions on Neural Networks and Learning Systems',
-        githubUrl: 'https://github.com/example/time-series-forecasting',
-        pdfUrl: 'https://example.com/papers/time-series-2021.pdf'
-      },
-      {
-        id: 20,
-        title: '大数据分析处理软件系统V1.5',
-        authors: ['何建军', '苏丽娜', '马志远'],
-        type: 'software',
-        year: 2025,
-        institution: '国家版权局',
-        githubUrl: 'https://github.com/example/bigdata-analysis-system',
-        projectUrl: 'https://bigdata-lab.example.com/analysis-system'
-      },
-      
-      // 2020年成果
-      {
-        id: 21,
-        title: 'Federated Learning for Mobile Edge Computing',
-        authors: ['Xu Lei', 'Wang Jie', 'Zhang Qi', 'Li Nan'],
-        type: 'journal',
-        year: 2020,
-        institution: 'IEEE Transactions on Mobile Computing',
-        githubUrl: 'https://github.com/example/federated-edge-computing',
-        pdfUrl: 'https://example.com/papers/federated-edge-2020.pdf'
-      },
-      {
-        id: 22,
-        title: 'Attention Mechanisms in Natural Language Processing',
-        authors: ['Song Mei', 'Zhao Bin', 'Fu Gang'],
-        type: 'conference',
-        year: 2020,
-        institution: 'ACL 2020',
-        projectUrl: 'https://nlp-lab.example.com/attention-mechanisms',
-        pdfUrl: 'https://example.com/papers/attention-nlp-2020.pdf'
-      },
-      {
-        id: 23,
-        title: '物联网数据传输协议标准',
-        authors: ['陈志华', '王美玲', '李国强'],
-        type: 'standard',
-        year: 2020,
-        institution: '国家标准化管理委员会',
-      },
-      {
-        id: 24,
-        title: 'Deep Learning for Medical Image Segmentation',
-        authors: ['Peng Xiao', 'Gu Hua', 'Dai Lin'],
-        type: 'journal',
-        year: 2020,
-        institution: 'Medical Image Analysis',
-        githubUrl: 'https://github.com/example/medical-image-segmentation',
-        pdfUrl: 'https://example.com/papers/medical-segmentation-2020.pdf'
-      },
-      {
-        id: 25,
-        title: '基于机器学习的智能制造系统',
-        authors: ['黄志明', '徐丽萍', '周建国'],
-        type: 'patent',
-        year: 2020,
-        institution: '中国专利局',
-        projectUrl: 'https://manufacturing-lab.example.com/intelligent-system'
-      }
-    ]
+    const response = await getAchievementsListApi({ type: 1 })
+    if (response.code === 0 && response.data) {
+      achievements.value = response.data.rows.map(convertApiDataToAchievement)
+    } else {
+      ElMessage.error('获取成果数据失败')
+      achievements.value = []
+    }
   } catch (error) {
-    console.error('加载成果数据失败:', error)
-  } finally {
-    loading.value = false
-  }
+     console.error('加载成果数据失败:', error)
+     ElMessage.error('网络错误，请稍后重试')
+     achievements.value = []
+   } finally {
+     loading.value = false
+   }
 }
 
 // 生命周期

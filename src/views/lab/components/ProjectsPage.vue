@@ -106,7 +106,7 @@
               <span class="project-separator">,</span>
               <span class="project-leader">负责人：{{ project.leader }}</span>
               <span class="project-separator">,</span>
-              <span class="project-funding">经费：{{ project.funding }}万元</span>
+              <span class="project-funding">经费：{{ project.fundingAmount }}万元</span>
               <span class="project-separator">,</span>
               <span class="project-year">{{ project.startYear }}-{{ project.endYear }}</span>
               <span class="project-separator">.</span>
@@ -135,6 +135,8 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { Search } from '@element-plus/icons-vue'
+import { getProjectsListApi, type ApiProject } from '@/api/lab/projects'
+import { ElMessage } from 'element-plus'
 
 // 项目类型定义
 interface Project {
@@ -142,9 +144,41 @@ interface Project {
   title: string
   leader: string
   type: 'horizontal' | 'nsfc_general' | 'nsfc_youth' | 'other_vertical' | 'beijing_edu' | 'national_edu_reform' | 'provincial_edu_reform' | 'other_edu_reform'
-  funding: number
+  fundingAmount: string
   startYear: number
   endYear: number
+}
+
+// 数据转换函数
+const convertApiDataToProject = (apiData: ApiProject): Project => {
+  // 根据 projectType 数字映射到字符串类型
+  const typeMap: Record<number, Project['type']> = {
+    1: 'horizontal',            // 横向
+    2: 'nsfc_general',          // 国自然面上
+    3: 'nsfc_youth',            // 国自然青年
+    4: 'beijing_edu',           // 北京市教委科技一般
+    5: 'national_edu_reform',   // 国家级教改
+    6: 'provincial_edu_reform', // 省部级教改
+    7: 'other_edu_reform',      // 其他教改
+    8: 'other_vertical'         // 其他纵向
+  }
+  
+  // 找到 authorOrder 为 1 的负责人
+  const leader = apiData.authors?.find(author => author.authorOrder === 1)?.name || '未知'
+  
+  // 从日期中提取年份
+  const startYear = apiData.projectStartDate ? new Date(apiData.projectStartDate).getFullYear() : new Date().getFullYear()
+  const endYear = apiData.projectEndDate ? new Date(apiData.projectEndDate).getFullYear() : new Date().getFullYear()
+  
+  return {
+    id: apiData.id,
+    title: apiData.title,
+    leader: leader,
+    type: typeMap[apiData.projectType] || 'horizontal',
+    fundingAmount: apiData.fundingAmount || '0',
+    startYear: startYear,
+    endYear: endYear
+  }
 }
 
 // 响应式数据
@@ -280,271 +314,21 @@ const handleCurrentChange = (val: number) => {
   currentPage.value = val
 }
 
-// 模拟数据加载
+// API数据加载
 const loadProjects = async () => {
   loading.value = true
   try {
-    // 这里应该调用API获取数据
-    // const response = await projectApi.getList()
-    // projects.value = response.data
-    
-    // 模拟数据
-    projects.value = [
-      {
-        id: 1,
-        title: '企业数据挖掘与智能分析平台开发',
-        leader: '张伟',
-        type: 'horizontal',
-        funding: 80,
-        startYear: 2023,
-        endYear: 2024
-      },
-      {
-        id: 2,
-        title: '基于深度学习的多模态情报分析方法研究',
-        leader: '李明',
-        type: 'nsfc_general',
-        funding: 58,
-        startYear: 2022,
-        endYear: 2025
-      },
-      {
-        id: 3,
-        title: '面向开源情报的知识图谱构建与推理技术',
-        leader: '王小丽',
-        type: 'nsfc_youth',
-        funding: 30,
-        startYear: 2024,
-        endYear: 2026
-      },
-      {
-        id: 4,
-        title: '网络空间安全态势感知关键技术研究',
-        leader: '陈浩',
-        type: 'other_vertical',
-        funding: 45,
-        startYear: 2023,
-        endYear: 2025
-      },
-      {
-        id: 5,
-        title: '大数据环境下的隐私保护算法优化',
-        leader: '刘建',
-        type: 'beijing_edu',
-        funding: 15,
-        startYear: 2022,
-        endYear: 2024
-      },
-      {
-        id: 6,
-        title: '数据科学专业课程体系改革与实践',
-        leader: '赵云',
-        type: 'national_edu_reform',
-        funding: 20,
-        startYear: 2024,
-        endYear: 2026
-      },
-      {
-        id: 7,
-        title: '人工智能导论课程教学模式创新研究',
-        leader: '马青',
-        type: 'provincial_edu_reform',
-        funding: 8,
-        startYear: 2023,
-        endYear: 2025
-      },
-      {
-        id: 8,
-        title: '计算机视觉实验教学平台建设',
-        leader: '孙雷',
-        type: 'other_edu_reform',
-        funding: 12,
-        startYear: 2024,
-        endYear: 2026
-      },
-      {
-        id: 9,
-        title: '智能制造企业数字化转型咨询服务',
-        leader: '周华',
-        type: 'horizontal',
-        funding: 120,
-        startYear: 2023,
-        endYear: 2024
-      },
-      {
-        id: 10,
-        title: '复杂网络中的异常检测算法研究',
-        leader: '吴强',
-        type: 'nsfc_youth',
-        funding: 25,
-        startYear: 2023,
-        endYear: 2025
-      },
-      {
-        id: 11,
-        title: '区块链技术在供应链金融中的应用',
-        leader: '郑敏',
-        type: 'beijing_edu',
-        funding: 18,
-        startYear: 2022,
-        endYear: 2024
-      },
-      {
-         id: 12,
-         title: '机器学习课程思政教学改革探索',
-         leader: '林涛',
-         type: 'other_edu_reform',
-         funding: 6,
-         startYear: 2023,
-         endYear: 2024
-       },
-       {
-         id: 13,
-         title: '金融科技风控系统智能化升级',
-         leader: '黄志强',
-         type: 'horizontal',
-         funding: 95,
-         startYear: 2024,
-         endYear: 2025
-       },
-       {
-         id: 14,
-         title: '跨模态信息融合的情报分析理论与方法',
-         leader: '陈雪梅',
-         type: 'nsfc_general',
-         funding: 62,
-         startYear: 2023,
-         endYear: 2026
-       },
-       {
-         id: 15,
-         title: '基于图神经网络的社交网络异常行为检测',
-         leader: '刘晓东',
-         type: 'nsfc_youth',
-         funding: 28,
-         startYear: 2024,
-         endYear: 2026
-       },
-       {
-         id: 16,
-         title: '工业互联网安全态势感知平台研发',
-         leader: '张国庆',
-         type: 'other_vertical',
-         funding: 38,
-         startYear: 2022,
-         endYear: 2024
-       },
-       {
-         id: 17,
-         title: '面向智慧城市的多源数据融合技术研究',
-         leader: '王丽华',
-         type: 'beijing_edu',
-         funding: 22,
-         startYear: 2023,
-         endYear: 2025
-       },
-       {
-         id: 18,
-         title: '新工科背景下计算机专业人才培养模式改革',
-         leader: '李文博',
-         type: 'national_edu_reform',
-         funding: 25,
-         startYear: 2023,
-         endYear: 2025
-       },
-       {
-         id: 19,
-         title: '大数据分析课程虚拟仿真实验教学研究',
-         leader: '赵明辉',
-         type: 'provincial_edu_reform',
-         funding: 12,
-         startYear: 2024,
-         endYear: 2026
-       },
-       {
-         id: 20,
-         title: 'Python程序设计课程线上线下混合式教学改革',
-         leader: '孙丽娟',
-         type: 'other_edu_reform',
-         funding: 8,
-         startYear: 2022,
-         endYear: 2024
-       },
-       {
-         id: 21,
-         title: '电商平台用户行为分析与推荐系统优化',
-         leader: '徐建国',
-         type: 'horizontal',
-         funding: 75,
-         startYear: 2023,
-         endYear: 2024
-       },
-       {
-         id: 22,
-         title: '面向复杂场景的多智能体协同决策机制研究',
-         leader: '杨慧敏',
-         type: 'nsfc_general',
-         funding: 55,
-         startYear: 2024,
-         endYear: 2027
-       },
-       {
-         id: 23,
-         title: '联邦学习中的隐私保护关键技术研究',
-         leader: '何志远',
-         type: 'nsfc_youth',
-         funding: 32,
-         startYear: 2023,
-         endYear: 2025
-       },
-       {
-         id: 24,
-         title: '网络舆情监测与预警系统关键技术研发',
-         leader: '冯晓明',
-         type: 'other_vertical',
-         funding: 42,
-         startYear: 2023,
-         endYear: 2025
-       },
-       {
-         id: 25,
-         title: '基于区块链的数据共享安全机制研究',
-         leader: '谢丽萍',
-         type: 'beijing_edu',
-         funding: 20,
-         startYear: 2024,
-         endYear: 2026
-       },
-       {
-         id: 26,
-         title: '产教融合背景下软件工程专业实践教学体系构建',
-         leader: '罗志华',
-         type: 'national_edu_reform',
-         funding: 18,
-         startYear: 2022,
-         endYear: 2024
-       },
-       {
-         id: 27,
-         title: '人工智能伦理教育融入计算机课程的探索与实践',
-         leader: '田雅芳',
-         type: 'provincial_edu_reform',
-         funding: 10,
-         startYear: 2023,
-         endYear: 2025
-       },
-       {
-         id: 28,
-         title: '基于项目驱动的数据结构与算法教学改革',
-         leader: '胡永刚',
-         type: 'other_edu_reform',
-         funding: 7,
-         startYear: 2024,
-         endYear: 2025
-       }
-     ]
+    const response = await getProjectsListApi({ type: 2 })
+    if (response.code === 0 && response.data?.rows) {
+      projects.value = response.data.rows.map(convertApiDataToProject)
+    } else {
+      ElMessage.error('获取项目数据失败')
+      projects.value = []
+    }
   } catch (error) {
     console.error('加载项目数据失败:', error)
+    ElMessage.error('获取项目数据失败，请稍后重试')
+    projects.value = []
   } finally {
     loading.value = false
   }

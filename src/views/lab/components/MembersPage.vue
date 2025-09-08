@@ -3,7 +3,8 @@ import { ref, computed, nextTick, onMounted } from 'vue';
 import { Search } from '@element-plus/icons-vue';
 import MemberInfo from './MemberInfo.vue';
 import { ElMessage } from 'element-plus';
-import { getMembersListApi, type ApiUser } from '@/api/lab/members';
+import { getMembersListApi, getMemberDetailApi, type ApiUser } from '@/api/lab/members';
+import { getAchievementsListApi, type ApiAchievement } from '@/api/lab/achievements';
 
 defineOptions({
   name: "MembersPage"
@@ -12,9 +13,22 @@ defineOptions({
 interface Member {
   id: number;
   name: string;
+  englishName?: string; // 英文名
+  gender?: number; // 性别
+  resume?: string; // 个人简述
+  phone?: string; // 手机号
   title: string;
   graduation?: string; // 毕业去向（可选，仅已毕业学生有）
   category: string; // 新增分类字段
+  email?: string; // 邮箱
+  photo?: string; // 头像
+  researchArea?: string; // 研究方向
+  enrollmentYear?: number; // 入学年份
+  graduationYear?: number; // 毕业年份
+  homepageUrl?: string; // 个人主页
+  orcid?: string; // ORCID
+  identity?: string; // 身份标识
+  academicStatus?: number; // 学术状态
 }
 
 // API相关接口定义已移至 @/api/lab/members
@@ -45,6 +59,13 @@ const searchKeyword = ref<string>(''); // 搜索关键词
 // API获取的成员数据
 const apiMembers = ref<Member[]>([]);
 const loading = ref(false);
+// 模拟加载开关
+const simulateLoading = ref(false);
+
+// API获取的成果数据
+const apiAchievements = ref<ApiAchievement[]>([]);
+// API获取的项目数据
+const apiProjects = ref<ApiAchievement[]>([]);
 
 // 获取实际使用的成员数据
 const actualMembers = computed(() => {
@@ -55,6 +76,19 @@ const actualMembers = computed(() => {
 });
 
 // 学术状态映射
+const convertAcademicStatusToCategory = (academicStatus: number): string => {
+  const statusMap: Record<number, string> = {
+    1: 'directors',      // 负责人
+    2: 'teachers',       // 教师
+    3: 'phd_students',   // 博士生
+    4: 'master_students', // 硕士生
+    5: 'undergraduate_students', // 本科生
+    6: 'graduates'       // 已毕业学生
+  };
+  return statusMap[academicStatus] || 'graduates';
+};
+
+// 原有的学术状态映射
 const getAcademicStatusTitle = (academicStatus: number | null, enrollmentYear?: number): string => {
   const statusMap: Record<number, string> = {
     0: '实验室负责人',
@@ -102,6 +136,11 @@ const getCategoryByAcademicStatus = (academicStatus: number | null, graduationDe
 const fetchMembersFromApi = async () => {
   loading.value = true;
   try {
+    // 如果开启模拟加载，添加延迟来展示加载动画
+    if (simulateLoading.value) {
+      await new Promise(resolve => setTimeout(resolve, 3000)); // 3秒延迟
+    }
+    
     const result = await getMembersListApi();
     
     if (result.code === 0 && result.data && result.data.rows) {
@@ -128,7 +167,6 @@ const fetchMembersFromApi = async () => {
       apiMembers.value = processedMembers.filter(member => 
         !(member.category === 'teachers' && member.originalTitle === '其他')
       );
-      ElMessage.success('成员数据加载成功');
     } else {
       throw new Error('API返回数据格式错误');
     }
@@ -152,8 +190,46 @@ const categories = [
 ];
 
 // 组件挂载时获取API数据
+// 从API获取成果数据
+const fetchAchievementsFromApi = async () => {
+  try {
+    const result = await getAchievementsListApi({ type: 1 });
+    
+    if (result.code === 0 && result.data && result.data.rows) {
+      apiAchievements.value = result.data.rows;
+      console.log('成果数据获取成功:', apiAchievements.value.length, '条记录');
+    } else {
+      console.error('获取成果数据失败:', result.msg);
+      ElMessage.error('获取成果数据失败：' + result.msg);
+    }
+  } catch (error) {
+    console.error('获取成果数据异常:', error);
+    ElMessage.error('获取成果数据失败，请稍后重试');
+  }
+};
+
+// 从API获取项目数据
+const fetchProjectsFromApi = async () => {
+  try {
+    const result = await getAchievementsListApi({ type: 2 });
+    
+    if (result.code === 0 && result.data && result.data.rows) {
+      apiProjects.value = result.data.rows;
+      console.log('项目数据获取成功:', apiProjects.value.length, '条记录');
+    } else {
+      console.error('获取项目数据失败:', result.msg);
+      ElMessage.error('获取项目数据失败：' + result.msg);
+    }
+  } catch (error) {
+    console.error('获取项目数据异常:', error);
+    ElMessage.error('获取项目数据失败，请稍后重试');
+  }
+};
+
 onMounted(() => {
   fetchMembersFromApi();
+  fetchAchievementsFromApi();
+  fetchProjectsFromApi();
 });
 
 // 获取当前选中分类的成员
@@ -185,23 +261,107 @@ const groupedMembers = computed<CategoryGroup[]>(() => {
 // 详情显示状态管理
 const showDetailView = ref(false);
 const selectedMember = ref<Member | null>(null);
+const selectedMemberAchievements = ref<ApiAchievement[]>([]);
+const selectedMemberProjects = ref<ApiAchievement[]>([]);
 // 滚动位置记忆
 const savedScrollPosition = ref(0);
 
-const showMemberDetail = (member: Member) => {
-  // 保存当前滚动位置
-  savedScrollPosition.value = window.pageYOffset || document.documentElement.scrollTop;
-  selectedMember.value = member;
-  showDetailView.value = true;
-  // 滚动到页面顶部
-  nextTick(() => {
-    window.scrollTo({ top: 0 });
+// 根据用户姓名筛选成果数据
+const filterAchievementsByUserName = (userName: string): ApiAchievement[] => {
+  return apiAchievements.value.filter(achievement => {
+    // 检查authors字段中是否有匹配的用户姓名
+    if (achievement.authors && Array.isArray(achievement.authors)) {
+      return achievement.authors.some(author => {
+        // 根据姓名匹配（支持模糊匹配）
+        return author.name && author.name.includes(userName);
+      });
+    }
+    return false;
+  }).filter(achievement => {
+    // 根据status字段过滤（假设status=1表示可见）
+    return achievement.status === undefined || achievement.status === 1;
   });
+};
+
+// 根据用户姓名筛选项目数据
+const filterProjectsByUserName = (userName: string): ApiAchievement[] => {
+  return apiProjects.value.filter(project => {
+    // 检查authors字段中是否有匹配的用户姓名
+    if (project.authors && Array.isArray(project.authors)) {
+      return project.authors.some(author => {
+        // 根据姓名匹配（支持模糊匹配）
+        return author.name && author.name.includes(userName);
+      });
+    }
+    return false;
+  }).filter(project => {
+    // 根据status字段过滤（假设status=1表示可见）
+    return project.status === undefined || project.status === 1;
+  });
+};
+
+const showMemberDetail = async (member: Member) => {
+  try {
+    // 保存当前滚动位置
+    savedScrollPosition.value = window.pageYOffset || document.documentElement.scrollTop;
+    
+    // 调用接口获取完整的成员详情
+    const response = await getMemberDetailApi(member.id);
+    
+    if (response.code === 0) {
+      // 将API返回的数据转换为Member格式
+      const detailMember: Member = {
+        id: response.data.id,
+        name: response.data.realName,
+        englishName: response.data.englishName,
+        gender: response.data.gender ? Number(response.data.gender) : undefined,
+        resume: response.data.resume,
+        phone: response.data.phone,
+        title: response.data.identity || '未知',
+        graduation: response.data.graduationDest,
+        category: convertAcademicStatusToCategory(response.data.academicStatus),
+        email: response.data.email,
+        photo: response.data.photo,
+        researchArea: response.data.researchArea,
+        enrollmentYear: response.data.enrollmentYear,
+        graduationYear: response.data.graduationYear,
+        homepageUrl: response.data.homepageUrl,
+        orcid: response.data.orcid,
+        identity: response.data.identity,
+        academicStatus: response.data.academicStatus
+      };
+      
+      // 筛选该用户相关的成果数据
+      const userAchievements = filterAchievementsByUserName(detailMember.name);
+      console.log(`为用户 ${detailMember.name} 筛选到 ${userAchievements.length} 条成果记录`);
+      
+      // 筛选该用户相关的项目数据
+      const userProjects = filterProjectsByUserName(detailMember.name);
+      console.log(`为用户 ${detailMember.name} 筛选到 ${userProjects.length} 条项目记录`);
+      
+      selectedMember.value = detailMember;
+      selectedMemberAchievements.value = userAchievements;
+      selectedMemberProjects.value = userProjects;
+      showDetailView.value = true;
+      
+      // 滚动到页面顶部
+      nextTick(() => {
+        window.scrollTo({ top: 0 });
+      });
+    } else {
+      ElMessage.error('获取成员详情失败：' + response.msg);
+    }
+  } catch (error) {
+    console.error('获取成员详情失败:', error);
+    ElMessage.error('获取成员详情失败，请稍后重试');
+  }
 };
 
 const hideDetailView = () => {
   showDetailView.value = false;
   selectedMember.value = null;
+  selectedMemberAchievements.value = [];
+  selectedMemberProjects.value = [];
   // 恢复之前的滚动位置
   nextTick(() => {
     window.scrollTo({ top: savedScrollPosition.value });
@@ -258,31 +418,73 @@ const getCategoryName = (categoryKey: string) => {
               clearable
               class="search-input"
             />
+            <div class="loading-switch-container">
+              <el-switch
+                v-model="simulateLoading"
+                active-text="模拟加载"
+                inactive-text="正常加载"
+                active-color="#409EFF"
+                inactive-color="#C0C4CC"
+                @change="fetchMembersFromApi"
+              />
+            </div>
           </div>
         </div>
         
         <div class="members-list">
           <!-- 加载状态 -->
           <div v-if="loading" class="loading-container">
-            <el-loading-spinner />
-            <p>正在加载成员数据...</p>
+            <div class="loading-animation">
+              <div class="loading-dots">
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+              </div>
+              <div class="loading-text">
+                <span class="loading-char">正</span>
+                <span class="loading-char">在</span>
+                <span class="loading-char">加</span>
+                <span class="loading-char">载</span>
+                <span class="loading-char">成</span>
+                <span class="loading-char">员</span>
+                <span class="loading-char">数</span>
+                <span class="loading-char">据</span>
+                <span class="loading-char">.</span>
+                <span class="loading-char">.</span>
+                <span class="loading-char">.</span>
+              </div>
+            </div>
+            <!-- 骨架屏 -->
+            <div class="skeleton-cards">
+              <div v-for="i in 6" :key="i" class="skeleton-card">
+                <div class="skeleton-avatar"></div>
+                <div class="skeleton-content">
+                  <div class="skeleton-line skeleton-name"></div>
+                  <div class="skeleton-line skeleton-title"></div>
+                </div>
+              </div>
+            </div>
           </div>
           
           <!-- 成员列表 -->
           <div 
-            v-else
-            v-for="member in currentCategoryMembers" 
-            :key="member.id" 
-            class="member-card"
-            @click="showMemberDetail(member)"
+            v-if="!loading"
+            class="member-cards-container"
           >
-            <div class="member-info">
-              <span class="member-field member-name">{{ member.name }}</span>
-              <span class="member-field member-title">{{ member.title }}</span>
-              <span v-if="member.graduation" class="member-field member-graduation">毕业去向：{{ member.graduation }}</span>
-            </div>
-            <div class="member-action">
-              <span class="view-detail">查看详情</span>
+            <div 
+              v-for="member in currentCategoryMembers" 
+              :key="member.id" 
+              class="member-card"
+              @click="showMemberDetail(member)"
+            >
+              <div class="member-info">
+                <span class="member-field member-name">{{ member.name }}</span>
+                <span class="member-field member-title">{{ member.title }}</span>
+                <span v-if="member.graduation" class="member-field member-graduation">毕业去向：{{ member.graduation }}</span>
+              </div>
+              <div class="member-action">
+                <span class="view-detail">查看详情</span>
+              </div>
             </div>
           </div>
           
@@ -297,7 +499,12 @@ const getCategoryName = (categoryKey: string) => {
     <!-- 成员详情视图 -->
     <MemberInfo 
       v-else 
-      :member="selectedMember" 
+      :member="{
+        ...selectedMember,
+        identity: selectedMember?.identity ? Number(selectedMember.identity) : undefined
+      }"
+      :achievements="selectedMemberAchievements"
+      :projects="selectedMemberProjects"
       @back="hideDetailView"
     />
   </div>
@@ -538,8 +745,18 @@ const getCategoryName = (categoryKey: string) => {
     }
     
     .search-container {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      
       .search-input {
         width: 280px;
+      }
+      
+      .loading-switch-container {
+        display: flex;
+        align-items: center;
+        white-space: nowrap;
       }
     }
   }
@@ -660,6 +877,182 @@ const getCategoryName = (categoryKey: string) => {
 }
 
 /* 空状态样式 */
+/* 加载动画样式 */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px 20px;
+}
+
+.loading-animation {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 40px;
+}
+
+.loading-dots {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  animation: bounce 1.4s ease-in-out infinite both;
+}
+
+.dot:nth-child(1) {
+  background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+  animation-delay: -0.32s;
+}
+
+.dot:nth-child(2) {
+  background: linear-gradient(45deg, #4ecdc4, #44bd87);
+  animation-delay: -0.16s;
+}
+
+.dot:nth-child(3) {
+  background: linear-gradient(45deg, #45b7d1, #96ceb4);
+  animation-delay: 0s;
+}
+
+@keyframes bounce {
+  0%, 80%, 100% {
+    transform: scale(0) translateY(0);
+  }
+  40% {
+    transform: scale(1) translateY(-20px);
+  }
+}
+
+.loading-text {
+  display: flex;
+  gap: 2px;
+}
+
+.loading-char {
+  display: inline-block;
+  animation: wave 2s ease-in-out infinite;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.loading-char:nth-child(1) { animation-delay: 0s; }
+.loading-char:nth-child(2) { animation-delay: 0.1s; }
+.loading-char:nth-child(3) { animation-delay: 0.2s; }
+.loading-char:nth-child(4) { animation-delay: 0.3s; }
+.loading-char:nth-child(5) { animation-delay: 0.4s; }
+.loading-char:nth-child(6) { animation-delay: 0.5s; }
+.loading-char:nth-child(7) { animation-delay: 0.6s; }
+.loading-char:nth-child(8) { animation-delay: 0.7s; }
+.loading-char:nth-child(9) { animation-delay: 0.8s; }
+.loading-char:nth-child(10) { animation-delay: 0.9s; }
+.loading-char:nth-child(11) { animation-delay: 1s; }
+
+@keyframes wave {
+  0%, 60%, 100% {
+    transform: translateY(0);
+    color: #64748b;
+  }
+  30% {
+    transform: translateY(-10px);
+    color: #3b82f6;
+  }
+}
+
+/* 骨架屏样式 */
+.skeleton-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  max-width: 800px;
+}
+
+.skeleton-card {
+  display: flex;
+  align-items: center;
+  background: rgba(248, 250, 252, 0.95);
+  border-radius: 12px;
+  padding: 16px 20px;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+.skeleton-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  margin-right: 16px;
+}
+
+.skeleton-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.skeleton-line {
+  height: 12px;
+  background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+  background-size: 200% 100%;
+  border-radius: 6px;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+.skeleton-name {
+  width: 80px;
+  height: 16px;
+}
+
+.skeleton-title {
+  width: 120px;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* 成员列表过渡动画 */
+.member-cards-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+/* 移除成员分类切换动画 */
+.member-list-enter-active,
+.member-list-leave-active,
+.member-list-enter-from,
+.member-list-leave-to,
+.member-list-move {
+  /* 无动画效果 */
+}
+
+/* 增强成员卡片悬停效果 */
+.member-card {
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  
+  &:hover {
+    transform: translateX(4px) translateY(-2px);
+    box-shadow: 0 12px 32px rgba(148, 163, 184, 0.25);
+    background: rgba(255, 255, 255, 0.98);
+  }
+}
+
 .empty-state {
   display: flex;
   align-items: center;
@@ -752,9 +1145,16 @@ const getCategoryName = (categoryKey: string) => {
       
       .search-container {
         width: 100%;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 15px;
         
         .search-input {
           width: 100%;
+        }
+        
+        .loading-switch-container {
+          justify-content: center;
         }
       }
     }
