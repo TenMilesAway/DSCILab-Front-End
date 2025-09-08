@@ -165,6 +165,7 @@ export function useHook() {
       fixed: "right",
       cellRenderer: scope => {
         const currentUser = useUserStoreHook().currentUserInfo;
+        // 根据调试信息，currentUser对象中identity字段在userInfo中
         const isTeacher = currentUser?.userInfo?.identity === 2;
 
         return (

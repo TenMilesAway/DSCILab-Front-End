@@ -41,7 +41,8 @@ export default [
         meta: {
           title: "用户管理",
           showLink: true,
-          showParent: false
+          showParent: false,
+          roles: ["admin"]
         }
       }
     ]
