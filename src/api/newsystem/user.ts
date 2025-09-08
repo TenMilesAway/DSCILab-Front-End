@@ -292,7 +292,7 @@ export const exportUserExcelApi = (params: UserListQuery, fileName: string) => {
 export const uploadUserAvatarApi = data => {
   return http.request<ResponseData<void>>(
     "post",
-    "/system/user/profile/avatar",
+    "/lab/users/crud/profile/photo",
     {
       data
     },
