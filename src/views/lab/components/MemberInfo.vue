@@ -27,20 +27,20 @@
           <!-- 头像和基本信息 -->
           <div class="member-header">
             <div class="avatar-section">
-              <img
-                v-if="member.photo"
-                :src="member.photo"
-                :alt="member.name"
-                class="member-avatar"
-                @error="handleImageError"
-              />
-              <img
-                v-else
-                src="/src/assets/lab/avatar.jpg"
-                :alt="member.name"
-                class="member-avatar"
-                @error="handleImageError"
-              />
+              <div class="avatar-container">
+                <img
+                  :src="avatarUrl"
+                  :alt="member.name"
+                  class="member-avatar"
+                  :class="{ 'avatar-loaded': isAvatarLoaded }"
+                  @load="handleImageLoad"
+                  @error="handleImageError"
+                  style="opacity: 0;"
+                />
+                <div v-if="!isAvatarLoaded" class="avatar-placeholder">
+                  <div class="loading-spinner"></div>
+                </div>
+              </div>
             </div>
             <div class="basic-info">
               <h1 class="member-name">{{ member.name }}</h1>
@@ -404,6 +404,29 @@ const _emit = defineEmits<{
   back: [];
 }>();
 
+// 头像加载状态
+const isAvatarLoaded = ref(false);
+
+// 监听member变化，重置头像加载状态
+watch(() => props.member, () => {
+  isAvatarLoaded.value = false;
+}, { immediate: true });
+
+// 计算头像URL
+const avatarUrl = computed(() => {
+  const userPhoto = props.member?.photo;
+  if (userPhoto) {
+    // 如果photo已经是完整URL，直接使用
+    if (userPhoto.startsWith("http")) {
+      return userPhoto;
+    }
+    // 否则拼接base API
+    return import.meta.env.VITE_APP_BASE_API + userPhoto;
+  }
+  // 默认头像
+  return "/src/assets/lab/default_user_avatar.png";
+});
+
 // 按时间排序的项目列表（从新到旧）
 const sortedProjects = computed(() => {
   if (!props.projects || props.projects.length === 0) return [];
@@ -522,15 +545,23 @@ const getAcademicStatusTitle = (academicStatus?: number): string => {
   return statusMap[academicStatus] || "未知";
 };
 
+// 处理图片加载完成
+const handleImageLoad = () => {
+  isAvatarLoaded.value = true;
+};
+
 // 处理图片加载错误
 const handleImageError = (event: Event) => {
   const img = event.target as HTMLImageElement;
-  const defaultAvatar = "/src/assets/lab/avatar.jpg";
+  const defaultAvatar = "/src/assets/lab/default_user_avatar.png";
   // 防止无限循环，只有当前src不是默认头像时才切换
   if (img.src !== window.location.origin + defaultAvatar) {
     img.src = defaultAvatar;
+    // 重置加载状态，让默认头像也能触发加载完成事件
+    isAvatarLoaded.value = false;
   } else {
-    // 如果默认头像也加载失败，移除src属性，显示alt文本
+    // 如果默认头像也加载失败，直接显示占位符
+    isAvatarLoaded.value = true;
     img.removeAttribute("src");
   }
 };
@@ -840,9 +871,19 @@ const handlePdfDownload = (url: string) => {
     padding: 20px 16px;
   }
 
+  .avatar-container {
+    width: 100px;
+    height: 100px;
+  }
+
   .member-avatar {
     width: 100px;
-    height: 125px;
+    height: 100px;
+  }
+
+  .avatar-placeholder {
+    width: 100px;
+    height: 100px;
   }
 
   .basic-info {
@@ -986,9 +1027,19 @@ const handlePdfDownload = (url: string) => {
     padding: 16px 12px;
   }
 
+  .avatar-container {
+    width: 80px;
+    height: 80px;
+  }
+
   .member-avatar {
     width: 80px;
-    height: 100px;
+    height: 80px;
+  }
+
+  .avatar-placeholder {
+    width: 80px;
+    height: 80px;
   }
 
   .basic-info {
@@ -1193,12 +1244,18 @@ const handlePdfDownload = (url: string) => {
   margin-right: 30px;
 }
 
+.avatar-container {
+  position: relative;
+  width: 120px;
+  height: 120px;
+}
+
 .member-avatar {
   display: flex;
   align-items: center;
   justify-content: center;
   width: 120px;
-  height: 150px;
+  height: 120px;
   font-size: 12px;
   color: #64748b;
   text-align: center;
@@ -1206,9 +1263,64 @@ const handlePdfDownload = (url: string) => {
   background: rgb(255 255 255 / 20%);
   backdrop-filter: blur(10px);
   border: 3px solid rgb(255 255 255 / 30%);
-  border-radius: 12px;
+  border-radius: 50%;
   box-shadow: 0 4px 12px rgb(0 0 0 / 10%);
-  transition: none; /* 移除过渡效果避免闪烁 */
+  transition: opacity 0.6s ease-in-out, transform 0.6s ease-in-out;
+  transform: scale(0.9);
+}
+
+.member-avatar.avatar-loaded {
+  opacity: 1 !important;
+  transform: scale(1);
+  animation: avatarFadeIn 0.8s ease-out;
+}
+
+.avatar-placeholder {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 120px;
+  height: 120px;
+  background: rgb(255 255 255 / 20%);
+  backdrop-filter: blur(10px);
+  border: 3px solid rgb(255 255 255 / 30%);
+  border-radius: 50%;
+  box-shadow: 0 4px 12px rgb(0 0 0 / 10%);
+}
+
+.loading-spinner {
+  width: 24px;
+  height: 24px;
+  border: 2px solid rgb(255 255 255 / 30%);
+  border-top: 2px solid rgb(255 255 255 / 80%);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes avatarFadeIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.8) translateY(10px);
+  }
+  50% {
+    transform: scale(1.05) translateY(-2px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .basic-info h1 {
