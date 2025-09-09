@@ -1,19 +1,20 @@
 <template>
   <div class="member-info-container">
     <!-- 主要内容区域 -->
-    <div v-if="member" class="main-content">
+    <div v-if="member" class="main-content" :class="{ 'content-visible': isContentVisible }">
       <!-- 左侧信息定位导航 -->
-      <div class="info-sidebar">
+      <div class="info-sidebar animate-slide-left">
         <div class="sidebar-header">
           <button @click="$emit('back')" class="back-button">返回</button>
           <h3>信息定位</h3>
         </div>
         <div class="nav-list">
           <div
-            v-for="item in navigationItems"
+            v-for="(item, index) in navigationItems"
             :key="item.key"
-            class="nav-item"
+            class="nav-item animate-fade-up"
             :class="{ active: activeNavItem === item.key }"
+            :style="{ animationDelay: `${0.2 + index * 0.1}s` }"
             @click="scrollToSection(item.id, item.key)"
           >
             <span class="nav-text">{{ item.name }}</span>
@@ -22,11 +23,11 @@
       </div>
 
       <!-- 右侧内容区域 -->
-      <div class="content-area">
+      <div class="content-area animate-slide-right">
         <div class="member-detail-card">
           <!-- 头像和基本信息 -->
-          <div class="member-header">
-            <div class="avatar-section">
+          <div class="member-header animate-fade-up" style="animation-delay: 0.3s;">
+            <div class="avatar-section animate-scale-up" style="animation-delay: 0.4s;">
               <div class="avatar-container">
                 <img
                   :src="avatarUrl"
@@ -42,7 +43,7 @@
                 </div>
               </div>
             </div>
-            <div class="basic-info">
+            <div class="basic-info animate-fade-up" style="animation-delay: 0.5s;">
               <h1 class="member-name">{{ member.name }}</h1>
 
               <p class="member-title">
@@ -52,20 +53,20 @@
           </div>
 
           <!-- 详细信息 -->
-          <div class="detail-sections">
+          <div class="detail-sections animate-fade-up" style="animation-delay: 0.6s;">
             <!-- 个人信息 -->
-            <div id="personal-info-section" class="info-section">
+            <div id="personal-info-section" class="info-section animate-fade-up" style="animation-delay: 0.7s;">
               <h3 class="section-title">个人信息</h3>
               <div class="info-grid">
-                <div class="info-item">
+                <div class="info-item animate-fade-up" style="animation-delay: 0.8s;">
                   <span class="label">姓名:</span>
                   <span class="value">{{ member.name }}</span>
                 </div>
-                <div class="info-item" v-if="member.englishName">
+                <div class="info-item animate-fade-up" v-if="member.englishName" style="animation-delay: 0.9s;">
                   <span class="label">英文名:</span>
                   <span class="value">{{ member.englishName }}</span>
                 </div>
-                <div class="info-item" v-if="member.gender">
+                <div class="info-item animate-fade-up" v-if="member.gender" style="animation-delay: 1.0s;">
                   <span class="label">性别:</span>
                   <span class="value">{{
                     member.gender === 1
@@ -75,33 +76,33 @@
                       : member.gender
                   }}</span>
                 </div>
-                <div class="info-item">
+                <div class="info-item animate-fade-up" style="animation-delay: 1.1s;">
                   <span class="label">职位:</span>
                   <span class="value">{{
                     getAcademicStatusTitle(member.academicStatus)
                   }}</span>
                 </div>
-                <div class="info-item" v-if="member.email">
+                <div class="info-item animate-fade-up" v-if="member.email" style="animation-delay: 1.2s;">
                   <span class="label">邮箱:</span>
                   <span class="value">{{ member.email }}</span>
                 </div>
-                <div class="info-item" v-if="member.phone">
+                <div class="info-item animate-fade-up" v-if="member.phone" style="animation-delay: 1.3s;">
                   <span class="label">手机号:</span>
                   <span class="value">{{ member.phone }}</span>
                 </div>
-                <div class="info-item" v-if="member.enrollmentYear">
+                <div class="info-item animate-fade-up" v-if="member.enrollmentYear" style="animation-delay: 1.4s;">
                   <span class="label">{{ getEnrollmentLabel(member) }}:</span>
                   <span class="value">{{ member.enrollmentYear }}</span>
                 </div>
-                <div class="info-item" v-if="member.graduationYear">
+                <div class="info-item animate-fade-up" v-if="member.graduationYear" style="animation-delay: 1.5s;">
                   <span class="label">毕业年份:</span>
                   <span class="value">{{ member.graduationYear }}</span>
                 </div>
-                <div class="info-item" v-if="member.graduation">
+                <div class="info-item animate-fade-up" v-if="member.graduation" style="animation-delay: 1.6s;">
                   <span class="label">毕业去向:</span>
                   <span class="value">{{ member.graduation }}</span>
                 </div>
-                <div class="info-item" v-if="member.orcid">
+                <div class="info-item animate-fade-up" v-if="member.orcid" style="animation-delay: 1.7s;">
                   <span class="label">ORCID:</span>
                   <span class="value">{{ member.orcid }}</span>
                 </div>
@@ -109,7 +110,7 @@
             </div>
 
             <!-- 研究方向 -->
-            <div id="research-areas-section" class="info-section">
+            <div id="research-areas-section" class="info-section animate-fade-up" style="animation-delay: 0.8s;">
               <h3 class="section-title">研究方向</h3>
               <div class="research-areas">
                 <div v-if="member.researchArea" class="research-tags">
@@ -119,29 +120,30 @@
                       .map(item => item.trim())
                       .filter(item => item)"
                     :key="index"
-                    class="research-tag"
+                    class="research-tag animate-fade-up"
+                    :style="{ animationDelay: `${1.8 + index * 0.1}s` }"
                   >
                     {{ area }}
                   </span>
                 </div>
-                <div v-else class="research-item">
+                <div v-else class="research-item animate-fade-up" style="animation-delay: 1.8s;">
                   <p>暂无研究方向信息</p>
                 </div>
               </div>
             </div>
 
             <!-- 个人简述 -->
-            <div v-if="member.resume" id="resume-section" class="info-section">
+            <div v-if="member.resume" id="resume-section" class="info-section animate-fade-up" style="animation-delay: 0.9s;">
               <h3 class="section-title">个人简述</h3>
               <div class="resume-content">
-                <p class="resume-text">
+                <p class="resume-text animate-fade-up" style="animation-delay: 1.7s;">
                   {{ member.resume.replace(/\\n/g, "\n") }}
                 </p>
               </div>
             </div>
 
             <!-- 项目经历 -->
-            <div id="projects-section" class="info-section">
+            <div id="projects-section" class="info-section animate-fade-up" style="animation-delay: 1.0s;">
               <h3 class="section-title">参与项目</h3>
               <div class="projects-list">
                 <div
@@ -149,9 +151,10 @@
                   class="projects-list-container"
                 >
                   <div
-                    v-for="project in sortedProjects"
+                    v-for="(project, index) in sortedProjects"
                     :key="project.id"
-                    class="project-item-member"
+                    class="project-item-member animate-fade-up"
+                    :style="{ animationDelay: `${2.2 + index * 0.15}s` }"
                   >
                     <div class="project-main-member">
                       <el-tag
@@ -185,14 +188,14 @@
                     </div>
                   </div>
                 </div>
-                <div v-else class="no-data">
+                <div v-else class="no-data animate-fade-up" style="animation-delay: 2.2s;">
                   <p>暂无参与项目信息</p>
                 </div>
               </div>
             </div>
 
             <!-- 发表论文 -->
-            <div id="publications-section" class="info-section">
+            <div id="publications-section" class="info-section animate-fade-up" style="animation-delay: 1.1s;">
               <h3 class="section-title">学术成果</h3>
               <div class="publications-list">
                 <div
@@ -200,9 +203,10 @@
                   class="achievements-list-container"
                 >
                   <div
-                    v-for="achievement in sortedAchievements"
+                    v-for="(achievement, index) in sortedAchievements"
                     :key="achievement.id"
-                    class="achievement-item-member"
+                    class="achievement-item-member animate-fade-up"
+                    :style="{ animationDelay: `${2.5 + index * 0.15}s` }"
                   >
                     <div class="achievement-main-member">
                       <el-tag
@@ -323,7 +327,7 @@
                     </div>
                   </div>
                 </div>
-                <div v-else class="no-data">
+                <div v-else class="no-data animate-fade-up" style="animation-delay: 2.5s;">
                   <p>暂无学术成果信息</p>
                 </div>
               </div>
@@ -407,9 +411,19 @@ const _emit = defineEmits<{
 // 头像加载状态
 const isAvatarLoaded = ref(false);
 
-// 监听member变化，重置头像加载状态
+// 动画控制状态
+const isContentVisible = ref(false);
+
+// 监听member变化，重置头像加载状态和动画状态
 watch(() => props.member, () => {
   isAvatarLoaded.value = false;
+  isContentVisible.value = false;
+  // 延迟触发动画，确保组件已渲染
+  nextTick(() => {
+    setTimeout(() => {
+      isContentVisible.value = true;
+    }, 100);
+  });
 }, { immediate: true });
 
 // 计算头像URL
@@ -424,7 +438,7 @@ const avatarUrl = computed(() => {
     return import.meta.env.VITE_APP_BASE_API + userPhoto;
   }
   // 默认头像
-  return "/src/assets/lab/default_user_avatar.png";
+  return "/src/assets/lab/default_avatar.png";
 });
 
 // 按时间排序的项目列表（从新到旧）
@@ -1103,7 +1117,7 @@ const handlePdfDownload = (url: string) => {
   box-sizing: border-box;
   width: 100%;
   min-height: 100vh;
-  padding: 20px;
+  padding: 0px 20px 20px 20px;
   background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #cbd5e1 100%);
 }
 
@@ -1930,4 +1944,78 @@ const handlePdfDownload = (url: string) => {
 }
 
 /* 成员详情视图样式 */
+
+/* 页面进入动画 */
+.main-content {
+  opacity: 0;
+  transition: opacity 0.3s ease-in-out;
+}
+
+.main-content.content-visible {
+  opacity: 1;
+}
+
+/* 从左侧滑入动画 */
+.animate-slide-left {
+  opacity: 0;
+  transform: translateX(-50px);
+  animation: slideInLeft 0.6s ease-out forwards;
+}
+
+@keyframes slideInLeft {
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* 从右侧滑入动画 */
+.animate-slide-right {
+  opacity: 0;
+  transform: translateX(50px);
+  animation: slideInRight 0.6s ease-out 0.1s forwards;
+}
+
+@keyframes slideInRight {
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* 从下方淡入动画 */
+.animate-fade-up {
+  opacity: 0;
+  transform: translateY(30px);
+  animation: fadeInUp 0.6s ease-out forwards;
+}
+
+@keyframes fadeInUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 缩放淡入动画 */
+.animate-scale-up {
+  opacity: 0;
+  transform: scale(0.8);
+  animation: scaleUp 0.6s ease-out forwards;
+}
+
+@keyframes scaleUp {
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* 确保动画只在内容可见时播放 */
+.main-content:not(.content-visible) .animate-slide-left,
+.main-content:not(.content-visible) .animate-slide-right,
+.main-content:not(.content-visible) .animate-fade-up,
+.main-content:not(.content-visible) .animate-scale-up {
+  animation: none;
+}
 </style>

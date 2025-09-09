@@ -67,6 +67,7 @@ const loading = ref(false);
 // 模拟加载开关
 const simulateLoading = ref(false);
 
+
 // API获取的成果数据
 const apiAchievements = ref<ApiAchievement[]>([]);
 // API获取的项目数据
@@ -295,6 +296,7 @@ const _groupedMembers = computed<CategoryGroup[]>(() => {
 
 // 详情显示状态管理
 const showDetailView = ref(false);
+const detailLoading = ref(false);
 const selectedMember = ref<Member | null>(null);
 const selectedMemberAchievements = ref<ApiAchievement[]>([]);
 const selectedMemberProjects = ref<ApiAchievement[]>([]);
@@ -345,6 +347,15 @@ const showMemberDetail = async (member: Member) => {
     savedScrollPosition.value =
       window.pageYOffset || document.documentElement.scrollTop;
 
+    // 开始加载
+    detailLoading.value = true;
+    showDetailView.value = true;
+
+    // 滚动到页面顶部
+    nextTick(() => {
+      window.scrollTo({ top: 0 });
+    });
+
     // 调用接口获取完整的成员详情
     const response = await getMemberDetailApi(member.id);
 
@@ -386,23 +397,23 @@ const showMemberDetail = async (member: Member) => {
       selectedMember.value = detailMember;
       selectedMemberAchievements.value = userAchievements;
       selectedMemberProjects.value = userProjects;
-      showDetailView.value = true;
-
-      // 滚动到页面顶部
-      nextTick(() => {
-        window.scrollTo({ top: 0 });
-      });
+      
+      // 加载完成
+      detailLoading.value = false;
     } else {
       ElMessage.error("获取成员详情失败：" + response.msg);
+      detailLoading.value = false;
     }
   } catch (error) {
     console.error("获取成员详情失败:", error);
     ElMessage.error("获取成员详情失败，请稍后重试");
+    detailLoading.value = false;
   }
 };
 
 const hideDetailView = () => {
   showDetailView.value = false;
+  detailLoading.value = false;
   selectedMember.value = null;
   selectedMemberAchievements.value = [];
   selectedMemberProjects.value = [];
@@ -552,9 +563,33 @@ const getCategoryName = (categoryKey: string) => {
       </div>
     </div>
 
+    <!-- 详情页面加载动画 -->
+    <div v-else-if="showDetailView && detailLoading" class="detail-loading-overlay">
+      <div class="detail-loading-container">
+        <div class="loading-spinner-detail">
+          <div class="spinner-ring"></div>
+          <div class="spinner-ring"></div>
+          <div class="spinner-ring"></div>
+        </div>
+        <div class="loading-text-detail">
+          <span class="loading-char">正</span>
+          <span class="loading-char">在</span>
+          <span class="loading-char">加</span>
+          <span class="loading-char">载</span>
+          <span class="loading-char">成</span>
+          <span class="loading-char">员</span>
+          <span class="loading-char">详</span>
+          <span class="loading-char">情</span>
+          <span class="loading-char">.</span>
+          <span class="loading-char">.</span>
+          <span class="loading-char">.</span>
+        </div>
+      </div>
+    </div>
+
     <!-- 成员详情视图 -->
     <MemberInfo
-      v-else
+      v-else-if="showDetailView && !detailLoading"
       :member="{
         ...selectedMember,
         identity: selectedMember?.identity
@@ -703,6 +738,117 @@ const getCategoryName = (categoryKey: string) => {
         font-size: 11px;
       }
     }
+  }
+}
+
+/* 详情页面加载动画样式 */
+.detail-loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(248, 250, 252, 0.95);
+  backdrop-filter: blur(8px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.detail-loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 30px;
+  padding: 40px;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.loading-spinner-detail {
+  position: relative;
+  width: 80px;
+  height: 80px;
+}
+
+.spinner-ring {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border: 3px solid transparent;
+  border-radius: 50%;
+  animation: spin-detail 2s linear infinite;
+}
+
+.spinner-ring:nth-child(1) {
+  border-top-color: #3b82f6;
+  animation-delay: 0s;
+}
+
+.spinner-ring:nth-child(2) {
+  border-right-color: #8b5cf6;
+  animation-delay: -0.4s;
+  width: 70%;
+  height: 70%;
+  top: 15%;
+  left: 15%;
+}
+
+.spinner-ring:nth-child(3) {
+  border-bottom-color: #06b6d4;
+  animation-delay: -0.8s;
+  width: 40%;
+  height: 40%;
+  top: 30%;
+  left: 30%;
+}
+
+.loading-text-detail {
+  display: flex;
+  gap: 2px;
+  font-size: 16px;
+  font-weight: 500;
+  color: #64748b;
+}
+
+.loading-char {
+  animation: wave-detail 1.5s ease-in-out infinite;
+  animation-fill-mode: both;
+}
+
+.loading-char:nth-child(1) { animation-delay: 0.1s; }
+.loading-char:nth-child(2) { animation-delay: 0.2s; }
+.loading-char:nth-child(3) { animation-delay: 0.3s; }
+.loading-char:nth-child(4) { animation-delay: 0.4s; }
+.loading-char:nth-child(5) { animation-delay: 0.5s; }
+.loading-char:nth-child(6) { animation-delay: 0.6s; }
+.loading-char:nth-child(7) { animation-delay: 0.7s; }
+.loading-char:nth-child(8) { animation-delay: 0.8s; }
+.loading-char:nth-child(9) { animation-delay: 0.9s; }
+.loading-char:nth-child(10) { animation-delay: 1.0s; }
+.loading-char:nth-child(11) { animation-delay: 1.1s; }
+
+@keyframes spin-detail {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes wave-detail {
+  0%, 60%, 100% {
+    transform: translateY(0);
+    color: #64748b;
+  }
+  30% {
+    transform: translateY(-10px);
+    color: #3b82f6;
   }
 }
 
@@ -1251,6 +1397,8 @@ const getCategoryName = (categoryKey: string) => {
 }
 
 /* 移除成员分类切换动画 */
+
+
 .member-list-enter-active,
 .member-list-leave-active,
 .member-list-enter-from,
