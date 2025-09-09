@@ -100,6 +100,7 @@ export interface LabAchievementDTO {
   ownerUserName: string | null;
   published: boolean;
   isVerified: boolean;
+  myVisibility?: boolean; // 我的成果可见性（仅在my-achievements接口中返回）
   authors?: AchievementAuthorDTO[]; // 可选：作者DTO
   extra: string | object | null;
   createTime: string;
@@ -129,28 +130,36 @@ export interface AchievementAuthorDTO {
  * 新增作者请求参数
  */
 export interface CreateAuthorRequest {
-  userId?: number | null; // 内部作者userId；外部作者为null
-  name?: string | null; // 外部作者必填；内部作者可选
-  nameEn?: string | null;
+  userId?: number | null; // 内部作者ID（强烈推荐）
+  username?: string | null; // 未传userId时用于自动绑定
+  email?: string | null; // 未传userId时用于自动绑定
+  phone?: string | null; // 未传userId时用于自动绑定
+  studentNumber?: string | null; // 未传userId时用于自动绑定
+  name?: string | null; // 姓名（外部作者必填；自动绑定失败则作为外部作者保存）
+  nameEn?: string | null; // 英文姓名
   affiliation?: string | null;
-  authorOrder: number; // 必填，>0，成果内唯一
-  isCorresponding?: boolean; // 默认false
-  role?: string | null;
-  visible?: boolean; // 仅内部作者生效
+  authorOrder: number; // 作者顺序（>0，同一成果下唯一）
+  isCorresponding?: boolean; // 是否通讯作者
+  role?: string | null; // 角色
+  visible?: boolean; // 仅对内部作者生效
 }
 
 /**
  * 更新作者请求参数
  */
 export interface UpdateAuthorRequest {
-  userId?: number | null;
-  name?: string | null;
-  nameEn?: string | null;
+  userId?: number | null; // 内部作者ID
+  username?: string | null; // 未传userId时用于自动绑定
+  email?: string | null; // 未传userId时用于自动绑定
+  phone?: string | null; // 未传userId时用于自动绑定
+  studentNumber?: string | null; // 未传userId时用于自动绑定
+  name?: string | null; // 姓名
+  nameEn?: string | null; // 英文姓名
   affiliation?: string | null;
-  authorOrder?: number | null; // 传入时需保证唯一
-  isCorresponding?: boolean | null;
-  role?: string | null;
-  visible?: boolean | null;
+  authorOrder?: number | null; // 作者顺序（传入时需保证唯一）
+  isCorresponding?: boolean | null; // 是否通讯作者
+  role?: string | null; // 角色
+  visible?: boolean | null; // 仅对内部作者生效
 }
 
 /**

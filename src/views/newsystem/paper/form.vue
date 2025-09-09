@@ -28,8 +28,13 @@ interface FormInlineData {
   projectStartDate?: string; // 项目开始日期（项目）
   projectEndDate?: string; // 项目结束日期（项目）
   doi?: string; // DOI
-  projectUrl?: string; // 项目链接（项目）
+
   githubUrl?: string; // GitHub链接（项目）
+  published?: boolean; // 发表状态：论文是否发表/项目是否结项
+  gitUrl?: string; // Git仓库链接
+  linkUrl?: string; // 相关链接
+  pdfUrl?: string; // PDF文件链接
+  fundingAmount?: number; // 项目经费（万元）
 }
 
 interface FormProps {
@@ -59,8 +64,12 @@ const props = withDefaults(defineProps<FormProps>(), {
     publishDate: "",
     projectEndDate: "",
     doi: "",
-    projectUrl: "",
-    githubUrl: ""
+    githubUrl: "",
+    published: false,
+    gitUrl: "",
+    linkUrl: "",
+    pdfUrl: "",
+    fundingAmount: undefined
   })
 });
 
@@ -384,22 +393,73 @@ defineExpose({ getFormRuleRef });
         </el-form-item>
       </re-col>
 
-      <re-col :value="12" v-if="newFormInline.achievementType === 'paper'">
-        <el-form-item label="DOI" prop="doi">
-          <el-input
-            v-model="newFormInline.doi"
-            clearable
-            placeholder="请输入DOI"
+      <re-col :value="12" v-if="newFormInline.achievementType === 'project'">
+        <el-form-item label="项目经费（万元）" prop="fundingAmount">
+          <el-input-number
+            v-model="newFormInline.fundingAmount"
+            :min="0"
+            :precision="2"
+            placeholder="请输入项目经费"
+            class="w-full"
           />
         </el-form-item>
       </re-col>
 
-      <re-col :value="12" v-if="newFormInline.achievementType === 'project'">
-        <el-form-item label="项目链接" prop="projectUrl">
+      <re-col :value="12" v-if="newFormInline.achievementType === 'paper'">
+        <el-form-item label="DOI" prop="doi">
           <el-input
-            v-model="newFormInline.projectUrl"
+            v-model="newFormInline.journal"
             clearable
-            placeholder="请输入项目链接"
+            placeholder="请输入期刊名称"
+          />
+        </el-form-item>
+      </re-col>
+
+      <re-col :value="12">
+        <el-form-item label="Git仓库链接" prop="gitUrl">
+          <el-input
+            v-model="newFormInline.gitUrl"
+            clearable
+            placeholder="请输入Git仓库链接"
+          />
+        </el-form-item>
+      </re-col>
+
+      <re-col :value="12">
+        <el-form-item label="相关链接" prop="linkUrl">
+          <el-input
+            v-model="newFormInline.linkUrl"
+            clearable
+            placeholder="请输入相关链接"
+          />
+        </el-form-item>
+      </re-col>
+
+      <re-col :value="12">
+        <el-form-item label="PDF文件链接" prop="pdfUrl">
+          <el-input
+            v-model="newFormInline.pdfUrl"
+            clearable
+            placeholder="请输入PDF文件链接"
+          />
+        </el-form-item>
+      </re-col>
+
+      <re-col :value="12">
+        <el-form-item
+          :label="
+            newFormInline.achievementType === 'paper' ? '是否发表' : '是否结项'
+          "
+          prop="published"
+        >
+          <el-switch
+            v-model="newFormInline.published"
+            :active-text="
+              newFormInline.achievementType === 'paper' ? '已发表' : '已结项'
+            "
+            :inactive-text="
+              newFormInline.achievementType === 'paper' ? '在投' : '未结项'
+            "
           />
         </el-form-item>
       </re-col>
