@@ -170,8 +170,9 @@ export function useHook() {
 
         return (
           <div
-            style={`display: flex; align-items: center; ${!isTeacher ? "justify-content: center;" : ""
-              }`}
+            style={`display: flex; align-items: center; ${
+              !isTeacher ? "justify-content: center;" : ""
+            }`}
           >
             <el-button
               link
@@ -281,27 +282,27 @@ export function useHook() {
     const authors =
       row?.authors?.length > 0
         ? row.authors.map((author, index) => ({
-          userId: author.userId || null,
-          name: author.name,
-          nameEn: author.nameEn || null,
-          affiliation: author.affiliation || null,
-          authorOrder: index + 1,
-          isCorresponding: author.isCorresponding || false,
-          role: author.role || null,
-          visible: author.visible !== false
-        }))
+            userId: author.userId || null,
+            name: author.name,
+            nameEn: author.nameEn || null,
+            affiliation: author.affiliation || null,
+            authorOrder: index + 1,
+            isCorresponding: author.isCorresponding || false,
+            role: author.role || null,
+            visible: author.visible !== false
+          }))
         : [
-          {
-            userId: null,
-            name: "",
-            nameEn: null,
-            affiliation: null,
-            authorOrder: 1,
-            isCorresponding: true,
-            role: null,
-            visible: true
-          }
-        ];
+            {
+              userId: null,
+              name: "",
+              nameEn: null,
+              affiliation: null,
+              authorOrder: 1,
+              isCorresponding: true,
+              role: null,
+              visible: true
+            }
+          ];
 
     addDialog({
       title: `${title}成果`,
@@ -314,9 +315,9 @@ export function useHook() {
           publishDate: row?.publishDate
             ? row.type === 1
               ? // 论文类型：提取年份
-              new Date(row.publishDate).getFullYear().toString()
+                new Date(row.publishDate).getFullYear().toString()
               : // 项目类型：提取年月
-              new Date(row.publishDate).toISOString().slice(0, 7)
+                new Date(row.publishDate).toISOString().slice(0, 7)
             : "",
           projectEndDate: row?.projectEndDate
             ? new Date(row.projectEndDate).toISOString().slice(0, 7)

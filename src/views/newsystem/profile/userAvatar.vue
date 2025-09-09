@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import ReCropper from "@/components/ReCropper";
 import { formatBytes } from "@pureadmin/utils";
-import { ref } from "vue";
+import { ref, computed, watch } from "vue";
 import { uploadUserAvatarApi } from "@/api/newsystem/user";
 import { useUserStoreHook } from "@/store/modules/user";
 import { message } from "@/utils/message";
@@ -9,6 +9,14 @@ import { message } from "@/utils/message";
 defineOptions({
   name: "NewSystemUserAvatar"
 });
+
+const props = defineProps<{
+  user?: any;
+}>();
+
+const emit = defineEmits<{
+  refresh: [];
+}>();
 
 const currentUser = useUserStoreHook().currentUserInfo;
 
@@ -18,7 +26,28 @@ const refCropper = ref();
 const showPopover = ref(false);
 const cropperImg = ref<string>("");
 
-cropperImg.value = import.meta.env.VITE_APP_BASE_API + currentUser.photo;
+// 计算头像URL
+const avatarUrl = computed(() => {
+  const userPhoto = props.user?.photo || currentUser.photo;
+  if (userPhoto) {
+    // 如果photo已经是完整URL，直接使用
+    if (userPhoto.startsWith("http")) {
+      return userPhoto;
+    }
+    // 否则拼接base API
+    return import.meta.env.VITE_APP_BASE_API + userPhoto;
+  }
+  // 默认头像
+  return "/default-avatar.png";
+});
+
+// 初始化cropperImg
+cropperImg.value = avatarUrl.value;
+
+// 监听avatarUrl变化
+watch(avatarUrl, newUrl => {
+  cropperImg.value = newUrl;
+});
 
 function onCropper({ base64, blob, info }) {
   console.log(blob);
@@ -33,19 +62,21 @@ const visible = ref(false);
 /** 上传图片 */
 function uploadImg() {
   const formData = new FormData();
-  formData.append("avatarfile", imgBlob.value);
+  formData.append("photofile", imgBlob.value);
   uploadUserAvatarApi(formData).then(() => {
     open.value = false;
     message("上传图片成功", {
       type: "success"
     });
     visible.value = false;
+    // 通知父组件刷新用户数据
+    emit("refresh");
   });
 }
 </script>
 <template>
   <div class="user-info-head" @click="open = true">
-    <el-avatar :size="120" :src="cropperImg" />
+    <el-avatar :size="120" :src="avatarUrl" />
   </div>
   <el-dialog
     title="修改头像"

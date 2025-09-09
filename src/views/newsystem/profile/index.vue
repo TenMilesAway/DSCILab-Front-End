@@ -63,7 +63,7 @@ onMounted(() => {
           </template>
           <div>
             <div class="text-center">
-              <userAvatar :user="state.user" />
+              <userAvatar :user="state.user" @refresh="getUser" />
             </div>
 
             <el-row v-loading="state.loading">

@@ -35,14 +35,15 @@ export function getToken(): TokenDTO {
 }
 
 /**
- * 后端处理token
+ * 统一登录接口处理token
  */
 export function setTokenFromBackend(data: TokenDTO): void {
   const cookieString = JSON.stringify(data);
   Cookies.set(tokenKey, cookieString);
 
-  useUserStoreHook().SET_USERNAME(data.currentUser.userInfo.username);
+  useUserStoreHook().SET_USERNAME(data.currentUser.username);
   useUserStoreHook().SET_ROLES([data.currentUser.roleKey]);
+  useUserStoreHook().SET_CURRENT_USER_INFO(data.currentUser);
   storageSession().setItem(sessionKey, data);
 }
 
