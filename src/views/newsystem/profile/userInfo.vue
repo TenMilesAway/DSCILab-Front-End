@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, reactive } from "vue";
+import { ref, reactive, watch } from "vue";
 import {
   updateUserProfileApi,
   UpdateProfileRequest,
@@ -34,6 +34,31 @@ const userModel = reactive<UpdateProfileRequest>({
   homepageUrl: props.user.homepageUrl || "",
   orcid: props.user.orcid || ""
 });
+
+// 监听props.user变化，实现数据回显
+watch(
+  () => props.user,
+  newUser => {
+    if (newUser && Object.keys(newUser).length > 0) {
+      userModel.realName = newUser.realName || newUser.real_name || "";
+      userModel.englishName = newUser.englishName || "";
+      userModel.gender = newUser.gender || undefined;
+      userModel.academicStatus = newUser.academicStatus || undefined;
+      userModel.researchArea =
+        newUser.researchArea || newUser.research_area || "";
+      userModel.phone = newUser.phone || "";
+      userModel.email = newUser.email || "";
+      userModel.graduationYear =
+        newUser.graduationYear || newUser.graduation_year || undefined;
+      userModel.graduationDest =
+        newUser.graduationDest || newUser.graduation_dest || "";
+      userModel.resume = newUser.resume || "";
+      userModel.homepageUrl = newUser.homepageUrl || "";
+      userModel.orcid = newUser.orcid || "";
+    }
+  },
+  { immediate: true, deep: true }
+);
 
 console.log(userModel);
 console.log(props.user);

@@ -342,12 +342,26 @@ defineExpose({ getFormRuleRef });
         </el-form-item>
       </re-col>
 
-      <re-col :value="12" v-if="newFormInline.achievementType === 'paper'">
-        <el-form-item label="期刊名称" prop="journal">
+      <re-col
+        :value="12"
+        v-if="
+          newFormInline.achievementType === 'paper' &&
+          newFormInline.paperType !== 4 &&
+          newFormInline.paperType !== 5
+        "
+      >
+        <el-form-item
+          :label="newFormInline.paperType === 2 ? '会议名称' : '期刊名称'"
+          prop="journal"
+        >
           <el-input
             v-model="newFormInline.journal"
             clearable
-            placeholder="请输入期刊名称"
+            :placeholder="
+              newFormInline.paperType === 2
+                ? '请输入会议名称'
+                : '请输入期刊名称'
+            "
           />
         </el-form-item>
       </re-col>
@@ -406,11 +420,22 @@ defineExpose({ getFormRuleRef });
       </re-col>
 
       <re-col :value="12" v-if="newFormInline.achievementType === 'paper'">
-        <el-form-item label="DOI" prop="doi">
+        <el-form-item
+          :label="
+            newFormInline.paperType === 4 || newFormInline.paperType === 5
+              ? '编号'
+              : 'DOI'
+          "
+          prop="doi"
+        >
           <el-input
             v-model="newFormInline.doi"
             clearable
-            placeholder="请输入DOI"
+            :placeholder="
+              newFormInline.paperType === 4 || newFormInline.paperType === 5
+                ? '请输入编号'
+                : '请输入DOI'
+            "
           />
         </el-form-item>
       </re-col>
@@ -448,17 +473,29 @@ defineExpose({ getFormRuleRef });
       <re-col :value="12">
         <el-form-item
           :label="
-            newFormInline.achievementType === 'paper' ? '是否发表' : '是否结项'
+            newFormInline.achievementType === 'paper'
+              ? newFormInline.paperType === 4 || newFormInline.paperType === 5
+                ? '是否授权'
+                : '是否发表'
+              : '是否结项'
           "
           prop="published"
         >
           <el-switch
             v-model="newFormInline.published"
             :active-text="
-              newFormInline.achievementType === 'paper' ? '已发表' : '已结项'
+              newFormInline.achievementType === 'paper'
+                ? newFormInline.paperType === 4 || newFormInline.paperType === 5
+                  ? '授权'
+                  : '已发表'
+                : '已结项'
             "
             :inactive-text="
-              newFormInline.achievementType === 'paper' ? '在投' : '未结项'
+              newFormInline.achievementType === 'paper'
+                ? newFormInline.paperType === 4 || newFormInline.paperType === 5
+                  ? '受理'
+                  : '在投'
+                : '未结项'
             "
           />
         </el-form-item>
