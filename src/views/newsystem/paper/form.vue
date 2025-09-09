@@ -408,9 +408,9 @@ defineExpose({ getFormRuleRef });
       <re-col :value="12" v-if="newFormInline.achievementType === 'paper'">
         <el-form-item label="DOI" prop="doi">
           <el-input
-            v-model="newFormInline.doi"
+            v-model="newFormInline.journal"
             clearable
-            placeholder="请输入DOI"
+            placeholder="请输入期刊名称"
           />
         </el-form-item>
       </re-col>

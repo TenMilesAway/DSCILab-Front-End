@@ -9,7 +9,6 @@ interface ResearchArea {
   icon: string;
   title: string;
   description: string;
-  detailDesc: string;
 }
 
 interface Props {
@@ -31,32 +30,27 @@ withDefaults(defineProps<Props>(), {
     {
       icon: 'el-icon-data-analysis',
       title: '知识图谱',
-      description: '研究知识图谱领域知识本体构建、知识实例抽取、知识关系抽取、知识融合等知识图谱核心关键技术',
-      detailDesc: '深度处理各类多源异构数据，构建海量数据并开构建专业领域知识图谱，为各类上层应用（例如智能问答、语义检索、规律挖掘等）提供底层知识图谱数据支撑。'
+      description: '研究知识图谱领域知识本体构建、知识实例抽取、知识关系抽取、知识属性值抽取、知识融合等知识图谱核心关键技术，深度处理各类多源异构海量数据并构建专业领域知识图谱，为各类上层应用（例如智能问答、语义检索、规律挖掘等）提供底层知识图谱数据支撑。'
     },
     {
       icon: 'el-icon-cpu',
       title: '时序数据分析',
-      description: '采集并利用海量开源的轨迹数据，通过时序深度学习技术，理解多个不同标记间的运动关系',
-      detailDesc: '预测轨迹并进行多角度的分析和预测，为智慧城市建设提供数据支撑和决策依据。'
+      description: '采集并利用海量开源的轨迹数据，通过时序深度学习技术，理解多个目标之间的运动关系，预测感兴趣的目标轨迹，并对目标行为进行多角度的分析和预测。'
     },
     {
       icon: 'el-icon-view',
       title: '计算机视觉',
-      description: '针对空中拍摄图像，采用图像增强、图像配准等图像处理技术，对于所拍摄的目标物体进行检测',
-      detailDesc: '跟踪等任务，实现多任务并行处理，并在此基础上实现对于场景内容的高语义理解。'
+      description: '针对空中拍摄图像，采用图像增强、图像配准等图像处理技术，对于所拍摄到的目标物体进行检测、识别、跟踪等操作，并在此基础上实现对于场景内容的髙语义理解。'
     },
     {
       icon: 'el-icon-connection',
       title: '边缘计算',
-      description: '针对靠近边缘协作快速发展趋势，探索面向性能优化的多效算力自适应协作机制',
-      detailDesc: '实现算力计算任务所需算力的合理分配，使端、边、云点可以进行数据和资源的分布式统一调度。'
+      description: '针对端边云协同快速发展趋势，探索面向性能优化的多级算力自适应协同机制，实现复杂计算任务所需算力实时动态调配，使端、边、云节点可以进行数据和资源的分布式统一调度。'
     },
     {
       icon: 'el-icon-magic-stick',
       title: '虚拟现实',
-      description: '针对虚拟漫游中物理空间有限的问题，通过重新映射用户在虚拟环境中的运动',
-      detailDesc: '从而突破空间限制，允许用户在有限的物理空间内实现更大范围的虚拟漫游。'
+      description: '针对虚拟漫游中物理空间有限的问题，通过重新映射用户在虚拟环境中的运动，从而突破空间限制，允许用户在有限的物理空间内实现更大范围的虚拟漫游。'
     }
   ]
 });
@@ -97,7 +91,6 @@ withDefaults(defineProps<Props>(), {
               </div>
               <div class="content-body">
                 <p class="content-description">{{ item.description }}</p>
-                <p class="content-detail">{{ item.detailDesc }}</p>
               </div>
             </div>
           </div>
@@ -444,19 +437,8 @@ withDefaults(defineProps<Props>(), {
     font-size: 1.1rem;
     color: #374151;
     line-height: 1.8;
-    margin-bottom: 20px;
-    font-weight: 500;
-  }
-  
-  .content-detail {
-    font-size: 1rem;
-    color: #6b7280;
-    line-height: 1.7;
     margin: 0;
-    padding: 20px;
-    background: rgba(30, 58, 138, 0.05);
-    border-radius: 12px;
-    border-left: 4px solid #3b82f6;
+    font-weight: 500;
   }
 }
 
@@ -621,7 +603,6 @@ withDefaults(defineProps<Props>(), {
       line-height: 1.6;
       background: rgba(59, 130, 246, 0.08);
       border-radius: 8px;
-      border-left: 3px solid #3b82f6;
       color: #4b5563;
       margin: 0;
     }
