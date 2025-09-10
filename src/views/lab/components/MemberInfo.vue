@@ -158,14 +158,14 @@
                   >
                     <div class="project-main-member">
                       <el-tag
-                        :type="getProjectTypeTagType(project.projectType)"
+                        :type="getProjectTypeTagType(project.projectType) as '' | 'success' | 'warning' | 'danger' | 'info'"
                         size="small"
                         class="project-type-tag-member"
                       >
                         {{ getProjectTypeLabel(project.projectType) }}
                       </el-tag>
                       <el-tag
-                        :type="getProjectStatusTagType(project.published, project.projectType)"
+                        :type="getProjectStatusTagType(project.published, project.projectType) as '' | 'success' | 'warning' | 'danger' | 'info'"
                         size="small"
                         class="project-status-tag-member"
                       >
@@ -217,14 +217,14 @@
                   >
                     <div class="achievement-main-member">
                       <el-tag
-                        :type="getPaperTypeTagType(achievement.paperType)"
+                        :type="getPaperTypeTagType(achievement.paperType) as '' | 'success' | 'warning' | 'danger' | 'info'"
                         size="small"
                         class="achievement-type-tag-member"
                       >
                         {{ getPaperTypeLabel(achievement.paperType) }}
                       </el-tag>
                       <el-tag
-                         :type="getStatusTagType(achievement.paperType, achievement.published)"
+                         :type="getStatusTagType(achievement.paperType, achievement.published) as '' | 'success' | 'warning' | 'danger' | 'info'"
                          size="small"
                          class="achievement-status-tag-member"
                        >
@@ -692,7 +692,7 @@ const getPaperTypeTagType = (paperType?: number) => {
     3: "warning", // 预印本
     4: "danger", // 专利
     5: "info", // 软著
-    6: "", // 标准
+    6: "info", // 标准
     7: "primary" // 专著
   };
   return typeMap[paperType || 7] || "info";
@@ -742,7 +742,7 @@ const getStatusTagType = (paperType?: number, published?: boolean) => {
     3: "warning", // 预印本
     4: "danger", // 专利
     5: "info", // 软著
-    6: "", // 标准
+    6: "info", // 标准
     7: "primary" // 专著
   };
   
@@ -756,10 +756,10 @@ const getStatusTagType = (paperType?: number, published?: boolean) => {
       3: "warning",  // 预印本：从warning变为info
       4: "danger",  // 专利：从danger变为warning
       5: "info",  // 软著：使用默认灰色调
-      6: "", // 标准
+      6: "info", // 标准
       7: "primary"  // 专著：从primary变为info
     };
-    return unpublishedColors[paperType || 7] || "";
+    return unpublishedColors[paperType || 7] || "info";
   }
   
   return baseTypeColors[paperType || 7] || "info";
@@ -772,7 +772,7 @@ const getProjectTypeTagType = (projectType?: number) => {
     2: "danger", // 国自然面上
     3: "primary", // 国自然青年
     4: "success", // 北京市教委科技一般
-    5: "", // 国家级教改
+    5: "success", // 国家级教改
     6: "primary", // 省部级教改
     7: "info", // 其他教改
     8: "info" // 其他纵向

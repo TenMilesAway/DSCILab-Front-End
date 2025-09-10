@@ -102,7 +102,7 @@
               {{ getTypeLabel(project.type) }}
             </el-tag>
             <el-tag 
-              :type="getStatusTagType(project.published, project.type)" 
+              :type="getTypeTagType(project.type)"
               size="small" 
               class="project-status-tag"
             >
@@ -309,8 +309,8 @@ const getStatusLabel = (published: boolean) => {
   return published ? '已结项' : '未结项'
 }
 
-const getStatusTagType = (published: boolean, projectType?: number) => {
-  // 返回与项目类型标签相同的颜色
+const getStatusTagType = (published: boolean, projectType: Project['type']) => {
+  // 返回与项目类型标签相同的颜色，确保相同项目类型的tag颜色一致
   return getTypeTagType(projectType)
 }
 

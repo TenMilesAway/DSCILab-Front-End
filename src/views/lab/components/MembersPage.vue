@@ -12,6 +12,10 @@ import {
   getAchievementsListApi,
   type ApiAchievement
 } from "@/api/lab/achievements";
+import {
+  getProjectsListApi,
+  type ApiProject
+} from "@/api/lab/projects";
 
 defineOptions({
   name: "MembersPage"
@@ -71,7 +75,7 @@ const simulateLoading = ref(false);
 // API获取的成果数据
 const apiAchievements = ref<ApiAchievement[]>([]);
 // API获取的项目数据
-const apiProjects = ref<ApiAchievement[]>([]);
+const apiProjects = ref<ApiProject[]>([]);
 
 // 获取实际使用的成员数据
 const actualMembers = computed(() => {
@@ -321,7 +325,7 @@ const showDetailView = ref(false);
 const detailLoading = ref(false);
 const selectedMember = ref<Member | null>(null);
 const selectedMemberAchievements = ref<ApiAchievement[]>([]);
-const selectedMemberProjects = ref<ApiAchievement[]>([]);
+const selectedMemberProjects = ref<ApiProject[]>([]);
 // 滚动位置记忆
 const savedScrollPosition = ref(0);
 
@@ -345,7 +349,7 @@ const filterAchievementsByUserName = (userName: string): ApiAchievement[] => {
 };
 
 // 根据用户姓名筛选项目数据
-const filterProjectsByUserName = (userName: string): ApiAchievement[] => {
+const filterProjectsByUserName = (userName: string): ApiProject[] => {
   return apiProjects.value
     .filter(project => {
       // 检查authors字段中是否有匹配的用户姓名
