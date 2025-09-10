@@ -13,17 +13,11 @@
         <el-menu-item index="all">
           <span>全部项目</span>
         </el-menu-item>
-        <el-menu-item index="horizontal">
-          <span>横向</span>
-        </el-menu-item>
         <el-menu-item index="nsfc_general">
           <span>国自然面上</span>
         </el-menu-item>
         <el-menu-item index="nsfc_youth">
           <span>国自然青年</span>
-        </el-menu-item>
-        <el-menu-item index="other_vertical">
-          <span>其它纵向</span>
         </el-menu-item>
         <el-menu-item index="beijing_edu">
           <span>北京市教委科技一般</span>
@@ -36,6 +30,12 @@
         </el-menu-item>
         <el-menu-item index="other_edu_reform">
           <span>其它教改</span>
+        </el-menu-item>
+        <el-menu-item index="horizontal">
+          <span>横向</span>
+        </el-menu-item>
+        <el-menu-item index="other_vertical">
+          <span>其它纵向</span>
         </el-menu-item>
       </el-menu>
     </div>
