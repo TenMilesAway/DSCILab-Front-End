@@ -12,6 +12,10 @@ import {
   getAchievementsListApi,
   type ApiAchievement
 } from "@/api/lab/achievements";
+import {
+  getProjectsListApi,
+  type ApiProject
+} from "@/api/lab/projects";
 
 defineOptions({
   name: "MembersPage"
@@ -71,7 +75,7 @@ const simulateLoading = ref(false);
 // API获取的成果数据
 const apiAchievements = ref<ApiAchievement[]>([]);
 // API获取的项目数据
-const apiProjects = ref<ApiAchievement[]>([]);
+const apiProjects = ref<ApiProject[]>([]);
 
 // 获取实际使用的成员数据
 const actualMembers = computed(() => {
@@ -262,7 +266,7 @@ const fetchAchievementsFromApi = async () => {
 // 从API获取项目数据
 const fetchProjectsFromApi = async () => {
   try {
-    const result = await getAchievementsListApi({ type: 2 });
+    const result = await getProjectsListApi({ type: 2 });
 
     if (result.code === 0 && result.data && result.data.rows) {
       apiProjects.value = result.data.rows;
@@ -321,7 +325,7 @@ const showDetailView = ref(false);
 const detailLoading = ref(false);
 const selectedMember = ref<Member | null>(null);
 const selectedMemberAchievements = ref<ApiAchievement[]>([]);
-const selectedMemberProjects = ref<ApiAchievement[]>([]);
+const selectedMemberProjects = ref<ApiProject[]>([]);
 // 滚动位置记忆
 const savedScrollPosition = ref(0);
 
@@ -345,7 +349,7 @@ const filterAchievementsByUserName = (userName: string): ApiAchievement[] => {
 };
 
 // 根据用户姓名筛选项目数据
-const filterProjectsByUserName = (userName: string): ApiAchievement[] => {
+const filterProjectsByUserName = (userName: string): ApiProject[] => {
   return apiProjects.value
     .filter(project => {
       // 检查authors字段中是否有匹配的用户姓名
@@ -667,25 +671,59 @@ const getCategoryName = (categoryKey: string) => {
 
 @media (width <= 480px) {
   .members-page {
-    padding: 40px 12px;
+    padding: 20px 8px;
   }
 
   .members-container {
     padding-left: 0;
+    gap: 12px;
+    align-items: center;
   }
 
   .members-sidebar {
+    max-width: 400px;
+    margin: 0 auto;
     padding: 12px;
+    border-radius: 12px;
 
-    .sidebar-header h3 {
-      font-size: 1.1rem;
+    .sidebar-header {
+      margin-bottom: 12px;
+      
+      h3 {
+        font-size: 1rem;
+        text-align: center;
+      }
+    }
+
+    .category-nav {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      justify-content: center;
     }
 
     .nav-item {
-      padding: 10px 12px;
-      font-size: 14px;
+      padding: 8px 10px;
+      font-size: 12px;
+      border-radius: 8px;
+      min-height: 36px;
+      justify-content: center;
+      text-align: center;
+      
+      .nav-text {
+        font-weight: 500;
+      }
 
       .nav-count {
+        font-size: 10px;
+        margin-left: 4px;
+      }
+      
+      &:hover {
+        transform: none;
+      }
+      
+      &.active {
         font-size: 12px;
       }
     }
@@ -693,21 +731,39 @@ const getCategoryName = (categoryKey: string) => {
 
   .members-content {
     .category-header {
+      margin-bottom: 16px;
+      
       h3 {
-        font-size: 1.3rem;
+        font-size: 1.2rem;
+        
+        .category-count {
+          font-size: 0.9rem;
+        }
+      }
+      
+      .search-container {
+        .search-input {
+          font-size: 14px;
+        }
       }
     }
   }
 
   .member-card {
     padding: 12px;
+    border-radius: 10px;
+    
+    &:hover {
+      transform: none;
+    }
 
     .member-info {
       gap: 6px;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
 
       .member-name {
         font-size: 15px;
+        font-weight: 600;
       }
 
       .member-title {
@@ -716,12 +772,14 @@ const getCategoryName = (categoryKey: string) => {
 
       .member-graduation {
         font-size: 12px;
+        padding: 3px 6px;
       }
     }
 
     .member-action {
       .view-detail {
-        font-size: 12px;
+        font-size: 11px;
+        padding: 4px 8px;
       }
     }
   }
@@ -729,20 +787,46 @@ const getCategoryName = (categoryKey: string) => {
 
 @media (width <= 360px) {
   .members-page {
-    padding: 30px 8px;
+    padding: 16px 6px;
   }
 
   .members-sidebar {
+    max-width: 320px;
+    margin: 0 auto;
+    padding: 10px;
+    
+    .sidebar-header {
+      h3 {
+        font-size: 0.95rem;
+        text-align: center;
+      }
+    }
+    
+    .category-nav {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 6px;
+      justify-content: center;
+    }
+    
     .nav-item {
-      padding: 8px 10px;
-      font-size: 13px;
+      padding: 6px 8px;
+      font-size: 11px;
+      min-height: 32px;
+      
+      .nav-count {
+        font-size: 9px;
+      }
     }
   }
 
   .members-content {
     .category-header {
       h3 {
-        font-size: 1.2rem;
+        font-size: 1.1rem;
+        
+        .category-count {
+          font-size: 0.85rem;
+        }
       }
     }
   }
@@ -761,6 +845,14 @@ const getCategoryName = (categoryKey: string) => {
 
       .member-graduation {
         font-size: 11px;
+        padding: 2px 5px;
+      }
+    }
+    
+    .member-action {
+      .view-detail {
+        font-size: 10px;
+        padding: 3px 6px;
       }
     }
   }
@@ -879,30 +971,167 @@ const getCategoryName = (categoryKey: string) => {
 
 /* 成员详情相关样式已移至 MemberInfo.vue 组件 */
 
+/* 超小屏幕优化 (320px及以下) */
+@media (width <= 320px) {
+  .members-page {
+    padding: 12px 4px;
+  }
+
+  .members-sidebar {
+    max-width: 280px;
+    margin: 0 auto;
+    padding: 8px;
+    
+    .sidebar-header {
+      margin-bottom: 8px;
+      
+      h3 {
+        font-size: 0.9rem;
+        text-align: center;
+      }
+    }
+    
+    .category-nav {
+      grid-template-columns: 1fr;
+      gap: 4px;
+      justify-content: center;
+    }
+    
+    .nav-item {
+      padding: 8px 6px;
+      font-size: 10px;
+      min-height: 28px;
+      
+      .nav-count {
+        font-size: 8px;
+      }
+    }
+  }
+
+  .members-content {
+    .category-header {
+      h3 {
+        font-size: 1rem;
+        
+        .category-count {
+          font-size: 0.8rem;
+        }
+      }
+    }
+  }
+
+  .member-card {
+    padding: 8px;
+    min-height: 50px;
+
+    .member-info {
+      .member-name {
+        font-size: 13px;
+      }
+
+      .member-title {
+        font-size: 11px;
+      }
+
+      .member-graduation {
+        font-size: 10px;
+        padding: 2px 4px;
+      }
+    }
+    
+    .member-action {
+      .view-detail {
+        font-size: 9px;
+        padding: 2px 4px;
+      }
+    }
+  }
+}
+
 /* 响应式调整 */
 @media (width <= 1024px) {
   .members-container {
     flex-direction: column;
     gap: 20px;
+    padding: 0 15px;
+    align-items: center;
   }
 
   .members-sidebar {
     position: static;
     width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 18px;
+    border-radius: 16px;
+
+    .sidebar-header {
+      margin-bottom: 18px;
+      
+      h3 {
+        font-size: 1.2rem;
+        text-align: center;
+      }
+    }
 
     .category-nav {
-      display: flex;
-      flex-flow: row wrap;
-      gap: 10px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px;
+      justify-content: center;
     }
 
     .nav-item {
-      flex: 1;
       justify-content: center;
-      min-width: 120px;
-
+      text-align: center;
+      min-width: auto;
+      padding: 12px 16px;
+      font-size: 14px;
+      border-radius: 12px;
+      
       .nav-text {
-        flex: none;
+        font-weight: 500;
+      }
+      
+      .nav-count {
+        font-size: 12px;
+        margin-left: 6px;
+      }
+      
+      &:hover {
+        transform: translateY(-2px);
+      }
+      
+      &.active {
+        transform: translateY(-1px);
+      }
+    }
+  }
+
+  /* 中等分辨率优化 */
+  @media (width <= 900px) and (width > 768px) {
+    .members-sidebar {
+      .category-nav {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+      }
+
+      .nav-item {
+        justify-content: center;
+        text-align: center;
+        min-width: auto;
+        padding: 12px 10px;
+        font-size: 14px;
+        
+        .nav-text {
+          font-weight: 500;
+        }
+        
+        .nav-count {
+          font-size: 12px;
+          margin-left: 4px;
+        }
       }
     }
   }
@@ -920,44 +1149,83 @@ const getCategoryName = (categoryKey: string) => {
 
 @media (width <= 768px) {
   .members-page {
-    padding: 60px 15px;
+    padding: 40px 12px;
   }
 
   .members-container {
-    gap: 15px;
+    gap: 16px;
+    align-items: center;
   }
 
   .members-sidebar {
+    max-width: 600px;
+    margin: 0 auto;
     padding: 16px;
+    border-radius: 14px;
+
+    .sidebar-header {
+      margin-bottom: 16px;
+      
+      h3 {
+        font-size: 1.1rem;
+        text-align: center;
+      }
+    }
 
     .category-nav {
-      flex-direction: column;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      justify-content: center;
     }
 
     .nav-item {
-      justify-content: flex-start;
+      justify-content: center;
+      text-align: center;
       min-width: auto;
+      padding: 10px 8px;
+      font-size: 13px;
+      border-radius: 10px;
+      
+      .nav-text {
+        font-weight: 500;
+      }
+      
+      .nav-count {
+        font-size: 11px;
+        margin-left: 4px;
+      }
+      
+      &:hover {
+        transform: translateY(-2px);
+      }
     }
   }
 
   .members-content {
     .category-header {
       flex-direction: column;
-      gap: 15px;
+      gap: 16px;
       align-items: flex-start;
+      margin-bottom: 20px;
 
       h3 {
-        font-size: 1.5rem;
+        font-size: 1.4rem;
+        
+        .category-count {
+          font-size: 1rem;
+        }
       }
 
       .search-container {
         flex-direction: column;
-        gap: 15px;
+        gap: 12px;
         align-items: stretch;
         width: 100%;
 
         .search-input {
           width: 100%;
+          font-size: 15px;
         }
 
         .loading-switch-container {
@@ -970,14 +1238,19 @@ const getCategoryName = (categoryKey: string) => {
   .member-card {
     flex-direction: column;
     align-items: flex-start;
-    padding: 16px;
+    padding: 14px;
+    border-radius: 12px;
+    
+    &:hover {
+      transform: translateY(-2px);
+    }
 
     .member-info {
       flex-direction: column;
       gap: 8px;
       align-items: flex-start;
       width: 100%;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
 
       .member-field {
         width: 100%;
@@ -988,6 +1261,7 @@ const getCategoryName = (categoryKey: string) => {
       .member-name {
         margin-bottom: 4px;
         font-size: 16px;
+        font-weight: 600;
       }
 
       .member-title {
@@ -997,11 +1271,20 @@ const getCategoryName = (categoryKey: string) => {
 
       .member-graduation {
         font-size: 13px;
+        padding: 4px 8px;
+        border-radius: 8px;
+        align-self: flex-start;
       }
     }
 
     .member-action {
       align-self: flex-end;
+      
+      .view-detail {
+        padding: 6px 12px;
+        font-size: 13px;
+        border-radius: 8px;
+      }
     }
   }
 }
@@ -1043,8 +1326,7 @@ const getCategoryName = (categoryKey: string) => {
 
 /* 左侧导航栏样式 */
 .members-sidebar {
-  position: sticky;
-  top: 100px;
+  position: static; /* 彻底移除sticky定位，避免缩放问题 */
   width: 280px;
   padding: 24px;
   background: rgb(248 250 252 / 95%);
@@ -1052,6 +1334,12 @@ const getCategoryName = (categoryKey: string) => {
   border: 1px solid rgb(226 232 240 / 30%);
   border-radius: 16px;
   box-shadow: 0 8px 32px rgb(148 163 184 / 15%);
+
+  /* 桌面端保持固定定位 */
+  @media (width > 1024px) {
+    position: sticky;
+    top: 100px;
+  }
 
   .sidebar-header {
     margin-bottom: 20px;
@@ -1078,16 +1366,38 @@ const getCategoryName = (categoryKey: string) => {
     background: rgb(255 255 255 / 50%);
     border-radius: 12px;
     transition: all 0.3s ease;
+    -webkit-tap-highlight-color: transparent; /* 移除移动端点击高亮 */
+    user-select: none; /* 防止文本选择 */
 
     &:hover {
       background: rgb(59 130 246 / 10%);
       transform: translateX(4px);
+    }
+    
+    /* 移动端触摸反馈 */
+    @media (hover: none) and (pointer: coarse) {
+      &:active {
+        background: rgb(59 130 246 / 15%);
+        transform: scale(0.98);
+      }
+      
+      &:hover {
+        transform: none;
+      }
     }
 
     &.active {
       color: white;
       background: linear-gradient(135deg, #3b82f6, #1d4ed8);
       box-shadow: 0 4px 12px rgb(59 130 246 / 30%);
+      
+      /* 移动端激活状态优化 */
+      @media (hover: none) and (pointer: coarse) {
+        &:active {
+          background: linear-gradient(135deg, #2563eb, #1e40af);
+          transform: scale(0.98);
+        }
+      }
     }
 
     .nav-text {
@@ -1177,11 +1487,26 @@ const getCategoryName = (categoryKey: string) => {
   border-radius: 12px;
   box-shadow: 0 4px 16px rgb(148 163 184 / 10%);
   transition: all 0.3s ease;
+  -webkit-tap-highlight-color: transparent; /* 移除移动端点击高亮 */
+  user-select: none; /* 防止文本选择 */
 
   &:hover {
     background: rgb(255 255 255 / 95%);
     box-shadow: 0 8px 24px rgb(148 163 184 / 20%);
     transform: translateX(4px);
+  }
+  
+  /* 移动端触摸反馈 */
+  @media (hover: none) and (pointer: coarse) {
+    &:active {
+      background: rgb(255 255 255 / 90%);
+      transform: scale(0.98);
+      box-shadow: 0 2px 8px rgb(148 163 184 / 15%);
+    }
+    
+    &:hover {
+      transform: none;
+    }
   }
 }
 
@@ -1420,17 +1745,6 @@ const getCategoryName = (categoryKey: string) => {
   flex-direction: column;
   gap: 12px;
   width: 100%;
-}
-
-/* 移除成员分类切换动画 */
-
-
-.member-list-enter-active,
-.member-list-leave-active,
-.member-list-enter-from,
-.member-list-leave-to,
-.member-list-move {
-  /* 无动画效果 */
 }
 
 .empty-state {

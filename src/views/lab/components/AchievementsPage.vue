@@ -100,7 +100,7 @@
                 {{ getTypeLabel(achievement.type) }}
               </el-tag>
               <el-tag 
-                :type="getStatusTagType(achievement.type, achievement.published)" 
+                :type="getStatusTagType(achievement.type, achievement.published) as '' | 'success' | 'warning' | 'info' | 'danger'"
                 size="small" 
                 class="achievement-status-tag"
               >
