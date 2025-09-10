@@ -110,8 +110,10 @@
                 <span class="achievement-authors">{{ achievement.authors.join(', ') }}</span>
                 <span class="achievement-separator">.</span>
                 <span class="achievement-title">{{ achievement.title }}</span>
-                <span class="achievement-separator">,</span>
-                <span class="achievement-institution">{{ achievement.institution }}</span>
+                <template v-if="achievement.institution">
+                  <span class="achievement-separator">,</span>
+                  <span class="achievement-institution">{{ achievement.institution }}</span>
+                </template>
                 <span class="achievement-separator">,</span>
                 <span class="achievement-year">{{ achievement.year }}</span>
                 <span class="achievement-separator">.</span>
@@ -130,7 +132,7 @@
                     @click="achievement.githubUrl && handleGithubClick(achievement.githubUrl)"
                   />
                 </el-tooltip>
-                <el-tooltip :content="achievement.projectUrl ? '项目主页' : '暂无项目主页'" placement="top">
+                <el-tooltip :content="achievement.projectUrl ? '成果主页' : '暂无成果主页'" placement="top">
                   <el-button 
                     plain 
                     :icon="House" 

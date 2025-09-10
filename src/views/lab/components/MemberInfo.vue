@@ -60,51 +60,71 @@
               <div class="info-grid">
                 <div class="info-item animate-fade-up" style="animation-delay: 0.8s;">
                   <span class="label">姓名:</span>
-                  <span class="value">{{ member.name }}</span>
+                  <el-tooltip :content="member.name" placement="top" :disabled="!shouldShowTooltip(member.name)">
+                    <span class="value truncated">{{ member.name }}</span>
+                  </el-tooltip>
                 </div>
                 <div class="info-item animate-fade-up" v-if="member.englishName" style="animation-delay: 0.9s;">
                   <span class="label">英文名:</span>
-                  <span class="value">{{ member.englishName }}</span>
+                  <el-tooltip :content="member.englishName" placement="top" :disabled="!shouldShowTooltip(member.englishName)">
+                    <span class="value truncated">{{ member.englishName }}</span>
+                  </el-tooltip>
                 </div>
                 <div class="info-item animate-fade-up" v-if="member.gender" style="animation-delay: 1.0s;">
                   <span class="label">性别:</span>
-                  <span class="value">{{
-                    member.gender === 1
-                      ? "男"
-                      : member.gender === 2
-                      ? "女"
-                      : member.gender
-                  }}</span>
+                  <el-tooltip :content="member.gender === 1 ? '男' : member.gender === 2 ? '女' : member.gender" placement="top" :disabled="!shouldShowTooltip(member.gender === 1 ? '男' : member.gender === 2 ? '女' : member.gender)">
+                    <span class="value truncated">{{
+                      member.gender === 1
+                        ? "男"
+                        : member.gender === 2
+                        ? "女"
+                        : member.gender
+                    }}</span>
+                  </el-tooltip>
                 </div>
                 <div class="info-item animate-fade-up" style="animation-delay: 1.1s;">
                   <span class="label">职位:</span>
-                  <span class="value">{{
-                    getAcademicStatusTitle(member.academicStatus)
-                  }}</span>
+                  <el-tooltip :content="getAcademicStatusTitle(member.academicStatus)" placement="top" :disabled="!shouldShowTooltip(getAcademicStatusTitle(member.academicStatus))">
+                    <span class="value truncated">{{
+                      getAcademicStatusTitle(member.academicStatus)
+                    }}</span>
+                  </el-tooltip>
                 </div>
                 <div class="info-item animate-fade-up" v-if="member.email" style="animation-delay: 1.2s;">
                   <span class="label">邮箱:</span>
-                  <span class="value">{{ member.email }}</span>
+                  <el-tooltip :content="member.email" placement="top" :disabled="!shouldShowTooltip(member.email)">
+                    <span class="value truncated">{{ member.email }}</span>
+                  </el-tooltip>
                 </div>
                 <div class="info-item animate-fade-up" v-if="member.phone" style="animation-delay: 1.3s;">
                   <span class="label">手机号:</span>
-                  <span class="value">{{ member.phone }}</span>
+                  <el-tooltip :content="member.phone" placement="top" :disabled="!shouldShowTooltip(member.phone)">
+                    <span class="value truncated">{{ member.phone }}</span>
+                  </el-tooltip>
                 </div>
                 <div class="info-item animate-fade-up" v-if="member.enrollmentYear" style="animation-delay: 1.4s;">
                   <span class="label">{{ getEnrollmentLabel(member) }}:</span>
-                  <span class="value">{{ member.enrollmentYear }}</span>
+                  <el-tooltip :content="member.enrollmentYear?.toString()" placement="top" :disabled="!shouldShowTooltip(member.enrollmentYear?.toString())">
+                    <span class="value truncated">{{ member.enrollmentYear }}</span>
+                  </el-tooltip>
                 </div>
                 <div class="info-item animate-fade-up" v-if="member.graduationYear" style="animation-delay: 1.5s;">
                   <span class="label">毕业年份:</span>
-                  <span class="value">{{ member.graduationYear }}</span>
+                  <el-tooltip :content="member.graduationYear?.toString()" placement="top" :disabled="!shouldShowTooltip(member.graduationYear?.toString())">
+                    <span class="value truncated">{{ member.graduationYear }}</span>
+                  </el-tooltip>
                 </div>
                 <div class="info-item animate-fade-up" v-if="member.graduation" style="animation-delay: 1.6s;">
                   <span class="label">毕业去向:</span>
-                  <span class="value">{{ member.graduation }}</span>
+                  <el-tooltip :content="member.graduation" placement="top" :disabled="!shouldShowTooltip(member.graduation)">
+                    <span class="value truncated">{{ member.graduation }}</span>
+                  </el-tooltip>
                 </div>
                 <div class="info-item animate-fade-up" v-if="member.orcid" style="animation-delay: 1.7s;">
                   <span class="label">ORCID:</span>
-                  <span class="value">{{ member.orcid }}</span>
+                  <el-tooltip :content="member.orcid" placement="top" :disabled="!shouldShowTooltip(member.orcid)">
+                    <span class="value truncated">{{ member.orcid }}</span>
+                  </el-tooltip>
                 </div>
               </div>
             </div>
@@ -621,6 +641,14 @@ const handleImageError = (event: Event) => {
   }
 };
 
+// 判断是否需要显示tooltip（始终显示以确保用户能看到完整内容）
+const shouldShowTooltip = (text: string | undefined | null): boolean => {
+  if (!text) return false;
+  const textStr = String(text).trim();
+  // 始终显示tooltip，让用户能够看到完整内容
+  return textStr.length > 0;
+};
+
 // 滚动监听功能
 const handleScroll = () => {
   const sections = navigationItems
@@ -996,6 +1024,10 @@ const handlePdfDownload = (url: string) => {
     .value {
       font-size: 14px;
     }
+
+    .value.truncated {
+      max-width: 120px;
+    }
   }
 
   .basic-info h1 {
@@ -1087,6 +1119,10 @@ const handlePdfDownload = (url: string) => {
 
     .value {
       font-size: 13px;
+    }
+
+    .value.truncated {
+      max-width: 100px;
     }
   }
 
@@ -1607,6 +1643,15 @@ const handlePdfDownload = (url: string) => {
   color: #1e293b;
 }
 
+.info-item .value.truncated {
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+  display: inline-block;
+}
+
 .info-item .value .link {
   color: #3b82f6;
   text-decoration: none;
@@ -1649,7 +1694,6 @@ const handlePdfDownload = (url: string) => {
       font-size: 13px;
       font-weight: 600;
       color: #1e40af;
-      cursor: pointer;
       background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
       border: none;
       border-radius: 8px;
