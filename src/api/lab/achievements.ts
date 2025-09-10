@@ -6,15 +6,22 @@ import { http } from "@/utils/http";
 export interface ApiAchievement {
   id: number;
   title: string;
-  paperType: number;
+  paperType?: number;
   description?: string;
   publishDate?: string;
-  authors?: Array<{name: string}>;
+  authors?: Array<{
+    name: string;
+    visible: boolean;
+    userId?: number;
+    authorOrder?: number;
+    isCorresponding?: boolean;
+  }>;
   journal?: string;
   venue?: string;
   doi?: string;
   tags?: string[];
   status?: number;
+  published?: boolean;
   gitUrl?: string;
   linkUrl?: string;
   pdfUrl?: string;

@@ -124,6 +124,27 @@ const getAcademicStatusTitle = (
   return baseTitle;
 };
 
+// 根据职称获取颜色
+const getTitleColor = (academicStatus: number | null, hasGraduation: boolean): string => {
+  // 已毕业学生使用明亮的橙色
+  if (hasGraduation) {
+    return "#ff6b35"; // 明亮的橙色
+  }
+
+  // 根据职级层次设置颜色，从深到浅
+  const colorMap: Record<number, string> = {
+    0: "#8b0000", // 实验室负责人 - 深红色
+    1: "#dc2626", // 教授 - 红色
+    2: "#ea580c", // 副教授 - 橙红色
+    3: "#d97706", // 讲师 - 橙色
+    4: "#059669", // 博士生 - 绿色
+    5: "#0891b2", // 硕士生 - 青色
+    6: "#7c3aed"  // 本科生 - 紫色
+  };
+
+  return colorMap[academicStatus || 6] || "#6b7280"; // 默认灰色
+};
+
 // 根据学术状态确定分类
 const getCategoryByAcademicStatus = (
   academicStatus: number | null,
@@ -187,7 +208,8 @@ const fetchMembersFromApi = async () => {
               ? user.graduationDest
               : undefined,
           category,
-          originalTitle: title
+          originalTitle: title,
+          academicStatus: user.academicStatus
         };
       });
 
@@ -479,7 +501,7 @@ const getCategoryName = (categoryKey: string) => {
               clearable
               class="search-input"
             />
-            <div class="loading-switch-container">
+            <!-- <div class="loading-switch-container">
               <el-switch
                 v-model="simulateLoading"
                 active-text="模拟加载"
@@ -488,7 +510,7 @@ const getCategoryName = (categoryKey: string) => {
                 inactive-color="#C0C4CC"
                 @change="fetchMembersFromApi"
               />
-            </div>
+            </div> -->
           </div>
         </div>
 
@@ -537,7 +559,10 @@ const getCategoryName = (categoryKey: string) => {
             >
               <div class="member-info">
                 <span class="member-field member-name">{{ member.name }}</span>
-                <span class="member-field member-title">{{
+                <span 
+                  class="member-field member-title"
+                  :style="{ color: getTitleColor(member.academicStatus, !!(member.graduation && member.graduation.trim())) }"
+                >{{
                   member.title
                 }}</span>
                 <span
@@ -1192,7 +1217,8 @@ const getCategoryName = (categoryKey: string) => {
     flex: 1;
     min-width: 150px;
     padding-right: 15px;
-    color: #7f8c8d;
+    font-weight: 500;
+    /* 颜色由动态样式控制 */
   }
 
   .member-graduation {

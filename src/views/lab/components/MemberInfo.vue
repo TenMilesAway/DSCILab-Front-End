@@ -164,6 +164,13 @@
                       >
                         {{ getProjectTypeLabel(project.projectType) }}
                       </el-tag>
+                      <el-tag
+                        :type="getProjectStatusTagType(project.published, project.projectType)"
+                        size="small"
+                        class="project-status-tag-member"
+                      >
+                        {{ getProjectStatusLabel(project.published) }}
+                      </el-tag>
                       <div class="project-content-member">
                         <span class="project-title-member">{{
                           project.title
@@ -216,6 +223,13 @@
                       >
                         {{ getPaperTypeLabel(achievement.paperType) }}
                       </el-tag>
+                      <el-tag
+                         :type="getStatusTagType(achievement.paperType, achievement.published)"
+                         size="small"
+                         class="achievement-status-tag-member"
+                       >
+                         {{ getStatusLabel(achievement.paperType, achievement.published) }}
+                       </el-tag>
                       <div class="achievement-content-member">
                         <span
                           v-if="
@@ -354,6 +368,7 @@ import {
 import { Link, Download } from "@element-plus/icons-vue";
 import { ElMessage } from "element-plus";
 import { type ApiAchievement } from "@/api/lab/achievements";
+import { type ApiProject } from "@/api/lab/projects";
 
 // 定义 Github 图标组件
 const _Github = {
@@ -400,7 +415,7 @@ interface Member {
 interface Props {
   member: Member | null;
   achievements?: ApiAchievement[];
-  projects?: ApiAchievement[];
+  projects?: ApiProject[];
 }
 
 const props = defineProps<Props>();
@@ -445,7 +460,20 @@ const avatarUrl = computed(() => {
 const sortedProjects = computed(() => {
   if (!props.projects || props.projects.length === 0) return [];
 
-  return [...props.projects].sort((a, b) => {
+  // 过滤出当前成员可见的项目
+  const visibleProjects = props.projects.filter(project => {
+    if (!project.authors || !props.member) return false;
+    
+    // 查找当前成员在作者列表中的记录
+    const currentMemberAuthor = project.authors.find(author => 
+      author.name === props.member.name
+    );
+    
+    // 如果找到当前成员且visible为true，则显示该项目
+    return currentMemberAuthor && currentMemberAuthor.visible;
+  });
+
+  return [...visibleProjects].sort((a, b) => {
     // 优先使用项目开始时间排序
     const aDate = a.projectStartDate
       ? new Date(a.projectStartDate).getTime()
@@ -461,7 +489,20 @@ const sortedProjects = computed(() => {
 const sortedAchievements = computed(() => {
   if (!props.achievements || props.achievements.length === 0) return [];
 
-  return [...props.achievements].sort((a, b) => {
+  // 过滤出当前成员可见的成果
+  const visibleAchievements = props.achievements.filter(achievement => {
+    if (!achievement.authors || !props.member) return false;
+    
+    // 查找当前成员在作者列表中的记录
+    const currentMemberAuthor = achievement.authors.find(author => 
+      author.name === props.member.name
+    );
+    
+    // 如果找到当前成员且visible为true，则显示该成果
+    return currentMemberAuthor && currentMemberAuthor.visible;
+  });
+
+  return [...visibleAchievements].sort((a, b) => {
     // 优先使用发表时间排序
     const aDate = a.publishDate ? new Date(a.publishDate).getTime() : 0;
     const bDate = b.publishDate ? new Date(b.publishDate).getTime() : 0;
@@ -671,6 +712,59 @@ const getPaperTypeLabel = (paperType?: number) => {
   return typeMap[paperType || 7] || "其他";
 };
 
+// 获取状态标签文本
+const getStatusLabel = (paperType?: number, published?: boolean) => {
+  const isPublished = published !== false;
+  if (isPublished) {
+    // published = true 时
+    if ([1, 2, 3, 6, 7].includes(paperType || 7)) { // 期刊、会议、预印本、标准、专著
+      return '已发表';
+    } else if ([4, 5].includes(paperType || 7)) { // 专利、软著
+      return '已授权';
+    }
+  } else {
+    // published = false 时
+    if ([1, 2, 3, 6, 7].includes(paperType || 7)) { // 期刊、会议、预印本、标准、专著
+      return '投递中';
+    } else if ([4, 5].includes(paperType || 7)) { // 专利、软著
+      return '受理中';
+    }
+  }
+  return '';
+};
+
+// 获取状态标签类型
+const getStatusTagType = (paperType?: number, published?: boolean) => {
+  // 基础类型颜色映射（与getPaperTypeTagType保持一致）
+  const baseTypeColors: Record<number, string> = {
+    1: "primary", // 期刊
+    2: "success", // 会议
+    3: "warning", // 预印本
+    4: "danger", // 专利
+    5: "info", // 软著
+    6: "", // 标准
+    7: "primary" // 专著
+  };
+  
+  const isPublished = published !== false;
+  
+  // 如果未发布，使用稍微不同的色调表示状态
+  if (!isPublished) {
+    const unpublishedColors: Record<number, string> = {
+      1: "primary",  // 期刊：使用默认灰色调
+      2: "success",  // 会议：从success变为warning
+      3: "warning",  // 预印本：从warning变为info
+      4: "danger",  // 专利：从danger变为warning
+      5: "info",  // 软著：使用默认灰色调
+      6: "", // 标准
+      7: "primary"  // 专著：从primary变为info
+    };
+    return unpublishedColors[paperType || 7] || "";
+  }
+  
+  return baseTypeColors[paperType || 7] || "info";
+}
+
 // 获取项目类型标签类型
 const getProjectTypeTagType = (projectType?: number) => {
   const typeMap: Record<number, string> = {
@@ -715,11 +809,22 @@ const getProjectYear = (startDate?: string, endDate?: string) => {
 
 // 获取项目负责人
 const getProjectLeader = (
-  authors?: Array<{ name: string; authorOrder: number }>
+  authors?: Array<{ name: string; authorOrder?: number }>
 ) => {
   if (!authors || !Array.isArray(authors)) return "未知";
   const leader = authors.find(author => author.authorOrder === 1);
   return leader?.name || "未知";
+};
+
+// 获取项目状态标签文本
+const getProjectStatusLabel = (published?: boolean) => {
+  return published ? "已结项" : "未结项";
+};
+
+// 获取项目状态标签类型（与项目类型标签颜色保持一致）
+const getProjectStatusTagType = (published?: boolean, projectType?: number) => {
+  // 返回与项目类型标签相同的颜色
+  return getProjectTypeTagType(projectType);
 };
 
 // 操作按钮事件处理
@@ -1581,6 +1686,14 @@ const handlePdfDownload = (url: string) => {
   margin-right: 16px;
 }
 
+.achievement-status-tag-member {
+  flex-shrink: 0;
+  margin-top: 2px;
+  margin-right: 8px;
+  font-weight: 500;
+  border-radius: 6px;
+}
+
 .achievement-type-tag-member {
   flex-shrink: 0;
   margin-top: 2px;
@@ -1885,8 +1998,17 @@ const handlePdfDownload = (url: string) => {
   display: flex;
   flex: 1;
   gap: 12px;
-  align-items: flex-start;
-  margin-right: 16px;
+}
+
+.project-status-tag-member {
+  flex-shrink: 0;
+  margin-right: 8px;
+  margin-top: 2px;
+}
+
+.project-type-tag-member {
+  flex-shrink: 0;
+  margin-right: 0px;
 }
 
 .project-number-member {

@@ -99,6 +99,13 @@
               >
                 {{ getTypeLabel(achievement.type) }}
               </el-tag>
+              <el-tag 
+                :type="getStatusTagType(achievement.type, achievement.published)" 
+                size="small" 
+                class="achievement-status-tag"
+              >
+                {{ getStatusLabel(achievement.type, achievement.published) }}
+              </el-tag>
               <div class="achievement-content">
                 <span class="achievement-authors">{{ achievement.authors.join(', ') }}</span>
                 <span class="achievement-separator">.</span>
@@ -182,6 +189,7 @@ interface Achievement {
   type: 'journal' | 'conference' | 'preprint' | 'patent' | 'software' | 'standard' | 'monograph'
   year: number
   institution: string
+  published: boolean
   githubUrl?: string
   projectUrl?: string
   pdfUrl?: string
@@ -297,6 +305,69 @@ const getTypeTagType = (type: string) => {
   return types[type] || ''
 }
 
+// 获取状态标签文本
+const getStatusLabel = (type: string, published: boolean) => {
+  if (published) {
+    // published = true 时
+    if (['journal', 'conference', 'standard', 'monograph', 'preprint'].includes(type)) {
+      return '已发表'
+    } else if (['patent', 'software'].includes(type)) {
+      return '已授权'
+    }
+  } else {
+    // published = false 时
+    if (['journal', 'conference', 'standard', 'monograph', 'preprint'].includes(type)) {
+      return '投递中'
+    } else if (['patent', 'software'].includes(type)) {
+      return '受理中'
+    }
+  }
+  return ''
+}
+
+// 获取状态标签类型
+const getStatusTagType = (type: string, published: boolean) => {
+  // 将字符串类型映射为数字类型，与MemberInfo.vue保持一致
+  const typeToNumberMap = {
+    journal: 1,
+    conference: 2,
+    preprint: 3,
+    patent: 4,
+    software: 5,
+    standard: 6,
+    monograph: 7
+  }
+  
+  const paperType = typeToNumberMap[type] || 7
+  
+  // 基础类型颜色映射（与MemberInfo.vue保持一致）
+  const baseTypeColors: Record<number, string> = {
+    1: 'primary', // 期刊
+    2: 'success', // 会议
+    3: 'warning', // 预印本
+    4: 'danger',  // 专利
+    5: 'info',    // 软著
+    6: '',        // 标准
+    7: 'primary'  // 专著
+  }
+  
+  // 如果未发布，使用稍微不同的色调表示状态
+  if (!published) {
+    const unpublishedColors: Record<number, string> = {
+      1: 'primary',        // 期刊：使用默认灰色调
+      2: 'success', // 会议：从success变为warning
+      3: 'warning',    // 预印本：从warning变为info
+      4: 'danger', // 专利：从danger变为warning
+      5: 'info',        // 软著：使用默认灰色调
+      6: '',    // 标准
+      7: 'primary'     // 专著：从primary变为info
+    }
+    return unpublishedColors[paperType] || ''
+  }
+  
+  return baseTypeColors[paperType] || ''
+}
+
 const handleCategorySelect = (index: string) => {
   activeCategory.value = index
   currentPage.value = 1
@@ -362,6 +433,7 @@ const convertApiDataToAchievement = (apiData: ApiAchievement): Achievement => {
     type: typeMap[apiData.paperType],
     year: year,
     institution: apiData.venue || '', // venue 字段映射为 institution
+    published: apiData.published !== false, // 处理published字段
     githubUrl: apiData.gitUrl,
     projectUrl: apiData.linkUrl,
     pdfUrl: apiData.pdfUrl
@@ -374,6 +446,7 @@ const loadAchievements = async () => {
   try {
     const response = await getAchievementsListApi({ type: 1 })
     if (response.code === 0 && response.data) {
+      // 显示所有成果
       achievements.value = response.data.rows.map(convertApiDataToAchievement)
     } else {
       ElMessage.error('获取成果数据失败')
@@ -595,6 +668,11 @@ onUnmounted(() => {
   flex-shrink: 0;
   min-width: 25px;
   font-size: 14px;
+}
+
+.achievement-status-tag {
+  flex-shrink: 0;
+  margin-right: 8px;
 }
 
 .achievement-type-tag {

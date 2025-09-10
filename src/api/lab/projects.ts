@@ -10,9 +10,16 @@ export interface ApiProject {
   description?: string;
   projectStartDate?: string;
   projectEndDate?: string;
-  authors?: Array<{name: string; authorOrder: number}>;
+  authors?: Array<{
+    name: string;
+    visible: boolean;
+    userId?: number;
+    authorOrder?: number;
+    isCorresponding?: boolean;
+  }>;
   fundingAmount?: string;
   status?: number;
+  published?: boolean;
   url?: string;
 }
 
