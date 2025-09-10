@@ -7,7 +7,6 @@ export default [
     component: Layout,
     redirect: "/newsystem/profile",
     meta: {
-      icon: "user",
       title: "个人中心",
       rank: 1
     },

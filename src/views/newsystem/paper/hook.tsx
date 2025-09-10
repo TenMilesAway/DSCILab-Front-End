@@ -140,11 +140,16 @@ export function useHook() {
         // 根据成果类型和published字段显示不同状态
         const isPaper = row.type === 1; // 1=论文, 2=项目
         const isPublished = row.published;
+        const isPatentOrSoftware = row.paperType === 4 || row.paperType === 5; // 4=专利, 5=软著
 
         let text: string;
 
         if (isPaper) {
-          text = isPublished ? "已发表" : "在投";
+          if (isPatentOrSoftware) {
+            text = isPublished ? "授权" : "受理";
+          } else {
+            text = isPublished ? "已发表" : "在投";
+          }
         } else {
           text = isPublished ? "已结项" : "未结项";
         }
