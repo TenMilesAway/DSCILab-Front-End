@@ -867,22 +867,58 @@ const handlePdfDownload = (url: string) => {
     flex-direction: column;
     gap: 20px;
     padding: 0 15px;
+    align-items: center;
   }
 
   .info-sidebar {
     position: static;
     width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+
+    .sidebar-header {
+      h3 {
+        text-align: center;
+      }
+    }
 
     .nav-list {
       display: flex;
       flex-flow: row wrap;
-      gap: 10px;
+      gap: 12px;
+      justify-content: center;
     }
 
     .nav-item {
-      flex: 1;
+      flex: 1 1 auto;
       justify-content: center;
-      min-width: 120px;
+      min-width: 140px;
+      max-width: none;
+    }
+  }
+
+  /* 中等分辨率优化 */
+  @media (width <= 900px) and (width > 768px) {
+    .info-sidebar {
+      max-width: 700px;
+      margin: 0 auto;
+
+      .sidebar-header {
+        h3 {
+          text-align: center;
+        }
+      }
+
+      .nav-list {
+        gap: 8px;
+        justify-content: center;
+      }
+
+      .nav-item {
+        flex: 1 1 calc(50% - 4px);
+        min-width: 0;
+        max-width: calc(50% - 4px);
+      }
     }
   }
 
@@ -900,13 +936,23 @@ const handlePdfDownload = (url: string) => {
   .main-content {
     gap: 15px;
     padding: 0 10px;
+    align-items: center;
   }
 
   .info-sidebar {
     padding: 16px;
+    max-width: 600px;
+    margin: 0 auto;
+
+    .sidebar-header {
+      h3 {
+        text-align: center;
+      }
+    }
 
     .nav-list {
       flex-direction: column;
+      justify-content: center;
     }
 
     .nav-item {
@@ -964,20 +1010,28 @@ const handlePdfDownload = (url: string) => {
 
   .main-content {
     padding: 0 8px;
+    align-items: center;
   }
 
   .info-sidebar {
     padding: 12px;
+    max-width: 400px;
+    margin: 0 auto;
 
     .sidebar-header {
       h3 {
         font-size: 1.1rem;
+        text-align: center;
       }
 
       .back-button {
         padding: 6px 10px;
         font-size: 11px;
       }
+    }
+
+    .nav-list {
+      justify-content: center;
     }
 
     .nav-item {
@@ -1124,16 +1178,27 @@ const handlePdfDownload = (url: string) => {
 
   .main-content {
     padding: 0 6px;
+    align-items: center;
   }
 
   .info-sidebar {
     padding: 10px;
+    max-width: 320px;
+    margin: 0 auto;
 
     .sidebar-header {
+      h3 {
+        text-align: center;
+      }
+
       .back-button {
         padding: 5px 8px;
         font-size: 10px;
       }
+    }
+
+    .nav-list {
+      justify-content: center;
     }
 
     .nav-item {
@@ -1237,8 +1302,7 @@ const handlePdfDownload = (url: string) => {
 }
 
 .info-sidebar {
-  position: sticky;
-  top: 100px;
+  position: static; /* 彻底移除sticky定位，避免缩放问题 */
   width: 280px;
   padding: 24px;
   background: rgb(248 250 252 / 95%);
@@ -1246,6 +1310,12 @@ const handlePdfDownload = (url: string) => {
   border: 1px solid rgb(226 232 240 / 30%);
   border-radius: 16px;
   box-shadow: 0 8px 32px rgb(148 163 184 / 15%);
+
+  /* 桌面端保持固定定位 */
+  @media (width > 1024px) {
+    position: sticky;
+    top: 100px;
+  }
 
   .sidebar-header {
     position: relative;
