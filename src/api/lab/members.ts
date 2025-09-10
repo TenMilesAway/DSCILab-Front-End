@@ -7,6 +7,9 @@ export interface ApiUser {
   id: number;
   realName: string;
   englishName?: string;
+  gender?: string;
+  resume?: string;
+  phone?: string;
   identity?: string;
   academicStatus: number;
   researchArea?: string;

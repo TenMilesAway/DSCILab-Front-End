@@ -429,7 +429,7 @@ defineExpose({ getFormRuleRef });
           prop="doi"
         >
           <el-input
-            v-model="newFormInline.doi"
+            v-model="newFormInline.journal"
             clearable
             :placeholder="
               newFormInline.paperType === 4 || newFormInline.paperType === 5
