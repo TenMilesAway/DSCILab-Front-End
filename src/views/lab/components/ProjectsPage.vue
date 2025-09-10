@@ -101,6 +101,13 @@
             >
               {{ getTypeLabel(project.type) }}
             </el-tag>
+            <el-tag 
+              :type="getStatusTagType(project.published, project.type)" 
+              size="small" 
+              class="project-status-tag"
+            >
+              {{ getStatusLabel(project.published) }}
+            </el-tag>
             <div class="project-content">
               <span class="project-title">{{ project.title }}</span>
               <span class="project-separator">,</span>
@@ -147,6 +154,7 @@ interface Project {
   fundingAmount: string
   startYear: number
   endYear: number
+  published: boolean
 }
 
 // 数据转换函数
@@ -177,7 +185,8 @@ const convertApiDataToProject = (apiData: ApiProject): Project => {
     type: typeMap[apiData.projectType] || 'horizontal',
     fundingAmount: apiData.fundingAmount || '0',
     startYear: startYear,
-    endYear: endYear
+    endYear: endYear,
+    published: apiData.published || false
   }
 }
 
@@ -296,6 +305,15 @@ const getTypeTagType = (type: string) => {
   return types[type] || ''
 }
 
+const getStatusLabel = (published: boolean) => {
+  return published ? '已结项' : '未结项'
+}
+
+const getStatusTagType = (published: boolean, projectType?: number) => {
+  // 返回与项目类型标签相同的颜色
+  return getTypeTagType(projectType)
+}
+
 const handleCategorySelect = (index: string) => {
   activeCategory.value = index
   currentPage.value = 1
@@ -320,6 +338,7 @@ const loadProjects = async () => {
   try {
     const response = await getProjectsListApi({ type: 2 })
     if (response.code === 0 && response.data?.rows) {
+      // 显示所有项目
       projects.value = response.data.rows.map(convertApiDataToProject)
     } else {
       ElMessage.error('获取项目数据失败')
@@ -467,6 +486,11 @@ onUnmounted(() => {
   flex-shrink: 0;
   min-width: 25px;
   font-size: 14px;
+}
+
+.project-status-tag {
+  margin-right: 8px;
+  flex-shrink: 0;
 }
 
 .project-type-tag {

@@ -85,13 +85,16 @@ class PureHttp {
           "/refreshToken",
           "/login",
           "/captchaImage",
-          "/getConfig"
+          "/getConfig",
+          "/welcome"
         ];
         return whiteList.some(v => config.url.endsWith(v))
           ? config
           : new Promise(resolve => {
               const data = getToken();
-              config.headers["Authorization"] = formatToken(data.token);
+              if (data && data.token) {
+                config.headers["Authorization"] = formatToken(data.token);
+              }
               resolve(config);
             });
       },
