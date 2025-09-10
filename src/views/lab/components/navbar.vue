@@ -72,7 +72,7 @@ onUnmounted(() => {
       <el-menu-item index="2">成员</el-menu-item>
       <el-menu-item index="3">成果</el-menu-item>
       <el-menu-item index="4">项目</el-menu-item>
-      <el-menu-item index="5">活动</el-menu-item>
+      <!-- <el-menu-item index="5">活动</el-menu-item> -->
     </el-menu>
     
     <!-- 移动端汉堡菜单按钮 -->
