@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, reactive, watch, nextTick } from "vue";
+import { ref, reactive, watch, nextTick, computed } from "vue";
 import {
   updateUserProfileApi,
   UpdateProfileRequest,
@@ -8,6 +8,7 @@ import {
 import { message } from "@/utils/message";
 import type { FormRules } from "element-plus";
 import { FormInstance } from "element-plus";
+import { useUserStoreHook } from "@/store/modules/user";
 
 defineOptions({
   name: "NewSystemUserProfile"
@@ -28,6 +29,14 @@ const props = defineProps<{
 const emit = defineEmits<{
   refresh: [];
 }>();
+
+// 获取当前用户信息
+const currentUserInfo = useUserStoreHook()?.currentUserInfo;
+
+// 判断当前用户是否为管理员且正在修改自己的信息
+const isAdminEditingSelf = computed(() => {
+  return currentUserInfo?.userInfo?.identity === 1 && currentUserInfo?.userInfo?.id === props.user.id;
+});
 
 const userModel = reactive<UpdateProfileRequest>({
   realName: props.user.realName || props.user.real_name || "",
@@ -169,18 +178,30 @@ const updateResearchAreaString = () => {
 
 /** 提交按钮 */
 function submit() {
+  // 检查管理员是否在修改自己的信息
+  if (isAdminEditingSelf.value) {
+    message("管理员不能修改自己的信息", {
+      type: "warning"
+    });
+    return;
+  }
+  
   console.log(userRef.value);
   // 确保提交前更新研究方向字符串
   updateResearchAreaString();
   userRef.value.validate(valid => {
     if (valid) {
-      // 处理空值，将空字符串转换为null
+      // 处理空值，将空字符串转换为null，但保留数字0
       const submitData = { ...userModel };
       Object.keys(submitData).forEach(key => {
         if (submitData[key] === '' || submitData[key] === undefined) {
           submitData[key] = null;
         }
       });
+      // 特殊处理academicStatus，确保0值不被转换为null
+      if (userModel.academicStatus === 0) {
+        submitData.academicStatus = 0;
+      }
       
       console.log("发送的数据:", submitData);
       updateUserProfileApi(submitData)
@@ -242,8 +263,9 @@ function submit() {
           <el-option label="硕士研究生" :value="5" />
           <el-option label="本科生" :value="6" />
         </template>
-        <!-- 教师只能选择教授副教授讲师 -->
+        <!-- 教师只能选择实验室负责人、教授副教授讲师 -->
         <template v-else-if="props.user.identity === 2">
+          <el-option label="实验室负责人" :value="0" />
           <el-option label="教授" :value="1" />
           <el-option label="副教授" :value="2" />
           <el-option label="讲师" :value="3" />
@@ -338,7 +360,16 @@ function submit() {
       />
     </el-form-item>
     <el-form-item>
-      <el-button type="primary" @click="submit">保存</el-button>
+      <el-button 
+        type="primary" 
+        @click="submit"
+        :disabled="isAdminEditingSelf"
+      >
+        保存
+      </el-button>
+      <el-text v-if="isAdminEditingSelf" type="warning" style="margin-left: 10px;">
+        管理员不能修改自己的信息
+      </el-text>
     </el-form-item>
   </el-form>
 </template>

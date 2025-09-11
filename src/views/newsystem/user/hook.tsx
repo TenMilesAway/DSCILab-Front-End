@@ -108,7 +108,7 @@ export function useHook() {
           5: "硕士研究生",
           6: "本科生"
         };
-        return row.academicStatus ? (
+        return row.academicStatus !== null && row.academicStatus !== undefined ? (
           <span>{statusMap[row.academicStatus] || "未知"}</span>
         ) : (
           "-"
@@ -197,6 +197,15 @@ export function useHook() {
     data: UpdateUserRequest,
     done
   ) {
+    // 检查是否为管理员用户，禁止修改管理员信息
+    const targetUser = dataList.value.find(user => user.id === userId);
+    if (targetUser && targetUser.identity === 1) {
+      message(`禁止修改管理员用户信息`, {
+        type: "error"
+      });
+      return;
+    }
+    
     await updateUserApi(userId, data).then(() => {
       message(`您修改了用户的数据`, {
         type: "success"
@@ -209,6 +218,14 @@ export function useHook() {
   }
 
   async function handleDelete(row) {
+    // 检查是否为管理员用户，禁止删除管理员
+    if (row.identity === 1) {
+      message(`禁止删除管理员用户`, {
+        type: "error"
+      });
+      return;
+    }
+    
     await deleteUserApi(row.id).then(() => {
       message(`您删除了用户${row.username}的这条数据`, { type: "success" });
       // 刷新列表
@@ -217,6 +234,14 @@ export function useHook() {
   }
 
   async function handleResetPassword(row, request, done) {
+    // 检查是否为管理员用户，禁止重置管理员密码
+    if (row.identity === 1) {
+      message(`禁止重置管理员用户密码`, {
+        type: "error"
+      });
+      return;
+    }
+    
     await updateUserPasswordApi(request).then(() => {
       message(`您修改了用户${row.username}的密码`, { type: "success" });
       // 刷新列表
@@ -286,7 +311,7 @@ export function useHook() {
             password: formData.password || null,
             gender: formData.gender || null,
             identity: formData.identity || null,
-            academicStatus: formData.academicStatus || null,
+            academicStatus: formData.academicStatus !== undefined && formData.academicStatus !== null ? formData.academicStatus : null,
             researchArea: formData.researchArea || null,
             phone: formData.phone || null,
             email: formData.email || null,
@@ -306,7 +331,7 @@ export function useHook() {
             englishName: formData.englishName || null,
             gender: formData.gender || null,
             identity: formData.identity || null,
-            academicStatus: formData.academicStatus || null,
+            academicStatus: formData.academicStatus !== undefined && formData.academicStatus !== null ? formData.academicStatus : null,
             status: formData.status,
             isActive: formData.isActive,
             phone: formData.phone || null,
@@ -320,7 +345,7 @@ export function useHook() {
             orcid: formData.orcid || null
           } as UpdateUserRequest;
         }
-        
+
         // 处理空值，将空字符串转换为null
         Object.keys(curData).forEach(key => {
           if (curData[key] === '' || curData[key] === undefined) {
