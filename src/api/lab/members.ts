@@ -10,7 +10,8 @@ export interface ApiUser {
   gender?: string;
   resume?: string;
   phone?: string;
-  identity?: string;
+  identity?: number;
+  status?: number;
   academicStatus: number;
   researchArea?: string;
   enrollmentYear?: number;

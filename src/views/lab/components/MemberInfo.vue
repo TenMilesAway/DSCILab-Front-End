@@ -72,13 +72,13 @@
                 </div>
                 <div class="info-item animate-fade-up" v-if="member.gender" style="animation-delay: 1.0s;">
                   <span class="label">性别:</span>
-                  <el-tooltip :content="member.gender === 1 ? '男' : member.gender === 2 ? '女' : member.gender" placement="top" :disabled="!shouldShowTooltip(member.gender === 1 ? '男' : member.gender === 2 ? '女' : member.gender)">
+                  <el-tooltip :content="member.gender === 1 ? '男' : member.gender === 2 ? '女' : String(member.gender)" placement="top" :disabled="!shouldShowTooltip(member.gender === 1 ? '男' : member.gender === 2 ? '女' : String(member.gender))">
                     <span class="value truncated">{{
                       member.gender === 1
                         ? "男"
                         : member.gender === 2
                         ? "女"
-                        : member.gender
+                        : String(member.gender)
                     }}</span>
                   </el-tooltip>
                 </div>
@@ -114,10 +114,10 @@
                     <span class="value truncated">{{ member.graduationYear }}</span>
                   </el-tooltip>
                 </div>
-                <div class="info-item animate-fade-up" v-if="member.graduation" style="animation-delay: 1.6s;">
+                <div class="info-item animate-fade-up" v-if="member.category === 'graduates'" style="animation-delay: 1.6s;">
                   <span class="label">毕业去向:</span>
-                  <el-tooltip :content="member.graduation" placement="top" :disabled="!shouldShowTooltip(member.graduation)">
-                    <span class="value truncated">{{ member.graduation }}</span>
+                  <el-tooltip :content="member.graduation && member.graduation.trim() ? member.graduation : '暂未统计'" placement="top" :disabled="!shouldShowTooltip(member.graduation && member.graduation.trim() ? member.graduation : '暂未统计')">
+                    <span class="value truncated">{{ member.graduation && member.graduation.trim() ? member.graduation : '暂未统计' }}</span>
                   </el-tooltip>
                 </div>
                 <div class="info-item animate-fade-up" v-if="member.orcid" style="animation-delay: 1.7s;">
