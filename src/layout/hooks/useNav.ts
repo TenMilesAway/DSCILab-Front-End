@@ -43,7 +43,7 @@ export function useNav() {
   /** 用户头像 */
   const userAvatar = computed(() => {
     const currentUser = useUserStoreHook().currentUserInfo;
-    
+
     if (currentUser?.photo) {
       // 如果photo已经是完整URL，直接使用
       if (currentUser.photo.startsWith("http")) {

@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import { useHook } from "./hook";
 import { PureTableBar } from "@/components/RePureTableBar";
 import { useRenderIcon } from "@/components/ReIcon/src/hooks";
+import { useUserStoreHook } from "@/store/modules/user";
 
 import Password from "@iconify-icons/ri/lock-password-line";
 
@@ -33,6 +34,24 @@ const {
   openDialog,
   getList
 } = useHook();
+
+// 获取当前用户信息
+const currentUserInfo = useUserStoreHook()?.currentUserInfo;
+
+// 判断当前用户是否为管理员
+const isCurrentUserAdmin = computed(() => {
+  return currentUserInfo?.identity === 1;
+});
+
+// 判断是否为当前用户
+const isCurrentUser = (row: any) => {
+  return currentUserInfo?.id === row.id;
+};
+
+// 判断是否为管理员用户（禁止修改任何管理员信息）
+const isAdminUser = (row: any) => {
+  return row.identity === 1;
+};
 </script>
 
 <template>
@@ -140,10 +159,15 @@ const {
               size="default"
               @click="openDialog('编辑', row)"
               :icon="useRenderIcon(EditPen)"
+              :disabled="isAdminUser(row)"
             >
               修改
             </el-button>
-            <el-popconfirm title="是否确认删除?" @confirm="handleDelete(row)">
+            <el-popconfirm 
+              title="是否确认删除?" 
+              @confirm="handleDelete(row)"
+              :disabled="isAdminUser(row)"
+            >
               <template #reference>
                 <el-button
                   class="reset-margin"
@@ -151,6 +175,7 @@ const {
                   type="danger"
                   size="default"
                   :icon="useRenderIcon(Delete)"
+                  :disabled="isAdminUser(row)"
                 >
                   删除
                 </el-button>
@@ -163,6 +188,7 @@ const {
               size="default"
               :icon="useRenderIcon(Password)"
               @click="openResetPasswordDialog(row)"
+              :disabled="isAdminUser(row)"
             >
               重置密码
             </el-button>
