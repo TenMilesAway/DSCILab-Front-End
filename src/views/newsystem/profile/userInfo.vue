@@ -25,6 +25,10 @@ const props = defineProps<{
   user: UserProfile | any;
 }>();
 
+const emit = defineEmits<{
+  refresh: [];
+}>();
+
 const userModel = reactive<UpdateProfileRequest>({
   realName: props.user.realName || props.user.real_name || "",
   englishName: props.user.englishName || "",
@@ -170,13 +174,23 @@ function submit() {
   updateResearchAreaString();
   userRef.value.validate(valid => {
     if (valid) {
-      console.log("发送的数据:", userModel);
-      updateUserProfileApi(userModel)
+      // 处理空值，将空字符串转换为null
+      const submitData = { ...userModel };
+      Object.keys(submitData).forEach(key => {
+        if (submitData[key] === '' || submitData[key] === undefined) {
+          submitData[key] = null;
+        }
+      });
+      
+      console.log("发送的数据:", submitData);
+      updateUserProfileApi(submitData)
         .then(response => {
           console.log("API响应:", response);
           message("修改成功", {
             type: "success"
           });
+          // 通知父组件刷新用户数据
+          emit('refresh');
         })
         .catch(error => {
           console.error("API调用失败:", error);

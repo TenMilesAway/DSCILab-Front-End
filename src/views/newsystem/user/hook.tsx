@@ -279,47 +279,54 @@ export function useHook() {
 
         if (title === "新增") {
           curData = {
-            studentNumber: formData.studentNumber,
-            username: formData.username,
-            realName: formData.realName,
-            englishName: formData.englishName,
-            password: formData.password,
-            gender: formData.gender,
-            identity: formData.identity,
-            academicStatus: formData.academicStatus,
-            researchArea: formData.researchArea,
-            phone: formData.phone,
-            email: formData.email,
+            studentNumber: formData.studentNumber || null,
+            username: formData.username || null,
+            realName: formData.realName || null,
+            englishName: formData.englishName || null,
+            password: formData.password || null,
+            gender: formData.gender || null,
+            identity: formData.identity || null,
+            academicStatus: formData.academicStatus || null,
+            researchArea: formData.researchArea || null,
+            phone: formData.phone || null,
+            email: formData.email || null,
             status: formData.status,
-            enrollmentYear: formData.enrollmentYear,
-            graduationYear: formData.graduationYear,
-            graduationDest: formData.graduationDest,
-            resume: formData.resume,
-            homepageUrl: formData.homepageUrl,
-            orcid: formData.orcid,
+            enrollmentYear: formData.enrollmentYear || null,
+            graduationYear: formData.graduationYear || null,
+            graduationDest: formData.graduationDest || null,
+            resume: formData.resume || null,
+            homepageUrl: formData.homepageUrl || null,
+            orcid: formData.orcid || null,
             isActive: formData.isActive
           } as CreateUserRequest;
         } else {
           curData = {
-            studentNumber: formData.studentNumber,
-            realName: formData.realName,
-            englishName: formData.englishName,
-            gender: formData.gender,
-            identity: formData.identity,
-            academicStatus: formData.academicStatus,
+            studentNumber: formData.studentNumber || null,
+            realName: formData.realName || null,
+            englishName: formData.englishName || null,
+            gender: formData.gender || null,
+            identity: formData.identity || null,
+            academicStatus: formData.academicStatus || null,
             status: formData.status,
             isActive: formData.isActive,
-            phone: formData.phone,
-            email: formData.email,
-            researchArea: formData.researchArea,
-            enrollmentYear: formData.enrollmentYear,
-            graduationYear: formData.graduationYear,
-            graduationDest: formData.graduationDest,
-            resume: formData.resume,
-            homepageUrl: formData.homepageUrl,
-            orcid: formData.orcid
+            phone: formData.phone || null,
+            email: formData.email || null,
+            researchArea: formData.researchArea || null,
+            enrollmentYear: formData.enrollmentYear || null,
+            graduationYear: formData.graduationYear || null,
+            graduationDest: formData.graduationDest || null,
+            resume: formData.resume || null,
+            homepageUrl: formData.homepageUrl || null,
+            orcid: formData.orcid || null
           } as UpdateUserRequest;
         }
+        
+        // 处理空值，将空字符串转换为null
+        Object.keys(curData).forEach(key => {
+          if (curData[key] === '' || curData[key] === undefined) {
+            curData[key] = null;
+          }
+        });
 
         formRuleRef.validate(valid => {
           if (valid) {

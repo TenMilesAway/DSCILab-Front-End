@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, nextTick, watch } from "vue";
 import ReCol from "@/components/ReCol";
 import { formRules } from "./rule";
 interface FormInlineData {
@@ -58,7 +58,60 @@ const props = withDefaults(defineProps<FormProps>(), {
 
 const newFormInline = ref(props.formInline);
 
+// 研究方向标签相关
+const researchAreaTags = ref<string[]>([]);
+const inputVisible = ref(false);
+const inputValue = ref('');
+const inputRef = ref();
+
 const formRuleRef = ref();
+
+// 初始化研究方向标签
+const initResearchAreaTags = () => {
+  if (newFormInline.value.researchArea) {
+    researchAreaTags.value = newFormInline.value.researchArea.split('，').filter(tag => tag.trim());
+  } else {
+    researchAreaTags.value = [];
+  }
+};
+
+// 监听表单数据变化，初始化研究方向标签
+watch(
+  () => newFormInline.value.researchArea,
+  () => {
+    initResearchAreaTags();
+  },
+  { immediate: true }
+);
+
+// 研究方向标签操作方法
+const removeResearchAreaTag = (index: number) => {
+  researchAreaTags.value.splice(index, 1);
+  updateResearchAreaString();
+};
+
+const showInput = () => {
+  inputVisible.value = true;
+  nextTick(() => {
+    inputRef.value?.focus();
+  });
+};
+
+const handleInputConfirm = () => {
+  if (inputValue.value && inputValue.value.trim()) {
+    const trimmedValue = inputValue.value.trim();
+    if (!researchAreaTags.value.includes(trimmedValue)) {
+      researchAreaTags.value.push(trimmedValue);
+      updateResearchAreaString();
+    }
+  }
+  inputVisible.value = false;
+  inputValue.value = '';
+};
+
+const updateResearchAreaString = () => {
+  newFormInline.value.researchArea = researchAreaTags.value.join('，');
+};
 
 function getFormRuleRef() {
   return formRuleRef.value;
@@ -226,11 +279,33 @@ defineExpose({ getFormRuleRef });
 
       <re-col :value="12">
         <el-form-item label="研究方向" prop="researchArea">
-          <el-input
-            v-model="newFormInline.researchArea"
-            clearable
-            placeholder="请输入研究方向"
-          />
+          <div class="research-area-tags">
+            <el-tag
+              v-for="(tag, index) in researchAreaTags"
+              :key="index"
+              closable
+              @close="removeResearchAreaTag(index)"
+              style="margin-right: 8px; margin-bottom: 8px;"
+            >
+              {{ tag }}
+            </el-tag>
+            <el-input
+              v-if="inputVisible"
+              ref="inputRef"
+              v-model="inputValue"
+              size="small"
+              style="width: 120px;"
+              @keyup.enter="handleInputConfirm"
+              @blur="handleInputConfirm"
+            />
+            <el-button
+              v-else
+              size="small"
+              @click="showInput"
+            >
+              + 添加研究方向
+            </el-button>
+          </div>
         </el-form-item>
       </re-col>
 
@@ -385,3 +460,17 @@ defineExpose({ getFormRuleRef });
     </el-row>
   </el-form>
 </template>
+
+<style scoped>
+.research-area-tags {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.research-area-tags .el-tag {
+  margin-right: 8px;
+  margin-bottom: 8px;
+}
+</style>
