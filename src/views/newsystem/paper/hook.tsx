@@ -393,25 +393,32 @@ export function useHook() {
             formData.achievementType === "project"
               ? formData.projectType
               : null,
-          venue: formData.journal,
+          venue: formData.journal || null,
           publishDate:
-            formData.achievementType === "paper" ? formData.publishDate : null,
+            formData.achievementType === "paper" ? formData.publishDate || null : null,
           projectStartDate:
             formData.achievementType === "project"
-              ? formData.publishDate
+              ? formData.publishDate || null
               : null,
           projectEndDate:
             formData.achievementType === "project"
-              ? formData.projectEndDate
+              ? formData.projectEndDate || null
               : null,
-          doi: formData.doi,
-          linkUrl: formData.linkUrl,
-          gitUrl: formData.gitUrl,
-          pdfUrl: formData.pdfUrl,
-          fundingAmount: formData.fundingAmount,
+          doi: formData.doi || null,
+          linkUrl: formData.linkUrl || null,
+          gitUrl: formData.gitUrl || null,
+          pdfUrl: formData.pdfUrl || null,
+          fundingAmount: formData.fundingAmount || null,
           published: formData.published,
           authors: authorsData
         };
+        
+        // 处理空值，将空字符串转换为null
+        Object.keys(curData).forEach(key => {
+          if (curData[key] === '' || curData[key] === undefined) {
+            curData[key] = null;
+          }
+        });
 
         formRuleRef.validate(valid => {
           if (valid) {
