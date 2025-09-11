@@ -114,7 +114,7 @@
                     <span class="value truncated">{{ member.graduationYear }}</span>
                   </el-tooltip>
                 </div>
-                <div class="info-item animate-fade-up" v-if="member.category === 'graduates'" style="animation-delay: 1.6s;">
+                <div class="info-item animate-fade-up" v-if="member.graduation && member.graduation.trim()" style="animation-delay: 1.6s;">
                   <span class="label">毕业去向:</span>
                   <el-tooltip :content="member.graduation && member.graduation.trim() ? member.graduation : '暂未统计'" placement="top" :disabled="!shouldShowTooltip(member.graduation && member.graduation.trim() ? member.graduation : '暂未统计')">
                     <span class="value truncated">{{ member.graduation && member.graduation.trim() ? member.graduation : '暂未统计' }}</span>
@@ -201,7 +201,7 @@
                         >
                         <span class="project-separator-member">,</span>
                         <span class="project-funding-member"
-                          >经费 {{ project.fundingAmount || "0" }} 万元</span
+                          >经费 {{ project.fundingAmount && project.fundingAmount !== `0` ? project.fundingAmount + ' 万元' : '未知金额' }}</span
                         >
                         <span class="project-separator-member">,</span>
                         <span class="project-year-member">{{

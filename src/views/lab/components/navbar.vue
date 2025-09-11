@@ -107,11 +107,11 @@ onUnmounted(() => {
              @click="handleSelect('4')">
           项目
         </div>
-        <div class="mobile-menu-item" 
+        <!-- <div class="mobile-menu-item" 
              :class="{ 'active': activeIndex === '5' }"
              @click="handleSelect('5')">
           活动
-        </div>
+        </div> -->
       </div>
     </div>
   </div>
