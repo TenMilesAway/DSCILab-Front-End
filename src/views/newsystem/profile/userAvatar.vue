@@ -69,7 +69,8 @@ function uploadImg() {
       type: "success"
     });
     visible.value = false;
-    // 通知父组件刷新用户数据
+    
+    // 通知父组件刷新用户数据，这会重新获取最新的用户信息
     emit("refresh");
   });
 }

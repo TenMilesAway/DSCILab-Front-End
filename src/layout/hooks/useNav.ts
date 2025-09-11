@@ -2,7 +2,7 @@ import { storeToRefs } from "pinia";
 import { getConfig } from "@/config";
 import { emitter } from "@/utils/mitt";
 import { routeMetaType } from "../types";
-import userAvatar from "@/assets/user.jpg";
+// import userAvatar from "@/assets/user.jpg";
 import { getTopMenu } from "@/router/utils";
 import { useGlobal } from "@pureadmin/utils";
 import { routerArrays } from "@/layout/types";
@@ -38,6 +38,22 @@ export function useNav() {
   /** 用户名 */
   const username = computed(() => {
     return useUserStoreHook()?.username;
+  });
+
+  /** 用户头像 */
+  const userAvatar = computed(() => {
+    const currentUser = useUserStoreHook().currentUserInfo;
+    
+    if (currentUser?.photo) {
+      // 如果photo已经是完整URL，直接使用
+      if (currentUser.photo.startsWith("http")) {
+        return currentUser.photo;
+      }
+      // 否则拼接base API
+      return import.meta.env.VITE_APP_BASE_API + currentUser.photo;
+    }
+    // 默认头像
+    return "/default-avatar.png";
   });
 
   const avatarsStyle = computed(() => {
@@ -80,7 +96,7 @@ export function useNav() {
 
   /** 个人中心 */
   function userProfile() {
-    router.push("/global/user/profile");
+    router.push("/newsystem/profile");
   }
 
   function backTopMenu() {

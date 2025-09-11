@@ -62,8 +62,8 @@ export function useHook() {
           row.identity === 1
             ? "学号/工号"
             : row.identity === 2
-            ? "工号"
-            : "学号";
+              ? "工号"
+              : "学号";
         return row.studentNumber ? (
           <span title={`${label}: ${row.studentNumber}`}>
             {row.studentNumber}
@@ -100,11 +100,13 @@ export function useHook() {
       minWidth: 100,
       cellRenderer: ({ row }) => {
         const statusMap = {
+          0: "实验室负责人",
           1: "教授",
           2: "副教授",
           3: "讲师",
-          4: "博士",
-          5: "硕士"
+          4: "博士研究生",
+          5: "硕士研究生",
+          6: "本科生"
         };
         return row.academicStatus ? (
           <span>{statusMap[row.academicStatus] || "未知"}</span>
