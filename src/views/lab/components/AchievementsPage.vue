@@ -91,21 +91,23 @@
             class="achievement-item"
           >
             <div class="achievement-main">
-              <span class="achievement-number">{{ (currentPage - 1) * pageSize + index + 1 }}.</span>
-              <el-tag 
-                :type="getTypeTagType(achievement.type)" 
-                size="small" 
-                class="achievement-type-tag"
-              >
-                {{ getTypeLabel(achievement.type) }}
-              </el-tag>
-              <el-tag 
-                :type="getStatusTagType(achievement.type, achievement.published) as '' | 'success' | 'warning' | 'info' | 'danger'"
-                size="small" 
-                class="achievement-status-tag"
-              >
-                {{ getStatusLabel(achievement.type, achievement.published) }}
-              </el-tag>
+              <div class="achievement-header">
+                <span class="achievement-number">{{ (currentPage - 1) * pageSize + index + 1 }}.</span>
+                <el-tag 
+                  :type="getTypeTagType(achievement.type)" 
+                  size="small" 
+                  class="achievement-type-tag"
+                >
+                  {{ getTypeLabel(achievement.type) }}
+                </el-tag>
+                <el-tag 
+                  :type="getStatusTagType(achievement.type, achievement.published) as '' | 'success' | 'warning' | 'info' | 'danger'"
+                  size="small" 
+                  class="achievement-status-tag"
+                >
+                  {{ getStatusLabel(achievement.type, achievement.published) }}
+                </el-tag>
+              </div>
               <div class="achievement-content">
                 <span class="achievement-authors">{{ achievement.authors.join(', ') }}</span>
                 <span class="achievement-separator">.</span>
@@ -610,6 +612,13 @@ onUnmounted(() => {
   gap: 12px;
 }
 
+.achievement-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
 .achievement-actions-container {
   background-color: #fafbfc;
   border: 1px solid #e8eaed;
@@ -675,10 +684,12 @@ onUnmounted(() => {
 .achievement-status-tag {
   flex-shrink: 0;
   margin-right: 8px;
+  vertical-align: middle;
 }
 
 .achievement-type-tag {
   flex-shrink: 0;
+  vertical-align: middle;
 }
 
 .achievement-content {
@@ -833,6 +844,19 @@ onUnmounted(() => {
     flex-direction: column;
     margin-right: 0;
     width: 100%;
+    align-items: flex-start;
+  }
+  
+  .achievement-header {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  
+  .achievement-content {
+    width: 100%;
   }
   
   .achievement-actions-container {
@@ -851,15 +875,6 @@ onUnmounted(() => {
   .action-btn {
     width: 30px;
     height: 30px;
-  }
-  
-  .achievement-number {
-    margin-bottom: 8px;
-  }
-  
-  .achievement-type-tag {
-    margin-bottom: 8px;
-    margin-right: 0;
   }
   
   .achievement-content {
