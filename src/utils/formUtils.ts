@@ -9,13 +9,13 @@
  */
 export function convertEmptyToNull<T extends Record<string, any>>(data: T): T {
   const result = { ...data };
-  
+
   Object.keys(result).forEach(key => {
     if (result[key] === '' || result[key] === undefined) {
       result[key] = null;
     }
   });
-  
+
   return result;
 }
 
@@ -28,15 +28,15 @@ export function deepConvertEmptyToNull<T>(data: T): T {
   if (data === null || data === undefined) {
     return data;
   }
-  
+
   if (typeof data === 'string' && data === '') {
     return null as T;
   }
-  
+
   if (Array.isArray(data)) {
     return data.map(item => deepConvertEmptyToNull(item)) as T;
   }
-  
+
   if (typeof data === 'object') {
     const result = {} as T;
     Object.keys(data).forEach(key => {
@@ -44,7 +44,7 @@ export function deepConvertEmptyToNull<T>(data: T): T {
     });
     return result;
   }
-  
+
   return data;
 }
 
@@ -60,12 +60,12 @@ export function convertSpecificFieldsToNull<T extends Record<string, any>>(
 ): T {
   const result = { ...data };
   const fieldsToProcess = fields || Object.keys(result);
-  
+
   fieldsToProcess.forEach(field => {
     if (result[field] === '' || result[field] === undefined) {
       result[field] = null;
     }
   });
-  
+
   return result;
 }

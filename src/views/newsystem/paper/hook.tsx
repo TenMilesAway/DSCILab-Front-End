@@ -412,7 +412,7 @@ export function useHook() {
           published: formData.published,
           authors: authorsData
         };
-        
+
         // 处理空值，将空字符串转换为null
         Object.keys(curData).forEach(key => {
           if (curData[key] === '' || curData[key] === undefined) {
