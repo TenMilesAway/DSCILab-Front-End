@@ -60,51 +60,71 @@
               <div class="info-grid">
                 <div class="info-item animate-fade-up" style="animation-delay: 0.8s;">
                   <span class="label">姓名:</span>
-                  <span class="value">{{ member.name }}</span>
+                  <el-tooltip :content="member.name" placement="top" :disabled="!shouldShowTooltip(member.name)">
+                    <span class="value truncated">{{ member.name }}</span>
+                  </el-tooltip>
                 </div>
                 <div class="info-item animate-fade-up" v-if="member.englishName" style="animation-delay: 0.9s;">
                   <span class="label">英文名:</span>
-                  <span class="value">{{ member.englishName }}</span>
+                  <el-tooltip :content="member.englishName" placement="top" :disabled="!shouldShowTooltip(member.englishName)">
+                    <span class="value truncated">{{ member.englishName }}</span>
+                  </el-tooltip>
                 </div>
                 <div class="info-item animate-fade-up" v-if="member.gender" style="animation-delay: 1.0s;">
                   <span class="label">性别:</span>
-                  <span class="value">{{
-                    member.gender === 1
-                      ? "男"
-                      : member.gender === 2
-                      ? "女"
-                      : member.gender
-                  }}</span>
+                  <el-tooltip :content="member.gender === 1 ? '男' : member.gender === 2 ? '女' : member.gender" placement="top" :disabled="!shouldShowTooltip(member.gender === 1 ? '男' : member.gender === 2 ? '女' : member.gender)">
+                    <span class="value truncated">{{
+                      member.gender === 1
+                        ? "男"
+                        : member.gender === 2
+                        ? "女"
+                        : member.gender
+                    }}</span>
+                  </el-tooltip>
                 </div>
                 <div class="info-item animate-fade-up" style="animation-delay: 1.1s;">
                   <span class="label">职位:</span>
-                  <span class="value">{{
-                    getAcademicStatusTitle(member.academicStatus)
-                  }}</span>
+                  <el-tooltip :content="getAcademicStatusTitle(member.academicStatus)" placement="top" :disabled="!shouldShowTooltip(getAcademicStatusTitle(member.academicStatus))">
+                    <span class="value truncated">{{
+                      getAcademicStatusTitle(member.academicStatus)
+                    }}</span>
+                  </el-tooltip>
                 </div>
                 <div class="info-item animate-fade-up" v-if="member.email" style="animation-delay: 1.2s;">
                   <span class="label">邮箱:</span>
-                  <span class="value">{{ member.email }}</span>
+                  <el-tooltip :content="member.email" placement="top" :disabled="!shouldShowTooltip(member.email)">
+                    <span class="value truncated">{{ member.email }}</span>
+                  </el-tooltip>
                 </div>
                 <div class="info-item animate-fade-up" v-if="member.phone" style="animation-delay: 1.3s;">
                   <span class="label">手机号:</span>
-                  <span class="value">{{ member.phone }}</span>
+                  <el-tooltip :content="member.phone" placement="top" :disabled="!shouldShowTooltip(member.phone)">
+                    <span class="value truncated">{{ member.phone }}</span>
+                  </el-tooltip>
                 </div>
                 <div class="info-item animate-fade-up" v-if="member.enrollmentYear" style="animation-delay: 1.4s;">
                   <span class="label">{{ getEnrollmentLabel(member) }}:</span>
-                  <span class="value">{{ member.enrollmentYear }}</span>
+                  <el-tooltip :content="member.enrollmentYear?.toString()" placement="top" :disabled="!shouldShowTooltip(member.enrollmentYear?.toString())">
+                    <span class="value truncated">{{ member.enrollmentYear }}</span>
+                  </el-tooltip>
                 </div>
                 <div class="info-item animate-fade-up" v-if="member.graduationYear" style="animation-delay: 1.5s;">
                   <span class="label">毕业年份:</span>
-                  <span class="value">{{ member.graduationYear }}</span>
+                  <el-tooltip :content="member.graduationYear?.toString()" placement="top" :disabled="!shouldShowTooltip(member.graduationYear?.toString())">
+                    <span class="value truncated">{{ member.graduationYear }}</span>
+                  </el-tooltip>
                 </div>
                 <div class="info-item animate-fade-up" v-if="member.graduation" style="animation-delay: 1.6s;">
                   <span class="label">毕业去向:</span>
-                  <span class="value">{{ member.graduation }}</span>
+                  <el-tooltip :content="member.graduation" placement="top" :disabled="!shouldShowTooltip(member.graduation)">
+                    <span class="value truncated">{{ member.graduation }}</span>
+                  </el-tooltip>
                 </div>
                 <div class="info-item animate-fade-up" v-if="member.orcid" style="animation-delay: 1.7s;">
                   <span class="label">ORCID:</span>
-                  <span class="value">{{ member.orcid }}</span>
+                  <el-tooltip :content="member.orcid" placement="top" :disabled="!shouldShowTooltip(member.orcid)">
+                    <span class="value truncated">{{ member.orcid }}</span>
+                  </el-tooltip>
                 </div>
               </div>
             </div>
@@ -158,14 +178,14 @@
                   >
                     <div class="project-main-member">
                       <el-tag
-                        :type="getProjectTypeTagType(project.projectType)"
+                        :type="getProjectTypeTagType(project.projectType) as '' | 'success' | 'warning' | 'danger' | 'info'"
                         size="small"
                         class="project-type-tag-member"
                       >
                         {{ getProjectTypeLabel(project.projectType) }}
                       </el-tag>
                       <el-tag
-                        :type="getProjectStatusTagType(project.published, project.projectType)"
+                        :type="getProjectStatusTagType(project.published, project.projectType) as '' | 'success' | 'warning' | 'danger' | 'info'"
                         size="small"
                         class="project-status-tag-member"
                       >
@@ -217,14 +237,14 @@
                   >
                     <div class="achievement-main-member">
                       <el-tag
-                        :type="getPaperTypeTagType(achievement.paperType)"
+                        :type="getPaperTypeTagType(achievement.paperType) as '' | 'success' | 'warning' | 'danger' | 'info'"
                         size="small"
                         class="achievement-type-tag-member"
                       >
                         {{ getPaperTypeLabel(achievement.paperType) }}
                       </el-tag>
                       <el-tag
-                         :type="getStatusTagType(achievement.paperType, achievement.published)"
+                         :type="getStatusTagType(achievement.paperType, achievement.published) as '' | 'success' | 'warning' | 'danger' | 'info'"
                          size="small"
                          class="achievement-status-tag-member"
                        >
@@ -621,6 +641,14 @@ const handleImageError = (event: Event) => {
   }
 };
 
+// 判断是否需要显示tooltip（始终显示以确保用户能看到完整内容）
+const shouldShowTooltip = (text: string | undefined | null): boolean => {
+  if (!text) return false;
+  const textStr = String(text).trim();
+  // 始终显示tooltip，让用户能够看到完整内容
+  return textStr.length > 0;
+};
+
 // 滚动监听功能
 const handleScroll = () => {
   const sections = navigationItems
@@ -692,7 +720,7 @@ const getPaperTypeTagType = (paperType?: number) => {
     3: "warning", // 预印本
     4: "danger", // 专利
     5: "info", // 软著
-    6: "", // 标准
+    6: "info", // 标准
     7: "primary" // 专著
   };
   return typeMap[paperType || 7] || "info";
@@ -742,7 +770,7 @@ const getStatusTagType = (paperType?: number, published?: boolean) => {
     3: "warning", // 预印本
     4: "danger", // 专利
     5: "info", // 软著
-    6: "", // 标准
+    6: "info", // 标准
     7: "primary" // 专著
   };
   
@@ -756,10 +784,10 @@ const getStatusTagType = (paperType?: number, published?: boolean) => {
       3: "warning",  // 预印本：从warning变为info
       4: "danger",  // 专利：从danger变为warning
       5: "info",  // 软著：使用默认灰色调
-      6: "", // 标准
+      6: "info", // 标准
       7: "primary"  // 专著：从primary变为info
     };
-    return unpublishedColors[paperType || 7] || "";
+    return unpublishedColors[paperType || 7] || "info";
   }
   
   return baseTypeColors[paperType || 7] || "info";
@@ -772,7 +800,7 @@ const getProjectTypeTagType = (projectType?: number) => {
     2: "danger", // 国自然面上
     3: "primary", // 国自然青年
     4: "success", // 北京市教委科技一般
-    5: "", // 国家级教改
+    5: "success", // 国家级教改
     6: "primary", // 省部级教改
     7: "info", // 其他教改
     8: "info" // 其他纵向
@@ -867,22 +895,58 @@ const handlePdfDownload = (url: string) => {
     flex-direction: column;
     gap: 20px;
     padding: 0 15px;
+    align-items: center;
   }
 
   .info-sidebar {
     position: static;
     width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+
+    .sidebar-header {
+      h3 {
+        text-align: center;
+      }
+    }
 
     .nav-list {
       display: flex;
       flex-flow: row wrap;
-      gap: 10px;
+      gap: 12px;
+      justify-content: center;
     }
 
     .nav-item {
-      flex: 1;
+      flex: 1 1 auto;
       justify-content: center;
-      min-width: 120px;
+      min-width: 140px;
+      max-width: none;
+    }
+  }
+
+  /* 中等分辨率优化 */
+  @media (width <= 900px) and (width > 768px) {
+    .info-sidebar {
+      max-width: 700px;
+      margin: 0 auto;
+
+      .sidebar-header {
+        h3 {
+          text-align: center;
+        }
+      }
+
+      .nav-list {
+        gap: 8px;
+        justify-content: center;
+      }
+
+      .nav-item {
+        flex: 1 1 calc(50% - 4px);
+        min-width: 0;
+        max-width: calc(50% - 4px);
+      }
     }
   }
 
@@ -900,13 +964,23 @@ const handlePdfDownload = (url: string) => {
   .main-content {
     gap: 15px;
     padding: 0 10px;
+    align-items: center;
   }
 
   .info-sidebar {
     padding: 16px;
+    max-width: 600px;
+    margin: 0 auto;
+
+    .sidebar-header {
+      h3 {
+        text-align: center;
+      }
+    }
 
     .nav-list {
       flex-direction: column;
+      justify-content: center;
     }
 
     .nav-item {
@@ -950,6 +1024,10 @@ const handlePdfDownload = (url: string) => {
     .value {
       font-size: 14px;
     }
+
+    .value.truncated {
+      max-width: 120px;
+    }
   }
 
   .basic-info h1 {
@@ -964,20 +1042,28 @@ const handlePdfDownload = (url: string) => {
 
   .main-content {
     padding: 0 8px;
+    align-items: center;
   }
 
   .info-sidebar {
     padding: 12px;
+    max-width: 400px;
+    margin: 0 auto;
 
     .sidebar-header {
       h3 {
         font-size: 1.1rem;
+        text-align: center;
       }
 
       .back-button {
         padding: 6px 10px;
         font-size: 11px;
       }
+    }
+
+    .nav-list {
+      justify-content: center;
     }
 
     .nav-item {
@@ -1033,6 +1119,10 @@ const handlePdfDownload = (url: string) => {
 
     .value {
       font-size: 13px;
+    }
+
+    .value.truncated {
+      max-width: 100px;
     }
   }
 
@@ -1124,16 +1214,27 @@ const handlePdfDownload = (url: string) => {
 
   .main-content {
     padding: 0 6px;
+    align-items: center;
   }
 
   .info-sidebar {
     padding: 10px;
+    max-width: 320px;
+    margin: 0 auto;
 
     .sidebar-header {
+      h3 {
+        text-align: center;
+      }
+
       .back-button {
         padding: 5px 8px;
         font-size: 10px;
       }
+    }
+
+    .nav-list {
+      justify-content: center;
     }
 
     .nav-item {
@@ -1237,8 +1338,7 @@ const handlePdfDownload = (url: string) => {
 }
 
 .info-sidebar {
-  position: sticky;
-  top: 100px;
+  position: static; /* 彻底移除sticky定位，避免缩放问题 */
   width: 280px;
   padding: 24px;
   background: rgb(248 250 252 / 95%);
@@ -1246,6 +1346,12 @@ const handlePdfDownload = (url: string) => {
   border: 1px solid rgb(226 232 240 / 30%);
   border-radius: 16px;
   box-shadow: 0 8px 32px rgb(148 163 184 / 15%);
+
+  /* 桌面端保持固定定位 */
+  @media (width > 1024px) {
+    position: sticky;
+    top: 100px;
+  }
 
   .sidebar-header {
     position: relative;
@@ -1537,6 +1643,15 @@ const handlePdfDownload = (url: string) => {
   color: #1e293b;
 }
 
+.info-item .value.truncated {
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+  display: inline-block;
+}
+
 .info-item .value .link {
   color: #3b82f6;
   text-decoration: none;
@@ -1579,7 +1694,6 @@ const handlePdfDownload = (url: string) => {
       font-size: 13px;
       font-weight: 600;
       color: #1e40af;
-      cursor: pointer;
       background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
       border: none;
       border-radius: 8px;
