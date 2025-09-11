@@ -30,6 +30,13 @@ function getUser() {
       if (response.code === 0) {
         state.user = response.data;
         console.log("获取用户信息成功:", response.data);
+        
+        // 更新用户store中的头像信息
+        const userStore = useUserStoreHook();
+        if (userStore.currentUserInfo && response.data.photo) {
+          userStore.currentUserInfo.photo = response.data.photo;
+          userStore.SET_CURRENT_USER_INFO(userStore.currentUserInfo);
+        }
       } else {
         message(response.msg || "获取用户信息失败", { type: "error" });
         // 如果接口失败，使用store中的数据作为备用
@@ -72,10 +79,10 @@ onMounted(() => {
                   state.user.realName
                 }}</el-descriptions-item>
 
-                <!-- 学号：仅当身份是student时显示 -->
+                <!-- 学号/工号：根据身份显示不同标签 -->
                 <el-descriptions-item
-                  v-if="(state.user.identity || currentUserInfo.identity) === 3"
-                  label="学号"
+                  v-if="state.user.studentNumber"
+                  :label="(state.user.identity || currentUserInfo.identity) === 2 ? '工号' : '学号'"
                   >{{ state.user.studentNumber }}</el-descriptions-item
                 >
 
@@ -115,21 +122,25 @@ onMounted(() => {
                   state.user.email
                 }}</el-descriptions-item>
 
-                <el-descriptions-item label="入学年份">{{
+                <!-- 教师显示入职年份，学生显示入学年份 -->
+                <el-descriptions-item
+                  v-if="state.user.enrollmentYear"
+                  :label="(state.user.identity || currentUserInfo.identity) === 2 ? '入职年份' : '入学年份'"
+                >{{
                   state.user.enrollmentYear
                 }}</el-descriptions-item>
 
-                <!-- 毕业年份：空就不显示 -->
+                <!-- 教师显示离职年份，学生显示毕业年份 -->
                 <el-descriptions-item
                   v-if="state.user.graduationYear"
-                  label="毕业年份"
+                  :label="(state.user.identity || currentUserInfo.identity) === 2 ? '离职年份' : '毕业年份'"
                   >{{ state.user.graduationYear }}</el-descriptions-item
                 >
 
-                <!-- 毕业去向：空就不显示 -->
+                <!-- 教师显示离职去向，学生显示毕业去向 -->
                 <el-descriptions-item
                   v-if="state.user.graduationDest"
-                  label="毕业去向"
+                  :label="(state.user.identity || currentUserInfo.identity) === 2 ? '离职去向' : '毕业去向'"
                   >{{ state.user.graduationDest }}</el-descriptions-item
                 >
               </el-descriptions>
