@@ -152,10 +152,12 @@ const getTitleColor = (academicStatus: number | null, hasGraduation: boolean): s
 // 根据学术状态确定分类
 const getCategoryByAcademicStatus = (
   academicStatus: number | null,
-  graduationDest: string
+  graduationDest: string,
+  status?: number,
+  identity?: number
 ): string => {
-  // 如果有毕业去向，归类为已毕业学生
-  if (graduationDest && graduationDest.trim()) {
+  // 新增逻辑：当status=2且identity=2时，代表已毕业的学生
+  if (status === 2 && identity === 3) {
     return "graduates";
   }
 
@@ -193,7 +195,9 @@ const fetchMembersFromApi = async () => {
       const processedMembers = result.data.rows.map((user: ApiUser) => {
         const category = getCategoryByAcademicStatus(
           user.academicStatus,
-          user.graduationDest
+          user.graduationDest,
+          user.status,
+          user.identity
         );
         const title = getAcademicStatusTitle(
           user.academicStatus,
@@ -394,7 +398,7 @@ const showMemberDetail = async (member: Member) => {
         gender: response.data.gender ? Number(response.data.gender) : undefined,
         resume: response.data.resume,
         phone: response.data.phone,
-        title: response.data.identity || "未知",
+        title: String(response.data.identity || "未知"),
         graduation: response.data.graduationDest,
         category: convertAcademicStatusToCategory(response.data.academicStatus),
         email: response.data.email,
@@ -404,7 +408,7 @@ const showMemberDetail = async (member: Member) => {
         graduationYear: response.data.graduationYear,
         homepageUrl: response.data.homepageUrl,
         orcid: response.data.orcid,
-        identity: response.data.identity,
+        identity: String(response.data.identity), // 将number类型转换为string类型
         academicStatus: response.data.academicStatus
       };
 
@@ -565,14 +569,14 @@ const getCategoryName = (categoryKey: string) => {
                 <span class="member-field member-name">{{ member.name }}</span>
                 <span 
                   class="member-field member-title"
-                  :style="{ color: getTitleColor(member.academicStatus, !!(member.graduation && member.graduation.trim())) }"
+                  :style="{ color: getTitleColor(member.academicStatus, member.category === 'graduates') }"
                 >{{
                   member.title
                 }}</span>
                 <span
-                  v-if="member.graduation"
+                  v-if="member.category === 'graduates'"
                   class="member-field member-graduation"
-                  >毕业去向：{{ member.graduation }}</span
+                  >毕业去向：{{ member.graduation && member.graduation.trim() ? member.graduation : '暂未统计' }}</span
                 >
               </div>
               <div class="member-action">
