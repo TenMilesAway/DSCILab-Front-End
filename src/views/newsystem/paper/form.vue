@@ -31,9 +31,9 @@ interface FormInlineData {
 
   githubUrl?: string; // GitHub链接（项目）
   published?: boolean; // 发表状态：论文是否发表/项目是否结项
-  gitUrl?: string; // Git仓库链接
+  gitUrl?: string; // Git链接
   linkUrl?: string; // 相关链接
-  pdfUrl?: string; // PDF文件链接
+  pdfUrl?: string; // PDF链接
   fundingAmount?: number; // 项目经费（万元）
 }
 
@@ -429,7 +429,7 @@ defineExpose({ getFormRuleRef });
           prop="doi"
         >
           <el-input
-            v-model="newFormInline.journal"
+            v-model="newFormInline.doi"
             clearable
             :placeholder="
               newFormInline.paperType === 4 || newFormInline.paperType === 5
@@ -441,11 +441,11 @@ defineExpose({ getFormRuleRef });
       </re-col>
 
       <re-col :value="12">
-        <el-form-item label="Git仓库链接" prop="gitUrl">
+        <el-form-item label="Git链接" prop="gitUrl">
           <el-input
             v-model="newFormInline.gitUrl"
             clearable
-            placeholder="请输入Git仓库链接"
+            placeholder="请输入Git链接"
           />
         </el-form-item>
       </re-col>
@@ -461,11 +461,11 @@ defineExpose({ getFormRuleRef });
       </re-col>
 
       <re-col :value="12">
-        <el-form-item label="PDF文件链接" prop="pdfUrl">
+        <el-form-item label="PDF链接" prop="pdfUrl">
           <el-input
             v-model="newFormInline.pdfUrl"
             clearable
-            placeholder="请输入PDF文件链接"
+            placeholder="请输入PDF链接"
           />
         </el-form-item>
       </re-col>
