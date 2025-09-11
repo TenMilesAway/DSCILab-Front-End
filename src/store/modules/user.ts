@@ -47,6 +47,12 @@ export const useUserStore = defineStore({
     /** 存储当前用户信息 */
     SET_CURRENT_USER_INFO(userInfo: any) {
       this.currentUserInfo = userInfo;
+      // 同时更新sessionStorage中的用户信息
+      const tokenData = storageSession().getItem<TokenDTO>(sessionKey);
+      if (tokenData) {
+        tokenData.currentUser = userInfo;
+        storageSession().setItem(sessionKey, tokenData);
+      }
     },
     /** 存储系统内的字典值 并拆分为Map形式和List形式 */
     SET_DICTIONARY(dictionary: Map<String, Array<DictionaryData>>) {

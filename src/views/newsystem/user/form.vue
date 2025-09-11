@@ -198,23 +198,27 @@ defineExpose({ getFormRuleRef });
           >
             <!-- 根据身份显示不同的学术状态选项 -->
             <template v-if="newFormInline.identity === 2">
-              <!-- 教师：教授、副教授、讲师 -->
+              <!-- 教师：实验室负责人、教授、副教授、讲师 -->
+              <el-option label="实验室负责人" :value="0" />
               <el-option label="教授" :value="1" />
               <el-option label="副教授" :value="2" />
               <el-option label="讲师" :value="3" />
             </template>
             <template v-else-if="newFormInline.identity === 3">
-              <!-- 学生：博士、硕士 -->
-              <el-option label="博士" :value="4" />
-              <el-option label="硕士" :value="5" />
+              <!-- 学生：博士研究生、硕士研究生、本科生 -->
+              <el-option label="博士研究生" :value="4" />
+              <el-option label="硕士研究生" :value="5" />
+              <el-option label="本科生" :value="6" />
             </template>
             <template v-else>
               <!-- 管理员：显示所有选项 -->
+              <el-option label="实验室负责人" :value="0" />
               <el-option label="教授" :value="1" />
               <el-option label="副教授" :value="2" />
               <el-option label="讲师" :value="3" />
-              <el-option label="博士" :value="4" />
-              <el-option label="硕士" :value="5" />
+              <el-option label="博士研究生" :value="4" />
+              <el-option label="硕士研究生" :value="5" />
+              <el-option label="本科生" :value="6" />
             </template>
           </el-select>
         </el-form-item>

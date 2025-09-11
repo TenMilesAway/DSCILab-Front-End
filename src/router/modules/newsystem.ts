@@ -75,7 +75,8 @@ export default [
     redirect: "/newsystem/news/index",
     meta: {
       title: "新闻活动",
-      rank: 4
+      rank: 4,
+      showLink: false
     },
     children: [
       {
@@ -84,7 +85,7 @@ export default [
         component: () => import("@/views/newsystem/news/index.vue"),
         meta: {
           title: "新闻活动",
-          showLink: true,
+          showLink: false,
           showParent: false
         }
       }

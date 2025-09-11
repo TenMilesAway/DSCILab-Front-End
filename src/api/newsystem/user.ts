@@ -10,7 +10,7 @@ export interface UserListQuery {
   realName?: string; // 真实姓名筛选
   englishName?: string; // 英文名筛选
   identity?: number; // 身份筛选：1=管理员,2=教师,3=学生
-  academicStatus?: number; // 学术身份筛选：1=教授,2=副教授,3=讲师,4=博士,5=硕士
+  academicStatus?: number; // 学术身份筛选：0=实验室负责人,1=教授,2=副教授,3=讲师,4=博士研究生,5=硕士研究生,6=本科生
   gender?: number; // 性别筛选：0=未知,1=男,2=女
   status?: number; // 状态筛选：1=在读/在职,2=毕业/离职
   isActive?: boolean; // 是否启用
@@ -38,7 +38,7 @@ export interface UserListItem {
   englishName: string;
   gender: number; // 0=未知,1=男,2=女
   identity: number; // 1=管理员,2=教师,3=学生
-  academicStatus: number | null; // 1=教授,2=副教授,3=讲师,4=博士,5=硕士
+  academicStatus: number | null; // 0=实验室负责人,1=教授,2=副教授,3=讲师,4=博士研究生,5=硕士研究生,6=本科生
   researchArea: string;
   phone: string;
   email: string;
@@ -87,7 +87,7 @@ export interface CreateUserRequest {
   password: string; // 密码（必填，6-20位）
   gender?: number; // 性别：0=未知,1=男,2=女
   identity: number; // 身份（必填）：1=管理员,2=教师,3=学生
-  academicStatus?: number; // 学术身份：1=教授,2=副教授,3=讲师,4=博士,5=硕士
+  academicStatus?: number; // 学术身份：0=实验室负责人,1=教授,2=副教授,3=讲师,4=博士研究生,5=硕士研究生,6=本科生
   researchArea?: string; // 研究方向
   phone?: string; // 手机号
   email?: string; // 邮箱
@@ -160,11 +160,13 @@ export interface UpdateUserRequest {
 export interface UpdateProfileRequest {
   realName: string;
   englishName?: string;
+  studentNumber?: string; // 学号/工号
   gender?: number;
   academicStatus?: number;
   researchArea?: string;
   phone?: string;
   email?: string;
+  enrollmentYear?: number; // 入学/入职年份
   graduationYear?: number;
   graduationDest?: string;
   resume?: string;
@@ -218,7 +220,7 @@ export interface UserProfile {
   genderDesc: string;
   identity: number; // 1=管理员,2=教师,3=学生
   identityDesc: string;
-  academicStatus: number; // 1=教授,2=副教授,3=讲师,4=博士,5=硕士
+  academicStatus: number; // 0=实验室负责人,1=教授,2=副教授,3=讲师,4=博士研究生,5=硕士研究生,6=本科生
   academicStatusDesc: string;
   researchArea: string;
   phone: string;
