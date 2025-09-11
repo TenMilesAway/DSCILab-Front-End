@@ -6,6 +6,12 @@ import {
 } from "@/api/newsystem/user";
 import { FormInstance, FormRules } from "element-plus";
 import { message } from "@/utils/message";
+import { removeToken } from "@/utils/auth";
+import { useUserStoreHook } from "@/store/modules/user";
+import { useMultiTagsStoreHook } from "@/store/modules/multiTags";
+import { resetRouter } from "@/router";
+import { useRouter } from "vue-router";
+import { routerArrays } from "@/layout/types";
 
 defineOptions({
   name: "NewSystemResetPwd"
@@ -42,15 +48,31 @@ const rules = ref<FormRules>({
   ]
 });
 
+const router = useRouter();
+
+/** 退出登录 */
+function logout() {
+  useUserStoreHook().SET_USERNAME("");
+  useUserStoreHook().SET_ROLES([]);
+  removeToken();
+  useMultiTagsStoreHook().handleTags("equal", [...routerArrays]);
+  resetRouter();
+  router.push("/login");
+}
+
 /** 提交按钮 */
 function submit() {
   console.log(user);
   pwdRef.value.validate(valid => {
     if (valid) {
       updateCurrentUserPasswordApi(toRaw(user)).then(() => {
-        message("修改成功", {
+        message("修改成功，请重新登录", {
           type: "success"
         });
+        // 延迟1秒后强制退出登录
+        setTimeout(() => {
+          logout();
+        }, 1000);
       });
     }
   });
