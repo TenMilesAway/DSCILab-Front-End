@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, nextTick, onMounted } from "vue";
+import { useRouter } from "vue-router";
 import { Search } from "@element-plus/icons-vue";
 import MemberInfo from "./MemberInfo.vue";
 import { ElMessage } from "element-plus";
@@ -20,6 +21,9 @@ import {
 defineOptions({
   name: "MembersPage"
 });
+
+// 路由实例
+const router = useRouter();
 
 interface Member {
   id: number;
@@ -371,74 +375,9 @@ const filterProjectsByUserName = (userName: string): ApiProject[] => {
     });
 };
 
-const showMemberDetail = async (member: Member) => {
-  try {
-    // 保存当前滚动位置
-    savedScrollPosition.value =
-      window.pageYOffset || document.documentElement.scrollTop;
-
-    // 开始加载
-    detailLoading.value = true;
-    showDetailView.value = true;
-
-    // 滚动到页面顶部
-    nextTick(() => {
-      window.scrollTo({ top: 0 });
-    });
-
-    // 调用接口获取完整的成员详情
-    const response = await getMemberDetailApi(member.id);
-
-    if (response.code === 0) {
-      // 将API返回的数据转换为Member格式
-      const detailMember: Member = {
-        id: response.data.id,
-        name: response.data.realName,
-        englishName: response.data.englishName,
-        gender: response.data.gender ? Number(response.data.gender) : undefined,
-        resume: response.data.resume,
-        phone: response.data.phone,
-        title: String(response.data.identity || "未知"),
-        graduation: response.data.graduationDest,
-        category: convertAcademicStatusToCategory(response.data.academicStatus),
-        email: response.data.email,
-        photo: response.data.photo,
-        researchArea: response.data.researchArea,
-        enrollmentYear: response.data.enrollmentYear,
-        graduationYear: response.data.graduationYear,
-        homepageUrl: response.data.homepageUrl,
-        orcid: response.data.orcid,
-        identity: String(response.data.identity), // 将number类型转换为string类型
-        academicStatus: response.data.academicStatus
-      };
-
-      // 筛选该用户相关的成果数据
-      const userAchievements = filterAchievementsByUserName(detailMember.name);
-      console.log(
-        `为用户 ${detailMember.name} 筛选到 ${userAchievements.length} 条成果记录`
-      );
-
-      // 筛选该用户相关的项目数据
-      const userProjects = filterProjectsByUserName(detailMember.name);
-      console.log(
-        `为用户 ${detailMember.name} 筛选到 ${userProjects.length} 条项目记录`
-      );
-
-      selectedMember.value = detailMember;
-      selectedMemberAchievements.value = userAchievements;
-      selectedMemberProjects.value = userProjects;
-      
-      // 加载完成
-      detailLoading.value = false;
-    } else {
-      ElMessage.error("获取成员详情失败：" + response.msg);
-      detailLoading.value = false;
-    }
-  } catch (error) {
-    console.error("获取成员详情失败:", error);
-    ElMessage.error("获取成员详情失败，请稍后重试");
-    detailLoading.value = false;
-  }
+const showMemberDetail = (member: Member) => {
+  // 使用路由跳转到成员详情页
+  router.push(`/welcome/member/${member.id}`);
 };
 
 const hideDetailView = () => {

@@ -478,7 +478,11 @@ const avatarUrl = computed(() => {
 
 // 按时间排序的项目列表（从新到旧）
 const sortedProjects = computed(() => {
-  if (!props.projects || props.projects.length === 0) return [];
+  console.log('原始参与项目数据:', props.projects);
+  if (!props.projects || props.projects.length === 0) {
+    console.log('参与项目数据为空');
+    return [];
+  }
 
   // 过滤出当前成员可见的项目
   const visibleProjects = props.projects.filter(project => {
@@ -493,6 +497,7 @@ const sortedProjects = computed(() => {
     return currentMemberAuthor && currentMemberAuthor.visible;
   });
 
+  console.log('过滤后的参与项目数据:', visibleProjects);
   return [...visibleProjects].sort((a, b) => {
     // 优先使用项目开始时间排序
     const aDate = a.projectStartDate
@@ -507,7 +512,11 @@ const sortedProjects = computed(() => {
 
 // 按时间排序的成果列表（从新到旧）
 const sortedAchievements = computed(() => {
-  if (!props.achievements || props.achievements.length === 0) return [];
+  console.log('原始学术成果数据:', props.achievements);
+  if (!props.achievements || props.achievements.length === 0) {
+    console.log('学术成果数据为空');
+    return [];
+  }
 
   // 过滤出当前成员可见的成果
   const visibleAchievements = props.achievements.filter(achievement => {
@@ -522,6 +531,7 @@ const sortedAchievements = computed(() => {
     return currentMemberAuthor && currentMemberAuthor.visible;
   });
 
+  console.log('过滤后的学术成果数据:', visibleAchievements);
   return [...visibleAchievements].sort((a, b) => {
     // 优先使用发表时间排序
     const aDate = a.publishDate ? new Date(a.publishDate).getTime() : 0;
