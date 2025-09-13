@@ -102,13 +102,6 @@
               >
                 {{ getTypeLabel(project.type) }}
               </el-tag>
-              <el-tag 
-                :type="getTypeTagType(project.type)"
-                size="small" 
-                class="project-status-tag"
-              >
-                {{ getStatusLabel(project.published) }}
-              </el-tag>
             </div>
             <div class="project-content">
               <span class="project-title">{{ project.title }}</span>

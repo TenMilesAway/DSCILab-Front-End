@@ -184,13 +184,6 @@
                       >
                         {{ getProjectTypeLabel(project.projectType) }}
                       </el-tag>
-                      <el-tag
-                        :type="getProjectStatusTagType(project.published, project.projectType) as '' | 'success' | 'warning' | 'danger' | 'info'"
-                        size="small"
-                        class="project-status-tag-member"
-                      >
-                        {{ getProjectStatusLabel(project.published) }}
-                      </el-tag>
                       <div class="project-content-member">
                         <span class="project-title-member">{{
                           project.title
@@ -243,13 +236,6 @@
                       >
                         {{ getPaperTypeLabel(achievement.paperType) }}
                       </el-tag>
-                      <el-tag
-                         :type="getStatusTagType(achievement.paperType, achievement.published) as '' | 'success' | 'warning' | 'danger' | 'info'"
-                         size="small"
-                         class="achievement-status-tag-member"
-                       >
-                         {{ getStatusLabel(achievement.paperType, achievement.published) }}
-                       </el-tag>
                       <div class="achievement-content-member">
                         <span
                           v-if="
