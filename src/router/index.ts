@@ -97,7 +97,14 @@ export function resetRouter() {
 }
 
 /** 路由白名单 */
-const whiteList = ["/login", "/welcome"];
+const whiteList = [
+  "/login", 
+  "/welcome",
+  "/welcome/members",
+  "/welcome/achievements", 
+  "/welcome/projects",
+  "/welcome/member"
+];
 
 const { VITE_HIDE_HOME } = import.meta.env;
 
@@ -123,7 +130,13 @@ router.beforeEach((to: ToRouteType, _from, next) => {
   /** 如果已经登录并存在登录信息后不能跳转到路由白名单，而是继续保持在当前页面 */
   function toCorrectRoute() {
     /** 新增判断是否存在登录信息 */
-    whiteList.includes(to.fullPath) && userInfo ? next(_from.fullPath) : next();
+    const isInWhiteList = whiteList.some(path => {
+      if (path === to.fullPath) return true;
+      // 支持带参数的路径匹配
+      if (path === '/welcome/member' && to.fullPath.startsWith('/welcome/member/')) return true;
+      return false;
+    });
+    isInWhiteList && userInfo ? next(_from.fullPath) : next();
   }
   if (userInfo) {
     // 无权限跳转403页面
@@ -189,7 +202,13 @@ router.beforeEach((to: ToRouteType, _from, next) => {
     }
   } else {
     if (to.path !== "/login") {
-      if (whiteList.indexOf(to.path) !== -1) {
+      const isInWhiteList = whiteList.some(path => {
+        if (path === to.path) return true;
+        // 支持带参数的路径匹配
+        if (path === '/welcome/member' && to.path.startsWith('/welcome/member/')) return true;
+        return false;
+      });
+      if (isInWhiteList) {
         next();
       } else {
         next({ path: "/login" });
