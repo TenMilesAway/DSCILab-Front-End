@@ -10,7 +10,6 @@ import {
   PureHttpRequestConfig
 } from "./types.d";
 import { stringify } from "qs";
-import NProgress from "../progress";
 import { getToken, formatToken } from "@/utils/auth";
 import { message } from "../message";
 import { ElMessageBox } from "element-plus";
@@ -69,8 +68,6 @@ class PureHttp {
   private httpInterceptorsRequest(): void {
     PureHttp.axiosInstance.interceptors.request.use(
       async (config: PureHttpRequestConfig): Promise<any> => {
-        // 开启进度条动画
-        NProgress.start();
         // 优先判断post/get等方法是否传入回调，否则执行初始化设置等回调
         if (typeof config.beforeRequestCallback === "function") {
           config.beforeRequestCallback(config);
@@ -122,7 +119,6 @@ class PureHttp {
             code = json.code;
             msg = json.msg;
           } else {
-            NProgress.done();
             return response.data;
           }
           // 正常的返回类型 直接获取code和msg字段
@@ -156,19 +152,15 @@ class PureHttp {
               .catch(() => {
                 message("取消重新登录", { type: "info" });
               });
-            NProgress.done();
             return Promise.reject(msg);
           } else {
             // 其余情况弹出错误提示框
             message(msg, { type: "error" });
-            NProgress.done();
             return Promise.reject(msg);
           }
         }
 
         const $config = response.config;
-        // 关闭进度条动画
-        NProgress.done();
         // 优先判断post/get等方法是否传入回调，否则执行初始化设置等回调
         if (typeof $config.beforeResponseCallback === "function") {
           $config.beforeResponseCallback(response);
@@ -183,8 +175,6 @@ class PureHttp {
       (error: PureHttpError) => {
         const $error = error;
         $error.isCancelRequest = Axios.isCancel($error);
-        // 关闭进度条动画
-        NProgress.done();
         // 所有的响应异常 区分来源为取消请求/非取消请求
         return Promise.reject($error);
       }

@@ -1,28 +1,35 @@
 <template>
   <div class="member-info-container">
-    <!-- 主要内容区域 -->
-    <div v-if="member" class="main-content" :class="{ 'content-visible': isContentVisible }">
-      <!-- 左侧信息定位导航 -->
-      <div class="info-sidebar animate-slide-left">
-        <div class="sidebar-header">
-          <button @click="$emit('back')" class="back-button">返回</button>
+    <!-- 顶部固定折叠窗 - 信息定位导航 -->
+    <div v-if="member" class="top-navigation-panel" :class="{ 'panel-expanded': isNavigationExpanded }">
+      <div class="panel-header" @click="toggleNavigation">
+        <div class="panel-title">
+          <button @click.stop="$emit('back')" class="back-button">返回</button>
           <h3>信息定位</h3>
         </div>
-        <div class="nav-list">
+        <div class="panel-toggle">
+          <i class="toggle-icon" :class="{ 'rotated': isNavigationExpanded }">▼</i>
+        </div>
+      </div>
+      <div class="panel-content" v-show="isNavigationExpanded">
+        <div class="nav-list-horizontal">
           <div
             v-for="(item, index) in navigationItems"
             :key="item.key"
-            class="nav-item animate-fade-up"
+            class="nav-item-horizontal animate-fade-up"
             :class="{ active: activeNavItem === item.key }"
-            :style="{ animationDelay: `${0.2 + index * 0.1}s` }"
+            :style="{ animationDelay: `${0.1 + index * 0.05}s` }"
             @click="scrollToSection(item.id, item.key)"
           >
             <span class="nav-text">{{ item.name }}</span>
           </div>
         </div>
       </div>
+    </div>
 
-      <!-- 右侧内容区域 -->
+    <!-- 主要内容区域 -->
+    <div v-if="member" class="main-content" :class="{ 'content-visible': isContentVisible }">
+      <!-- 内容区域 -->
       <div class="content-area animate-slide-right">
         <div class="member-detail-card">
           <!-- 头像和基本信息 -->
@@ -56,74 +63,18 @@
           <div class="detail-sections animate-fade-up" style="animation-delay: 0.6s;">
             <!-- 个人信息 -->
             <div id="personal-info-section" class="info-section animate-fade-up" style="animation-delay: 0.7s;">
-              <h3 class="section-title">个人信息</h3>
+              <h3 class="section-title">联系方式</h3>
               <div class="info-grid">
-                <div class="info-item animate-fade-up" style="animation-delay: 0.8s;">
-                  <span class="label">姓名:</span>
-                  <el-tooltip :content="member.name" placement="top" :disabled="!shouldShowTooltip(member.name)">
-                    <span class="value truncated">{{ member.name }}</span>
-                  </el-tooltip>
-                </div>
-                <div class="info-item animate-fade-up" v-if="member.englishName" style="animation-delay: 0.9s;">
-                  <span class="label">英文名:</span>
-                  <el-tooltip :content="member.englishName" placement="top" :disabled="!shouldShowTooltip(member.englishName)">
-                    <span class="value truncated">{{ member.englishName }}</span>
-                  </el-tooltip>
-                </div>
-                <div class="info-item animate-fade-up" v-if="member.gender" style="animation-delay: 1.0s;">
-                  <span class="label">性别:</span>
-                  <el-tooltip :content="member.gender === 1 ? '男' : member.gender === 2 ? '女' : String(member.gender)" placement="top" :disabled="!shouldShowTooltip(member.gender === 1 ? '男' : member.gender === 2 ? '女' : String(member.gender))">
-                    <span class="value truncated">{{
-                      member.gender === 1
-                        ? "男"
-                        : member.gender === 2
-                        ? "女"
-                        : String(member.gender)
-                    }}</span>
-                  </el-tooltip>
-                </div>
-                <div class="info-item animate-fade-up" style="animation-delay: 1.1s;">
-                  <span class="label">职位:</span>
-                  <el-tooltip :content="getAcademicStatusTitle(member.academicStatus)" placement="top" :disabled="!shouldShowTooltip(getAcademicStatusTitle(member.academicStatus))">
-                    <span class="value truncated">{{
-                      getAcademicStatusTitle(member.academicStatus)
-                    }}</span>
-                  </el-tooltip>
-                </div>
-                <div class="info-item animate-fade-up" v-if="member.email" style="animation-delay: 1.2s;">
+                <div class="info-item animate-fade-up" style="animation-delay: 1.2s;">
                   <span class="label">邮箱:</span>
                   <el-tooltip :content="member.email" placement="top" :disabled="!shouldShowTooltip(member.email)">
-                    <span class="value truncated">{{ member.email }}</span>
-                  </el-tooltip>
-                </div>
-                <div class="info-item animate-fade-up" v-if="member.phone" style="animation-delay: 1.3s;">
-                  <span class="label">手机号:</span>
-                  <el-tooltip :content="member.phone" placement="top" :disabled="!shouldShowTooltip(member.phone)">
-                    <span class="value truncated">{{ member.phone }}</span>
-                  </el-tooltip>
-                </div>
-                <div class="info-item animate-fade-up" v-if="member.enrollmentYear" style="animation-delay: 1.4s;">
-                  <span class="label">{{ getEnrollmentLabel(member) }}:</span>
-                  <el-tooltip :content="member.enrollmentYear?.toString()" placement="top" :disabled="!shouldShowTooltip(member.enrollmentYear?.toString())">
-                    <span class="value truncated">{{ member.enrollmentYear }}</span>
-                  </el-tooltip>
-                </div>
-                <div class="info-item animate-fade-up" v-if="member.graduationYear" style="animation-delay: 1.5s;">
-                  <span class="label">毕业年份:</span>
-                  <el-tooltip :content="member.graduationYear?.toString()" placement="top" :disabled="!shouldShowTooltip(member.graduationYear?.toString())">
-                    <span class="value truncated">{{ member.graduationYear }}</span>
+                    <span class="value">{{ member.email ? member.email : '暂未统计' }}</span>
                   </el-tooltip>
                 </div>
                 <div class="info-item animate-fade-up" v-if="member.graduation && member.graduation.trim()" style="animation-delay: 1.6s;">
                   <span class="label">毕业去向:</span>
                   <el-tooltip :content="member.graduation && member.graduation.trim() ? member.graduation : '暂未统计'" placement="top" :disabled="!shouldShowTooltip(member.graduation && member.graduation.trim() ? member.graduation : '暂未统计')">
                     <span class="value truncated">{{ member.graduation && member.graduation.trim() ? member.graduation : '暂未统计' }}</span>
-                  </el-tooltip>
-                </div>
-                <div class="info-item animate-fade-up" v-if="member.orcid" style="animation-delay: 1.7s;">
-                  <span class="label">ORCID:</span>
-                  <el-tooltip :content="member.orcid" placement="top" :disabled="!shouldShowTooltip(member.orcid)">
-                    <span class="value truncated">{{ member.orcid }}</span>
                   </el-tooltip>
                 </div>
               </div>
@@ -601,13 +552,19 @@ watch(
 
 // 信息定位导航配置
 const navigationItems = [
-  { key: "personal-info", name: "个人信息", id: "personal-info-section" },
+  { key: "personal-info", name: "联系方式", id: "personal-info-section" },
   { key: "education", name: "个人简述", id: "resume-section" },
   { key: "projects", name: "参与项目", id: "projects-section" },
   { key: "publications", name: "学术成果", id: "publications-section" }
 ];
 
 const activeNavItem = ref("personal-info");
+const isNavigationExpanded = ref(false);
+
+// 切换导航面板展开/收起状态
+const toggleNavigation = () => {
+  isNavigationExpanded.value = !isNavigationExpanded.value;
+};
 
 // 滚动到指定部分
 const scrollToSection = (sectionId: string, navKey: string) => {
@@ -885,6 +842,132 @@ const handlePdfDownload = (url: string) => {
 </script>
 
 <style scoped>
+/* 顶部导航面板样式 */
+.top-navigation-panel {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  transition: all 0.3s ease;
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 20px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.panel-title {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.panel-title h3 {
+  color: white;
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.panel-title .back-button {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+}
+
+.panel-title .back-button:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+.panel-toggle {
+  color: white;
+}
+
+.toggle-icon {
+  font-size: 1.2rem;
+  transition: transform 0.3s ease;
+  font-style: normal;
+}
+
+.toggle-icon.rotated {
+  transform: rotate(180deg);
+}
+
+.panel-content {
+  padding: 0 20px 15px;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.nav-list-horizontal {
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 15px;
+}
+
+.nav-item-horizontal {
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.nav-item-horizontal:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.nav-item-horizontal.active {
+  background: rgba(255, 255, 255, 0.9);
+  color: #667eea;
+  font-weight: 600;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* 主要容器样式调整 */
+.member-info-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  padding-top: 60px; /* 为固定顶部面板留出空间 */
+}
+
+.main-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 0.6s ease;
+}
+
+.main-content.content-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.content-area {
+  width: 100%;
+}
 /* 响应式设计 */
 @media (width <= 1200px) {
   .main-content {
@@ -1338,10 +1421,10 @@ const handlePdfDownload = (url: string) => {
   display: flex;
   gap: 30px;
   align-items: flex-start;
-  width: 100%;
+  width: 80%;
   max-width: 100%;
   padding: 0 20px;
-  margin: 0 auto;
+  margin: 90px auto;
 }
 
 .info-sidebar {
@@ -2260,5 +2343,284 @@ const handlePdfDownload = (url: string) => {
 .main-content:not(.content-visible) .animate-fade-up,
 .main-content:not(.content-visible) .animate-scale-up {
   animation: none;
+}
+
+/* 移动端响应式样式 */
+@media (max-width: 768px) {
+  /* 顶部导航面板移动端适配 */
+  .top-navigation-panel {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  .panel-header {
+    padding: 10px 15px;
+  }
+
+  .panel-title h3 {
+    font-size: 1rem;
+  }
+
+  .panel-title .back-button {
+    padding: 5px 10px;
+    font-size: 0.8rem;
+  }
+
+  .panel-content {
+    padding: 0 15px 12px;
+  }
+
+  .nav-list-horizontal {
+    gap: 8px;
+    margin-top: 12px;
+    overflow-x: auto;
+    padding-bottom: 5px;
+  }
+
+  .nav-item-horizontal {
+    padding: 6px 12px;
+    font-size: 0.8rem;
+    border-radius: 15px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  /* 主要容器移动端适配 */
+  .member-info-container {
+    padding-top: 80px; /* 为固定的顶部面板留出空间 */
+    padding-left: 10px;
+    padding-right: 10px;
+    padding-bottom: 10px;
+  }
+
+  .main-content {
+    width: 100%;
+    padding: 0 10px;
+    margin: 20px auto;
+  }
+
+  .content-area {
+    order: 1; /* 将内容区域移到侧边栏上方 */
+  }
+
+  .member-detail-card {
+    border-radius: 16px;
+  }
+
+  /* 头像和基本信息居中布局 */
+  .member-header {
+    flex-direction: column;
+    padding: 30px 20px;
+    text-align: center;
+  }
+
+  .avatar-section {
+    margin-right: 0;
+    margin-bottom: 20px;
+    align-self: center;
+  }
+
+  .basic-info {
+    text-align: center;
+    
+    h1 {
+      font-size: 24px;
+      margin-bottom: 8px;
+    }
+
+    p {
+      font-size: 16px;
+      margin: 4px 0;
+    }
+  }
+
+  .member-title {
+    font-size: 16px;
+  }
+
+  .member-status {
+    margin-top: 16px;
+  }
+
+  /* 详细信息区域居中 */
+  .detail-sections {
+    padding: 20px;
+  }
+
+  .section-title {
+    font-size: 18px;
+    text-align: center;
+    margin-bottom: 20px;
+  }
+
+  /* 个人信息网格居中 */
+  .info-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    max-width: 400px;
+    margin: 0 auto;
+  }
+
+  .info-item {
+    flex-direction: column;
+    padding: 16px;
+    text-align: center;
+    
+    .label {
+      min-width: auto;
+      margin-right: 0;
+      margin-bottom: 8px;
+      font-size: 14px;
+      color: #64748b;
+    }
+
+    .value {
+      font-size: 15px;
+      font-weight: 600;
+      color: #1e293b;
+    }
+  }
+
+  /* 研究方向标签居中 */
+  .research-areas {
+    text-align: center;
+  }
+
+  .research-tags {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    max-width: 400px;
+    margin: 0 auto;
+  }
+
+  .research-tag {
+    padding: 8px 16px;
+    font-size: 13px;
+  }
+
+  /* 个人简述居中 */
+  .resume-content {
+    max-width: 400px;
+    margin: 0 auto;
+    text-align: center;
+  }
+
+  .resume-text {
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  /* 项目列表居中 */
+  .projects-list-container {
+    max-width: 450px;
+    margin: 0 auto;
+  }
+
+  .project-item-member {
+    padding: 16px;
+    text-align: center;
+  }
+
+  .project-main-member {
+    flex-direction: column;
+    gap: 8px;
+    text-align: center;
+  }
+
+  .project-type-tag-member {
+    align-self: center;
+    margin: 0 0 8px 0;
+  }
+
+  .project-content-member {
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .project-title-member {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 15px;
+    text-align: center;
+  }
+
+  .project-separator-member {
+    display: none; /* 隐藏分隔符，改为换行显示 */
+  }
+
+  .project-leader-member,
+  .project-funding-member,
+  .project-year-member {
+    display: block;
+    margin: 4px 0;
+    font-size: 13px;
+    text-align: center;
+  }
+
+  /* 学术成果居中 */
+  .achievements-list-container {
+    max-width: 450px;
+    margin: 0 auto;
+  }
+
+  .achievement-item-member {
+    padding: 16px;
+    text-align: center;
+  }
+
+  .achievement-main-member {
+    flex-direction: column;
+    gap: 8px;
+    text-align: center;
+  }
+
+  .achievement-content-member {
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .achievement-title-member {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    text-align: center;
+  }
+
+  .achievement-authors-member,
+  .achievement-institution-member,
+  .achievement-year-member {
+    display: block;
+    margin: 4px 0;
+    font-size: 13px;
+    text-align: center;
+  }
+
+  .paper-links {
+    justify-content: center;
+    margin-top: 12px;
+  }
+
+  .paper-link {
+    font-size: 12px;
+    padding: 4px 8px;
+  }
+
+  /* 无数据状态居中 */
+  .no-data {
+    max-width: 300px;
+    margin: 0 auto;
+    padding: 24px;
+    
+    p {
+      font-size: 14px;
+    }
+  }
 }
 </style>
