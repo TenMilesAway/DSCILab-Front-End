@@ -1,6 +1,5 @@
 // import "@/utils/sso";
 import { getConfig } from "@/config";
-import NProgress from "@/utils/progress";
 import { sessionKey } from "@/utils/auth";
 import { useMultiTagsStoreHook } from "@/store/modules/multiTags";
 import { usePermissionStoreHook } from "@/store/modules/permission";
@@ -67,6 +66,12 @@ export const router: Router = createRouter({
   strict: true,
   scrollBehavior(to, from, savedPosition) {
     return new Promise(resolve => {
+      // 如果是从member详情页返回到members页面，使用平滑滚动到顶部
+      if (from.path.startsWith('/welcome/member/') && to.path === '/welcome/members') {
+        resolve({ left: 0, top: 0, behavior: 'smooth' });
+        return;
+      }
+      
       if (savedPosition) {
         return savedPosition;
       } else {
@@ -98,10 +103,10 @@ export function resetRouter() {
 
 /** 路由白名单 */
 const whiteList = [
-  "/login", 
+  "/login",
   "/welcome",
   "/welcome/members",
-  "/welcome/achievements", 
+  "/welcome/achievements",
   "/welcome/projects",
   "/welcome/member"
 ];
@@ -117,7 +122,6 @@ router.beforeEach((to: ToRouteType, _from, next) => {
     }
   }
   const userInfo = storageSession().getItem<TokenDTO>(sessionKey)?.currentUser;
-  NProgress.start();
   const externalLink = isUrl(to?.name as string);
   if (!externalLink) {
     to.matched.some(item => {
@@ -151,7 +155,6 @@ router.beforeEach((to: ToRouteType, _from, next) => {
       // name为超链接
       if (externalLink) {
         openLink(to?.name as string);
-        NProgress.done();
       } else {
         toCorrectRoute();
       }
@@ -220,7 +223,7 @@ router.beforeEach((to: ToRouteType, _from, next) => {
 });
 
 router.afterEach(() => {
-  NProgress.done();
+  // 路由切换完成后的处理
 });
 
 export default router;
