@@ -52,7 +52,7 @@ const {
           clearable
           class="!w-[160px]"
         >
-          <el-option label="论文" :value="1" />
+          <el-option label="论文、专利等" :value="1" />
           <el-option label="项目" :value="2" />
         </el-select>
       </el-form-item>

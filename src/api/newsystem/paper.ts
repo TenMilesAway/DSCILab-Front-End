@@ -32,7 +32,7 @@ export interface CreateAchievementRequest {
   publishDate?: string | null; // 仅论文；type=1必填；type=2必须null；格式：YYYY
   projectStartDate?: string | null; // 仅项目；type=2必填；格式：YYYY-MM
   projectEndDate?: string | null; // 仅项目；可空或>=开始；格式：YYYY-MM
-  coverUrl?: string | null;
+  reference?: string | null;
   linkUrl?: string | null;
   gitUrl?: string | null;
   homepageUrl?: string | null;
@@ -59,7 +59,7 @@ export interface UpdateAchievementRequest {
   publishDate?: string | null; // 仅论文；type=1必填；type=2必须null；格式：YYYY
   projectStartDate?: string | null; // 仅项目；type=2必填；格式：YYYY-MM
   projectEndDate?: string | null; // 仅项目；可空或>=开始；格式：YYYY-MM
-  coverUrl?: string | null;
+  reference?: string | null;
   linkUrl?: string | null;
   gitUrl?: string | null;
   homepageUrl?: string | null;
@@ -89,7 +89,7 @@ export interface LabAchievementDTO {
   publishDate: string | null; // 论文：YYYY；项目：null
   projectStartDate: string | null; // 项目：YYYY-MM；论文：null
   projectEndDate: string | null; // 项目：YYYY-MM；论文：null
-  coverUrl: string | null;
+  reference: string | null;
   linkUrl: string | null;
   gitUrl: string | null;
   homepageUrl: string | null;
@@ -223,7 +223,7 @@ export interface PublicAchievementDTO {
   publishDate: string | null; // 论文：YYYY；项目：null
   projectStartDate: string | null; // 项目：YYYY-MM；论文：null
   projectEndDate: string | null; // 项目：YYYY-MM；论文：null
-  coverUrl: string | null;
+  reference: string | null;
   linkUrl: string | null;
   gitUrl: string | null;
   homepageUrl: string | null;

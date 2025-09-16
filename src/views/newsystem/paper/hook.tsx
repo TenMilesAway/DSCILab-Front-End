@@ -54,7 +54,7 @@ export function useHook() {
       fixed: "left"
     },
     {
-      label: "成果标题",
+      label: "成果名称",
       prop: "title",
       minWidth: 200,
       showOverflowTooltip: true
@@ -289,10 +289,8 @@ export function useHook() {
           userId: author.userId || null,
           name: author.name,
           nameEn: author.nameEn || null,
-          affiliation: author.affiliation || null,
           authorOrder: index + 1,
           isCorresponding: author.isCorresponding || false,
-          role: author.role || null,
           visible: author.visible !== false
         }))
         : [
@@ -300,10 +298,8 @@ export function useHook() {
             userId: null,
             name: "",
             nameEn: null,
-            affiliation: null,
             authorOrder: 1,
             isCorresponding: true,
-            role: null,
             visible: true
           }
         ];
@@ -361,7 +357,6 @@ export function useHook() {
             const baseAuthor = {
               userId: author.userId,
               name: author.name.trim(),
-              affiliation: author.affiliation?.trim() || null,
               authorOrder: index + 1,
               visible: author.visible
             };
@@ -371,15 +366,13 @@ export function useHook() {
               return {
                 ...baseAuthor,
                 nameEn: author.nameEn?.trim() || null,
-                isCorresponding: author.isCorresponding,
-                role: author.role?.trim() || null
+                isCorresponding: author.isCorresponding
               };
             } else {
               return {
                 ...baseAuthor,
                 nameEn: null,
-                isCorresponding: false,
-                role: null
+                isCorresponding: false
               };
             }
           });
@@ -408,6 +401,7 @@ export function useHook() {
           linkUrl: formData.linkUrl || null,
           gitUrl: formData.gitUrl || null,
           pdfUrl: formData.pdfUrl || null,
+          reference: formData.reference || null,
           fundingAmount: formData.fundingAmount || null,
           published: formData.published,
           authors: authorsData
