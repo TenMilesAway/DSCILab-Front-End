@@ -167,7 +167,7 @@
               <h3 class="section-title">参与项目</h3>
               <div class="projects-list">
                 <div
-                  v-if="props.projects && props.projects.length > 0"
+                  v-if="sortedProjects && sortedProjects.length > 0"
                   class="projects-list-container"
                 >
                   <div
@@ -183,13 +183,6 @@
                         class="project-type-tag-member"
                       >
                         {{ getProjectTypeLabel(project.projectType) }}
-                      </el-tag>
-                      <el-tag
-                        :type="getProjectStatusTagType(project.published, project.projectType) as '' | 'success' | 'warning' | 'danger' | 'info'"
-                        size="small"
-                        class="project-status-tag-member"
-                      >
-                        {{ getProjectStatusLabel(project.published) }}
                       </el-tag>
                       <div class="project-content-member">
                         <span class="project-title-member">{{
@@ -226,7 +219,7 @@
               <h3 class="section-title">学术成果</h3>
               <div class="publications-list">
                 <div
-                  v-if="props.achievements && props.achievements.length > 0"
+                  v-if="sortedAchievements && sortedAchievements.length > 0"
                   class="achievements-list-container"
                 >
                   <div
@@ -243,13 +236,6 @@
                       >
                         {{ getPaperTypeLabel(achievement.paperType) }}
                       </el-tag>
-                      <el-tag
-                         :type="getStatusTagType(achievement.paperType, achievement.published) as '' | 'success' | 'warning' | 'danger' | 'info'"
-                         size="small"
-                         class="achievement-status-tag-member"
-                       >
-                         {{ getStatusLabel(achievement.paperType, achievement.published) }}
-                       </el-tag>
                       <div class="achievement-content-member">
                         <span
                           v-if="
@@ -387,8 +373,8 @@ import {
 } from "vue";
 import { Link, Download } from "@element-plus/icons-vue";
 import { ElMessage } from "element-plus";
-import { type ApiAchievement } from "@/api/lab/achievements";
-import { type ApiProject } from "@/api/lab/projects";
+import { type ApiAchievement, getAchievementsListApi } from "@/api/lab/achievements";
+import { type ApiProject, getProjectsListApi } from "@/api/lab/projects";
 
 // 定义 Github 图标组件
 const _Github = {
@@ -439,9 +425,6 @@ interface Props {
 }
 
 const props = defineProps<Props>();
-const _emit = defineEmits<{
-  back: [];
-}>();
 
 // 头像加载状态
 const isAvatarLoaded = ref(false);
@@ -449,10 +432,77 @@ const isAvatarLoaded = ref(false);
 // 动画控制状态
 const isContentVisible = ref(false);
 
-// 监听member变化，重置头像加载状态和动画状态
-watch(() => props.member, () => {
+// 内部成果数据状态
+const internalAchievements = ref<ApiAchievement[]>([]);
+
+// 内部项目数据状态
+const internalProjects = ref<ApiProject[]>([]);
+
+// 获取成果数据的函数
+const fetchAchievements = async () => {
+  if (!props.member) return;
+  
+  try {
+    const response = await getAchievementsListApi({ type: 1 });
+    if (response.code === 0 && response.data && response.data.rows) {
+      // 根据当前用户的 id 筛选成果数据
+      const filteredAchievements = response.data.rows.filter(achievement => {
+        if (!achievement.authors || !Array.isArray(achievement.authors)) {
+          return false;
+        }
+        
+        // 检查当前用户是否存在于 authors 字段中
+        return achievement.authors.some(author => 
+          author.name === props.member?.name
+        );
+      });
+      
+      internalAchievements.value = filteredAchievements;
+    }
+  } catch (error) {
+    console.error('获取成果数据失败:', error);
+    internalAchievements.value = [];
+  }
+};
+
+// 获取项目数据的函数
+const fetchProjects = async () => {
+  if (!props.member) return;
+  
+  try {
+    const response = await getProjectsListApi({ type: 2 });
+    if (response.code === 0 && response.data && response.data.rows) {
+      // 根据当前用户的 id 筛选项目数据
+      const filteredProjects = response.data.rows.filter(project => {
+        if (!project.authors || !Array.isArray(project.authors)) {
+          return false;
+        }
+        
+        // 检查当前用户是否存在于 authors 字段中
+        return project.authors.some(author => 
+          author.name === props.member?.name
+        );
+      });
+      
+      internalProjects.value = filteredProjects;
+    }
+  } catch (error) {
+    console.error('获取项目数据失败:', error);
+    internalProjects.value = [];
+  }
+};
+
+// 监听member变化，重置头像加载状态和动画状态，并获取成果和项目数据
+watch(() => props.member, (newMember) => {
   isAvatarLoaded.value = false;
   isContentVisible.value = false;
+  
+  // 如果有新的成员，获取成果和项目数据
+  if (newMember) {
+    fetchAchievements();
+    fetchProjects();
+  }
+  
   // 延迟触发动画，确保组件已渲染
   nextTick(() => {
     setTimeout(() => {
@@ -478,14 +528,14 @@ const avatarUrl = computed(() => {
 
 // 按时间排序的项目列表（从新到旧）
 const sortedProjects = computed(() => {
-  console.log('原始参与项目数据:', props.projects);
-  if (!props.projects || props.projects.length === 0) {
+  console.log('原始参与项目数据:', internalProjects.value);
+  if (!internalProjects.value || internalProjects.value.length === 0) {
     console.log('参与项目数据为空');
     return [];
   }
 
   // 过滤出当前成员可见的项目
-  const visibleProjects = props.projects.filter(project => {
+  const visibleProjects = internalProjects.value.filter(project => {
     if (!project.authors || !props.member) return false;
     
     // 查找当前成员在作者列表中的记录
@@ -512,14 +562,14 @@ const sortedProjects = computed(() => {
 
 // 按时间排序的成果列表（从新到旧）
 const sortedAchievements = computed(() => {
-  console.log('原始学术成果数据:', props.achievements);
-  if (!props.achievements || props.achievements.length === 0) {
+  console.log('原始学术成果数据:', internalAchievements.value);
+  if (!internalAchievements.value || internalAchievements.value.length === 0) {
     console.log('学术成果数据为空');
     return [];
   }
 
   // 过滤出当前成员可见的成果
-  const visibleAchievements = props.achievements.filter(achievement => {
+  const visibleAchievements = internalAchievements.value.filter(achievement => {
     if (!achievement.authors || !props.member) return false;
     
     // 查找当前成员在作者列表中的记录
@@ -749,59 +799,6 @@ const getPaperTypeLabel = (paperType?: number) => {
   };
   return typeMap[paperType || 7] || "其他";
 };
-
-// 获取状态标签文本
-const getStatusLabel = (paperType?: number, published?: boolean) => {
-  const isPublished = published !== false;
-  if (isPublished) {
-    // published = true 时
-    if ([1, 2, 3, 6, 7].includes(paperType || 7)) { // 期刊、会议、预印本、标准、专著
-      return '已发表';
-    } else if ([4, 5].includes(paperType || 7)) { // 专利、软著
-      return '已授权';
-    }
-  } else {
-    // published = false 时
-    if ([1, 2, 3, 6, 7].includes(paperType || 7)) { // 期刊、会议、预印本、标准、专著
-      return '投递中';
-    } else if ([4, 5].includes(paperType || 7)) { // 专利、软著
-      return '受理中';
-    }
-  }
-  return '';
-};
-
-// 获取状态标签类型
-const getStatusTagType = (paperType?: number, published?: boolean) => {
-  // 基础类型颜色映射（与getPaperTypeTagType保持一致）
-  const baseTypeColors: Record<number, string> = {
-    1: "primary", // 期刊
-    2: "success", // 会议
-    3: "warning", // 预印本
-    4: "danger", // 专利
-    5: "info", // 软著
-    6: "info", // 标准
-    7: "primary" // 专著
-  };
-  
-  const isPublished = published !== false;
-  
-  // 如果未发布，使用稍微不同的色调表示状态
-  if (!isPublished) {
-    const unpublishedColors: Record<number, string> = {
-      1: "primary",  // 期刊：使用默认灰色调
-      2: "success",  // 会议：从success变为warning
-      3: "warning",  // 预印本：从warning变为info
-      4: "danger",  // 专利：从danger变为warning
-      5: "info",  // 软著：使用默认灰色调
-      6: "info", // 标准
-      7: "primary"  // 专著：从primary变为info
-    };
-    return unpublishedColors[paperType || 7] || "info";
-  }
-  
-  return baseTypeColors[paperType || 7] || "info";
-}
 
 // 获取项目类型标签类型
 const getProjectTypeTagType = (projectType?: number) => {

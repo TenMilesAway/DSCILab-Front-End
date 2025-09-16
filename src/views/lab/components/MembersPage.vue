@@ -90,19 +90,6 @@ const actualMembers = computed(() => {
 });
 
 // 学术状态映射
-const convertAcademicStatusToCategory = (academicStatus: number): string => {
-  const statusMap: Record<number, string> = {
-    1: "directors", // 负责人
-    2: "teachers", // 教师
-    3: "phd_students", // 博士生
-    4: "master_students", // 硕士生
-    5: "undergraduate_students", // 本科生
-    6: "graduates" // 已毕业学生
-  };
-  return statusMap[academicStatus] || "graduates";
-};
-
-// 原有的学术状态映射
 const getAcademicStatusTitle = (
   academicStatus: number | null,
   enrollmentYear?: number
@@ -252,47 +239,8 @@ const categories = [
   { key: "graduates", name: "已毕业学生" }
 ];
 
-// 组件挂载时获取API数据
-// 从API获取成果数据
-const fetchAchievementsFromApi = async () => {
-  try {
-    const result = await getAchievementsListApi({ type: 1 });
-
-    if (result.code === 0 && result.data && result.data.rows) {
-      apiAchievements.value = result.data.rows;
-      console.log("成果数据获取成功:", apiAchievements.value.length, "条记录");
-    } else {
-      console.error("获取成果数据失败:", result.msg);
-      ElMessage.error("获取成果数据失败：" + result.msg);
-    }
-  } catch (error) {
-    console.error("获取成果数据异常:", error);
-    ElMessage.error("获取成果数据失败，请稍后重试");
-  }
-};
-
-// 从API获取项目数据
-const fetchProjectsFromApi = async () => {
-  try {
-    const result = await getProjectsListApi({ type: 2 });
-
-    if (result.code === 0 && result.data && result.data.rows) {
-      apiProjects.value = result.data.rows;
-      console.log("项目数据获取成功:", apiProjects.value.length, "条记录");
-    } else {
-      console.error("获取项目数据失败:", result.msg);
-      ElMessage.error("获取项目数据失败：" + result.msg);
-    }
-  } catch (error) {
-    console.error("获取项目数据异常:", error);
-    ElMessage.error("获取项目数据失败，请稍后重试");
-  }
-};
-
 onMounted(() => {
   fetchMembersFromApi();
-  fetchAchievementsFromApi();
-  fetchProjectsFromApi();
 });
 
 // 获取当前选中分类的成员
@@ -315,19 +263,6 @@ const currentCategoryMembers = computed(() => {
   return filteredMembers;
 });
 
-// 按类别分组成员（用于左侧导航显示统计）
-const _groupedMembers = computed<CategoryGroup[]>(() => {
-  return categories
-    .map(category => ({
-      name: category.name,
-      key: category.key,
-      members: actualMembers.value.filter(
-        member => member.category === category.key
-      )
-    }))
-    .filter(group => group.members.length > 0);
-});
-
 // 详情显示状态管理
 const showDetailView = ref(false);
 const detailLoading = ref(false);
@@ -336,44 +271,6 @@ const selectedMemberAchievements = ref<ApiAchievement[]>([]);
 const selectedMemberProjects = ref<ApiProject[]>([]);
 // 滚动位置记忆
 const savedScrollPosition = ref(0);
-
-// 根据用户姓名筛选成果数据
-const filterAchievementsByUserName = (userName: string): ApiAchievement[] => {
-  return apiAchievements.value
-    .filter(achievement => {
-      // 检查authors字段中是否有匹配的用户姓名
-      if (achievement.authors && Array.isArray(achievement.authors)) {
-        return achievement.authors.some(author => {
-          // 根据姓名匹配（支持模糊匹配）
-          return author.name && author.name.includes(userName);
-        });
-      }
-      return false;
-    })
-    .filter(achievement => {
-      // 根据status字段过滤（假设status=1表示可见）
-      return achievement.status === undefined || achievement.status === 1;
-    });
-};
-
-// 根据用户姓名筛选项目数据
-const filterProjectsByUserName = (userName: string): ApiProject[] => {
-  return apiProjects.value
-    .filter(project => {
-      // 检查authors字段中是否有匹配的用户姓名
-      if (project.authors && Array.isArray(project.authors)) {
-        return project.authors.some(author => {
-          // 根据姓名匹配（支持模糊匹配）
-          return author.name && author.name.includes(userName);
-        });
-      }
-      return false;
-    })
-    .filter(project => {
-      // 根据status字段过滤（假设status=1表示可见）
-      return project.status === undefined || project.status === 1;
-    });
-};
 
 const showMemberDetail = (member: Member) => {
   // 使用路由跳转到成员详情页
@@ -536,7 +433,7 @@ const getCategoryName = (categoryKey: string) => {
     </div>
 
     <!-- 详情页面加载动画 -->
-    <div v-else-if="showDetailView && detailLoading" class="detail-loading-overlay">
+    <!-- <div v-else-if="showDetailView && detailLoading" class="detail-loading-overlay">
       <div class="detail-loading-container">
         <div class="loading-spinner-detail">
           <div class="spinner-ring"></div>
@@ -557,7 +454,7 @@ const getCategoryName = (categoryKey: string) => {
           <span class="loading-char">.</span>
         </div>
       </div>
-    </div>
+    </div> -->
 
     <!-- 成员详情视图 -->
     <MemberInfo

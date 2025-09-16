@@ -100,13 +100,6 @@
                 >
                   {{ getTypeLabel(achievement.type) }}
                 </el-tag>
-                <el-tag 
-                  :type="getStatusTagType(achievement.type, achievement.published) as '' | 'success' | 'warning' | 'info' | 'danger'"
-                  size="small" 
-                  class="achievement-status-tag"
-                >
-                  {{ getStatusLabel(achievement.type, achievement.published) }}
-                </el-tag>
               </div>
               <div class="achievement-content">
                 <span class="achievement-authors">{{ achievement.authors.join(', ') }}</span>
