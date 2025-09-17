@@ -9,10 +9,8 @@ interface FormAuthor {
   userId?: number | null; // 内部作者userId；外部作者为null
   name: string; // 作者姓名
   nameEn?: string | null; // 英文姓名
-  affiliation?: string | null; // 单位
   authorOrder: number; // 作者顺序
   isCorresponding: boolean; // 是否通讯作者
-  role?: string | null; // 角色
   visible?: boolean; // 是否可见（仅内部作者）
 }
 
@@ -34,6 +32,7 @@ interface FormInlineData {
   gitUrl?: string; // Git链接
   linkUrl?: string; // 相关链接
   pdfUrl?: string; // PDF链接
+  reference?: string; // 前端展示引用
   fundingAmount?: number; // 项目经费（万元）
 }
 
@@ -49,10 +48,8 @@ const props = withDefaults(defineProps<FormProps>(), {
       {
         name: "",
         nameEn: null,
-        affiliation: null,
         authorOrder: 1,
         isCorresponding: true,
-        role: null,
         visible: true,
         userId: null
       }
@@ -86,10 +83,8 @@ const addAuthor = () => {
   newFormInline.value.authors.push({
     name: "",
     nameEn: null,
-    affiliation: null,
     authorOrder: newOrder,
     isCorresponding: false,
-    role: null,
     visible: true,
     userId: null
   });
@@ -140,11 +135,11 @@ defineExpose({ getFormRuleRef });
     <el-row :gutter="30">
       <!-- 基本信息 -->
       <re-col :value="24">
-        <el-form-item label="成果标题" prop="title">
+        <el-form-item label="成果名称" prop="title">
           <el-input
             v-model="newFormInline.title"
             clearable
-            placeholder="请输入成果标题"
+            placeholder="请输入成果名称"
             type="textarea"
             :rows="2"
           />
@@ -158,7 +153,7 @@ defineExpose({ getFormRuleRef });
             v-model="newFormInline.achievementType"
             placeholder="请选择成果类型"
           >
-            <el-option label="论文" value="paper" />
+            <el-option label="论文、专利等" value="paper" />
             <el-option label="项目" value="project" />
           </el-select>
         </el-form-item>
@@ -258,13 +253,6 @@ defineExpose({ getFormRuleRef });
                   <el-col :span="8">
                     <el-form-item
                       :prop="`authors.${index}.name`"
-                      :rules="[
-                        {
-                          required: true,
-                          message: '请输入作者姓名',
-                          trigger: 'blur'
-                        }
-                      ]"
                     >
                       <el-input
                         v-model="author.name"
@@ -285,29 +273,13 @@ defineExpose({ getFormRuleRef });
                       />
                     </el-form-item>
                   </el-col>
-                  <el-col :span="8">
-                    <el-form-item>
-                      <el-input
-                        v-model="author.affiliation"
-                        placeholder="单位（可选）"
-                        clearable
-                      />
-                    </el-form-item>
-                  </el-col>
+
                 </el-row>
                 <el-row
                   :gutter="16"
                   v-if="newFormInline.achievementType === 'paper'"
                 >
-                  <el-col :span="8">
-                    <el-form-item>
-                      <el-input
-                        v-model="author.role"
-                        placeholder="角色（可选）"
-                        clearable
-                      />
-                    </el-form-item>
-                  </el-col>
+
                   <el-col :span="8">
                     <el-form-item>
                       <el-checkbox v-model="author.isCorresponding">
@@ -344,24 +316,16 @@ defineExpose({ getFormRuleRef });
 
       <re-col
         :value="12"
-        v-if="
-          newFormInline.achievementType === 'paper' &&
-          newFormInline.paperType !== 4 &&
-          newFormInline.paperType !== 5
-        "
+        v-if="newFormInline.achievementType === 'paper'"
       >
         <el-form-item
-          :label="newFormInline.paperType === 2 ? '会议名称' : '期刊名称'"
+          label="机构名称"
           prop="journal"
         >
           <el-input
             v-model="newFormInline.journal"
             clearable
-            :placeholder="
-              newFormInline.paperType === 2
-                ? '请输入会议名称'
-                : '请输入期刊名称'
-            "
+            placeholder="请输入例如期刊或会议名称"
           />
         </el-form-item>
       </re-col>
@@ -421,21 +385,13 @@ defineExpose({ getFormRuleRef });
 
       <re-col :value="12" v-if="newFormInline.achievementType === 'paper'">
         <el-form-item
-          :label="
-            newFormInline.paperType === 4 || newFormInline.paperType === 5
-              ? '编号'
-              : 'DOI'
-          "
+          label="编号"
           prop="doi"
         >
           <el-input
             v-model="newFormInline.doi"
             clearable
-            :placeholder="
-              newFormInline.paperType === 4 || newFormInline.paperType === 5
-                ? '请输入编号'
-                : '请输入DOI'
-            "
+            placeholder="请输入论文doi或专利、软著等编号"
           />
         </el-form-item>
       </re-col>
@@ -470,36 +426,17 @@ defineExpose({ getFormRuleRef });
         </el-form-item>
       </re-col>
 
-      <re-col :value="12">
-        <el-form-item
-          :label="
-            newFormInline.achievementType === 'paper'
-              ? newFormInline.paperType === 4 || newFormInline.paperType === 5
-                ? '是否授权'
-                : '是否发表'
-              : '是否结项'
-          "
-          prop="published"
-        >
-          <el-switch
-            v-model="newFormInline.published"
-            :active-text="
-              newFormInline.achievementType === 'paper'
-                ? newFormInline.paperType === 4 || newFormInline.paperType === 5
-                  ? '授权'
-                  : '已发表'
-                : '已结项'
-            "
-            :inactive-text="
-              newFormInline.achievementType === 'paper'
-                ? newFormInline.paperType === 4 || newFormInline.paperType === 5
-                  ? '受理'
-                  : '在投'
-                : '未结项'
-            "
+      <re-col :value="24">
+        <el-form-item label="前端展示引用" prop="reference" style="white-space: nowrap;">
+          <el-input
+            v-model="newFormInline.reference"
+            clearable
+            placeholder="请输入用于在前端页面进行展示的成果引用格式"
           />
         </el-form-item>
       </re-col>
+
+
     </el-row>
   </el-form>
 </template>

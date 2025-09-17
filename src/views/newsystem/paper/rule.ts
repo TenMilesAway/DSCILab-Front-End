@@ -6,18 +6,18 @@ const formRules = reactive(<FormRules>{
   title: [
     {
       required: true,
-      message: "成果标题为必填项",
+      message: "成果名称为必填项",
       trigger: "blur"
     },
     {
       min: 5,
       max: 500,
-      message: "成果标题长度应在5到500个字符之间",
+      message: "成果名称长度应在5到500个字符之间",
       trigger: "blur"
     }
   ],
   // 作者数组验证将在表单组件中单独处理
-  // 每个作者的name字段已在form.vue中设置了必填验证
+  // 每个作者的name字段在form.vue中为非必填
   achievementType: [
     {
       required: true,

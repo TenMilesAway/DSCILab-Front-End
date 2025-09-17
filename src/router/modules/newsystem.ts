@@ -69,13 +69,36 @@ export default [
     ]
   },
   {
+    path: "/newsystem/achievement-type",
+    name: "NewSystemAchievementTypeManagement",
+    component: Layout,
+    redirect: "/newsystem/achievement-type/index",
+    meta: {
+      title: "成果类型管理",
+      rank: 4
+    },
+    children: [
+      {
+        path: "/newsystem/achievement-type/index",
+        name: "NewSystemAchievementType",
+        component: () => import("@/views/newsystem/achievement-type/index.vue"),
+        meta: {
+          title: "成果类型管理",
+          showLink: true,
+          showParent: false,
+          roles: ["admin"]
+        }
+      }
+    ]
+  },
+  {
     path: "/newsystem/news",
     name: "NewSystemNewsManagement",
     component: Layout,
     redirect: "/newsystem/news/index",
     meta: {
       title: "新闻活动",
-      rank: 4,
+      rank: 5,
       showLink: false
     },
     children: [
