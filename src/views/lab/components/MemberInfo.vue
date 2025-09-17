@@ -1,28 +1,35 @@
 <template>
   <div class="member-info-container">
-    <!-- 主要内容区域 -->
-    <div v-if="member" class="main-content" :class="{ 'content-visible': isContentVisible }">
-      <!-- 左侧信息定位导航 -->
-      <div class="info-sidebar animate-slide-left">
-        <div class="sidebar-header">
-          <button @click="$emit('back')" class="back-button">返回</button>
+    <!-- 顶部固定折叠窗 - 信息定位导航 -->
+    <div v-if="member" class="top-navigation-panel" :class="{ 'panel-expanded': isNavigationExpanded }">
+      <div class="panel-header" @click="toggleNavigation">
+        <div class="panel-title">
+          <button @click.stop="$emit('back')" class="back-button">返回</button>
           <h3>信息定位</h3>
         </div>
-        <div class="nav-list">
+        <div class="panel-toggle">
+          <i class="toggle-icon" :class="{ 'rotated': isNavigationExpanded }">▼</i>
+        </div>
+      </div>
+      <div class="panel-content" v-show="isNavigationExpanded">
+        <div class="nav-list-horizontal">
           <div
             v-for="(item, index) in navigationItems"
             :key="item.key"
-            class="nav-item animate-fade-up"
+            class="nav-item-horizontal animate-fade-up"
             :class="{ active: activeNavItem === item.key }"
-            :style="{ animationDelay: `${0.2 + index * 0.1}s` }"
+            :style="{ animationDelay: `${0.1 + index * 0.05}s` }"
             @click="scrollToSection(item.id, item.key)"
           >
             <span class="nav-text">{{ item.name }}</span>
           </div>
         </div>
       </div>
+    </div>
 
-      <!-- 右侧内容区域 -->
+    <!-- 主要内容区域 -->
+    <div v-if="member" class="main-content" :class="{ 'content-visible': isContentVisible }">
+      <!-- 内容区域 -->
       <div class="content-area animate-slide-right">
         <div class="member-detail-card">
           <!-- 头像和基本信息 -->
@@ -56,74 +63,18 @@
           <div class="detail-sections animate-fade-up" style="animation-delay: 0.6s;">
             <!-- 个人信息 -->
             <div id="personal-info-section" class="info-section animate-fade-up" style="animation-delay: 0.7s;">
-              <h3 class="section-title">个人信息</h3>
+              <h3 class="section-title">联系方式</h3>
               <div class="info-grid">
-                <div class="info-item animate-fade-up" style="animation-delay: 0.8s;">
-                  <span class="label">姓名:</span>
-                  <el-tooltip :content="member.name" placement="top" :disabled="!shouldShowTooltip(member.name)">
-                    <span class="value truncated">{{ member.name }}</span>
-                  </el-tooltip>
-                </div>
-                <div class="info-item animate-fade-up" v-if="member.englishName" style="animation-delay: 0.9s;">
-                  <span class="label">英文名:</span>
-                  <el-tooltip :content="member.englishName" placement="top" :disabled="!shouldShowTooltip(member.englishName)">
-                    <span class="value truncated">{{ member.englishName }}</span>
-                  </el-tooltip>
-                </div>
-                <div class="info-item animate-fade-up" v-if="member.gender" style="animation-delay: 1.0s;">
-                  <span class="label">性别:</span>
-                  <el-tooltip :content="member.gender === 1 ? '男' : member.gender === 2 ? '女' : String(member.gender)" placement="top" :disabled="!shouldShowTooltip(member.gender === 1 ? '男' : member.gender === 2 ? '女' : String(member.gender))">
-                    <span class="value truncated">{{
-                      member.gender === 1
-                        ? "男"
-                        : member.gender === 2
-                        ? "女"
-                        : String(member.gender)
-                    }}</span>
-                  </el-tooltip>
-                </div>
-                <div class="info-item animate-fade-up" style="animation-delay: 1.1s;">
-                  <span class="label">职位:</span>
-                  <el-tooltip :content="getAcademicStatusTitle(member.academicStatus)" placement="top" :disabled="!shouldShowTooltip(getAcademicStatusTitle(member.academicStatus))">
-                    <span class="value truncated">{{
-                      getAcademicStatusTitle(member.academicStatus)
-                    }}</span>
-                  </el-tooltip>
-                </div>
-                <div class="info-item animate-fade-up" v-if="member.email" style="animation-delay: 1.2s;">
+                <div class="info-item animate-fade-up" style="animation-delay: 1.2s;">
                   <span class="label">邮箱:</span>
                   <el-tooltip :content="member.email" placement="top" :disabled="!shouldShowTooltip(member.email)">
-                    <span class="value truncated">{{ member.email }}</span>
+                    <span class="value">{{ member.email ? member.email : '暂未统计' }}</span>
                   </el-tooltip>
                 </div>
-                <div class="info-item animate-fade-up" v-if="member.phone" style="animation-delay: 1.3s;">
-                  <span class="label">手机号:</span>
-                  <el-tooltip :content="member.phone" placement="top" :disabled="!shouldShowTooltip(member.phone)">
-                    <span class="value truncated">{{ member.phone }}</span>
-                  </el-tooltip>
-                </div>
-                <div class="info-item animate-fade-up" v-if="member.enrollmentYear" style="animation-delay: 1.4s;">
-                  <span class="label">{{ getEnrollmentLabel(member) }}:</span>
-                  <el-tooltip :content="member.enrollmentYear?.toString()" placement="top" :disabled="!shouldShowTooltip(member.enrollmentYear?.toString())">
-                    <span class="value truncated">{{ member.enrollmentYear }}</span>
-                  </el-tooltip>
-                </div>
-                <div class="info-item animate-fade-up" v-if="member.graduationYear" style="animation-delay: 1.5s;">
-                  <span class="label">毕业年份:</span>
-                  <el-tooltip :content="member.graduationYear?.toString()" placement="top" :disabled="!shouldShowTooltip(member.graduationYear?.toString())">
-                    <span class="value truncated">{{ member.graduationYear }}</span>
-                  </el-tooltip>
-                </div>
-                <div class="info-item animate-fade-up" v-if="member.category === 'graduates'" style="animation-delay: 1.6s;">
+                <div class="info-item animate-fade-up" v-if="member.graduation && member.graduation.trim()" style="animation-delay: 1.6s;">
                   <span class="label">毕业去向:</span>
                   <el-tooltip :content="member.graduation && member.graduation.trim() ? member.graduation : '暂未统计'" placement="top" :disabled="!shouldShowTooltip(member.graduation && member.graduation.trim() ? member.graduation : '暂未统计')">
                     <span class="value truncated">{{ member.graduation && member.graduation.trim() ? member.graduation : '暂未统计' }}</span>
-                  </el-tooltip>
-                </div>
-                <div class="info-item animate-fade-up" v-if="member.orcid" style="animation-delay: 1.7s;">
-                  <span class="label">ORCID:</span>
-                  <el-tooltip :content="member.orcid" placement="top" :disabled="!shouldShowTooltip(member.orcid)">
-                    <span class="value truncated">{{ member.orcid }}</span>
                   </el-tooltip>
                 </div>
               </div>
@@ -167,7 +118,7 @@
               <h3 class="section-title">参与项目</h3>
               <div class="projects-list">
                 <div
-                  v-if="props.projects && props.projects.length > 0"
+                  v-if="sortedProjects && sortedProjects.length > 0"
                   class="projects-list-container"
                 >
                   <div
@@ -184,13 +135,6 @@
                       >
                         {{ getProjectTypeLabel(project.projectType) }}
                       </el-tag>
-                      <el-tag
-                        :type="getProjectStatusTagType(project.published, project.projectType) as '' | 'success' | 'warning' | 'danger' | 'info'"
-                        size="small"
-                        class="project-status-tag-member"
-                      >
-                        {{ getProjectStatusLabel(project.published) }}
-                      </el-tag>
                       <div class="project-content-member">
                         <span class="project-title-member">{{
                           project.title
@@ -201,7 +145,7 @@
                         >
                         <span class="project-separator-member">,</span>
                         <span class="project-funding-member"
-                          >经费 {{ project.fundingAmount || "0" }} 万元</span
+                          >经费 {{ project.fundingAmount && project.fundingAmount !== `0` ? project.fundingAmount + ' 万元' : '未知金额' }}</span
                         >
                         <span class="project-separator-member">,</span>
                         <span class="project-year-member">{{
@@ -226,7 +170,7 @@
               <h3 class="section-title">学术成果</h3>
               <div class="publications-list">
                 <div
-                  v-if="props.achievements && props.achievements.length > 0"
+                  v-if="sortedAchievements && sortedAchievements.length > 0"
                   class="achievements-list-container"
                 >
                   <div
@@ -243,13 +187,6 @@
                       >
                         {{ getPaperTypeLabel(achievement.paperType) }}
                       </el-tag>
-                      <el-tag
-                         :type="getStatusTagType(achievement.paperType, achievement.published) as '' | 'success' | 'warning' | 'danger' | 'info'"
-                         size="small"
-                         class="achievement-status-tag-member"
-                       >
-                         {{ getStatusLabel(achievement.paperType, achievement.published) }}
-                       </el-tag>
                       <div class="achievement-content-member">
                         <span
                           v-if="
@@ -387,8 +324,8 @@ import {
 } from "vue";
 import { Link, Download } from "@element-plus/icons-vue";
 import { ElMessage } from "element-plus";
-import { type ApiAchievement } from "@/api/lab/achievements";
-import { type ApiProject } from "@/api/lab/projects";
+import { type ApiAchievement, getAchievementsListApi } from "@/api/lab/achievements";
+import { type ApiProject, getProjectsListApi } from "@/api/lab/projects";
 
 // 定义 Github 图标组件
 const _Github = {
@@ -439,9 +376,6 @@ interface Props {
 }
 
 const props = defineProps<Props>();
-const _emit = defineEmits<{
-  back: [];
-}>();
 
 // 头像加载状态
 const isAvatarLoaded = ref(false);
@@ -449,10 +383,77 @@ const isAvatarLoaded = ref(false);
 // 动画控制状态
 const isContentVisible = ref(false);
 
-// 监听member变化，重置头像加载状态和动画状态
-watch(() => props.member, () => {
+// 内部成果数据状态
+const internalAchievements = ref<ApiAchievement[]>([]);
+
+// 内部项目数据状态
+const internalProjects = ref<ApiProject[]>([]);
+
+// 获取成果数据的函数
+const fetchAchievements = async () => {
+  if (!props.member) return;
+  
+  try {
+    const response = await getAchievementsListApi({ type: 1 });
+    if (response.code === 0 && response.data && response.data.rows) {
+      // 根据当前用户的 id 筛选成果数据
+      const filteredAchievements = response.data.rows.filter(achievement => {
+        if (!achievement.authors || !Array.isArray(achievement.authors)) {
+          return false;
+        }
+        
+        // 检查当前用户是否存在于 authors 字段中
+        return achievement.authors.some(author => 
+          author.name === props.member?.name
+        );
+      });
+      
+      internalAchievements.value = filteredAchievements;
+    }
+  } catch (error) {
+    console.error('获取成果数据失败:', error);
+    internalAchievements.value = [];
+  }
+};
+
+// 获取项目数据的函数
+const fetchProjects = async () => {
+  if (!props.member) return;
+  
+  try {
+    const response = await getProjectsListApi({ type: 2 });
+    if (response.code === 0 && response.data && response.data.rows) {
+      // 根据当前用户的 id 筛选项目数据
+      const filteredProjects = response.data.rows.filter(project => {
+        if (!project.authors || !Array.isArray(project.authors)) {
+          return false;
+        }
+        
+        // 检查当前用户是否存在于 authors 字段中
+        return project.authors.some(author => 
+          author.name === props.member?.name
+        );
+      });
+      
+      internalProjects.value = filteredProjects;
+    }
+  } catch (error) {
+    console.error('获取项目数据失败:', error);
+    internalProjects.value = [];
+  }
+};
+
+// 监听member变化，重置头像加载状态和动画状态，并获取成果和项目数据
+watch(() => props.member, (newMember) => {
   isAvatarLoaded.value = false;
   isContentVisible.value = false;
+  
+  // 如果有新的成员，获取成果和项目数据
+  if (newMember) {
+    fetchAchievements();
+    fetchProjects();
+  }
+  
   // 延迟触发动画，确保组件已渲染
   nextTick(() => {
     setTimeout(() => {
@@ -478,10 +479,14 @@ const avatarUrl = computed(() => {
 
 // 按时间排序的项目列表（从新到旧）
 const sortedProjects = computed(() => {
-  if (!props.projects || props.projects.length === 0) return [];
+  console.log('原始参与项目数据:', internalProjects.value);
+  if (!internalProjects.value || internalProjects.value.length === 0) {
+    console.log('参与项目数据为空');
+    return [];
+  }
 
   // 过滤出当前成员可见的项目
-  const visibleProjects = props.projects.filter(project => {
+  const visibleProjects = internalProjects.value.filter(project => {
     if (!project.authors || !props.member) return false;
     
     // 查找当前成员在作者列表中的记录
@@ -493,6 +498,7 @@ const sortedProjects = computed(() => {
     return currentMemberAuthor && currentMemberAuthor.visible;
   });
 
+  console.log('过滤后的参与项目数据:', visibleProjects);
   return [...visibleProjects].sort((a, b) => {
     // 优先使用项目开始时间排序
     const aDate = a.projectStartDate
@@ -507,10 +513,14 @@ const sortedProjects = computed(() => {
 
 // 按时间排序的成果列表（从新到旧）
 const sortedAchievements = computed(() => {
-  if (!props.achievements || props.achievements.length === 0) return [];
+  console.log('原始学术成果数据:', internalAchievements.value);
+  if (!internalAchievements.value || internalAchievements.value.length === 0) {
+    console.log('学术成果数据为空');
+    return [];
+  }
 
   // 过滤出当前成员可见的成果
-  const visibleAchievements = props.achievements.filter(achievement => {
+  const visibleAchievements = internalAchievements.value.filter(achievement => {
     if (!achievement.authors || !props.member) return false;
     
     // 查找当前成员在作者列表中的记录
@@ -522,6 +532,7 @@ const sortedAchievements = computed(() => {
     return currentMemberAuthor && currentMemberAuthor.visible;
   });
 
+  console.log('过滤后的学术成果数据:', visibleAchievements);
   return [...visibleAchievements].sort((a, b) => {
     // 优先使用发表时间排序
     const aDate = a.publishDate ? new Date(a.publishDate).getTime() : 0;
@@ -541,13 +552,19 @@ watch(
 
 // 信息定位导航配置
 const navigationItems = [
-  { key: "personal-info", name: "个人信息", id: "personal-info-section" },
+  { key: "personal-info", name: "联系方式", id: "personal-info-section" },
   { key: "education", name: "个人简述", id: "resume-section" },
   { key: "projects", name: "参与项目", id: "projects-section" },
   { key: "publications", name: "学术成果", id: "publications-section" }
 ];
 
 const activeNavItem = ref("personal-info");
+const isNavigationExpanded = ref(false);
+
+// 切换导航面板展开/收起状态
+const toggleNavigation = () => {
+  isNavigationExpanded.value = !isNavigationExpanded.value;
+};
 
 // 滚动到指定部分
 const scrollToSection = (sectionId: string, navKey: string) => {
@@ -740,59 +757,6 @@ const getPaperTypeLabel = (paperType?: number) => {
   return typeMap[paperType || 7] || "其他";
 };
 
-// 获取状态标签文本
-const getStatusLabel = (paperType?: number, published?: boolean) => {
-  const isPublished = published !== false;
-  if (isPublished) {
-    // published = true 时
-    if ([1, 2, 3, 6, 7].includes(paperType || 7)) { // 期刊、会议、预印本、标准、专著
-      return '已发表';
-    } else if ([4, 5].includes(paperType || 7)) { // 专利、软著
-      return '已授权';
-    }
-  } else {
-    // published = false 时
-    if ([1, 2, 3, 6, 7].includes(paperType || 7)) { // 期刊、会议、预印本、标准、专著
-      return '投递中';
-    } else if ([4, 5].includes(paperType || 7)) { // 专利、软著
-      return '受理中';
-    }
-  }
-  return '';
-};
-
-// 获取状态标签类型
-const getStatusTagType = (paperType?: number, published?: boolean) => {
-  // 基础类型颜色映射（与getPaperTypeTagType保持一致）
-  const baseTypeColors: Record<number, string> = {
-    1: "primary", // 期刊
-    2: "success", // 会议
-    3: "warning", // 预印本
-    4: "danger", // 专利
-    5: "info", // 软著
-    6: "info", // 标准
-    7: "primary" // 专著
-  };
-  
-  const isPublished = published !== false;
-  
-  // 如果未发布，使用稍微不同的色调表示状态
-  if (!isPublished) {
-    const unpublishedColors: Record<number, string> = {
-      1: "primary",  // 期刊：使用默认灰色调
-      2: "success",  // 会议：从success变为warning
-      3: "warning",  // 预印本：从warning变为info
-      4: "danger",  // 专利：从danger变为warning
-      5: "info",  // 软著：使用默认灰色调
-      6: "info", // 标准
-      7: "primary"  // 专著：从primary变为info
-    };
-    return unpublishedColors[paperType || 7] || "info";
-  }
-  
-  return baseTypeColors[paperType || 7] || "info";
-}
-
 // 获取项目类型标签类型
 const getProjectTypeTagType = (projectType?: number) => {
   const typeMap: Record<number, string> = {
@@ -878,6 +842,132 @@ const handlePdfDownload = (url: string) => {
 </script>
 
 <style scoped>
+/* 顶部导航面板样式 */
+.top-navigation-panel {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  transition: all 0.3s ease;
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 20px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.panel-title {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.panel-title h3 {
+  color: white;
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.panel-title .back-button {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+}
+
+.panel-title .back-button:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+.panel-toggle {
+  color: white;
+}
+
+.toggle-icon {
+  font-size: 1.2rem;
+  transition: transform 0.3s ease;
+  font-style: normal;
+}
+
+.toggle-icon.rotated {
+  transform: rotate(180deg);
+}
+
+.panel-content {
+  padding: 0 20px 15px;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.nav-list-horizontal {
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 15px;
+}
+
+.nav-item-horizontal {
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.nav-item-horizontal:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.nav-item-horizontal.active {
+  background: rgba(255, 255, 255, 0.9);
+  color: #667eea;
+  font-weight: 600;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* 主要容器样式调整 */
+.member-info-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  padding-top: 60px; /* 为固定顶部面板留出空间 */
+}
+
+.main-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 0.6s ease;
+}
+
+.main-content.content-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.content-area {
+  width: 100%;
+}
 /* 响应式设计 */
 @media (width <= 1200px) {
   .main-content {
@@ -1331,10 +1421,10 @@ const handlePdfDownload = (url: string) => {
   display: flex;
   gap: 30px;
   align-items: flex-start;
-  width: 100%;
+  width: 80%;
   max-width: 100%;
   padding: 0 20px;
-  margin: 0 auto;
+  margin: 90px auto;
 }
 
 .info-sidebar {
@@ -2253,5 +2343,284 @@ const handlePdfDownload = (url: string) => {
 .main-content:not(.content-visible) .animate-fade-up,
 .main-content:not(.content-visible) .animate-scale-up {
   animation: none;
+}
+
+/* 移动端响应式样式 */
+@media (max-width: 768px) {
+  /* 顶部导航面板移动端适配 */
+  .top-navigation-panel {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  .panel-header {
+    padding: 10px 15px;
+  }
+
+  .panel-title h3 {
+    font-size: 1rem;
+  }
+
+  .panel-title .back-button {
+    padding: 5px 10px;
+    font-size: 0.8rem;
+  }
+
+  .panel-content {
+    padding: 0 15px 12px;
+  }
+
+  .nav-list-horizontal {
+    gap: 8px;
+    margin-top: 12px;
+    overflow-x: auto;
+    padding-bottom: 5px;
+  }
+
+  .nav-item-horizontal {
+    padding: 6px 12px;
+    font-size: 0.8rem;
+    border-radius: 15px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  /* 主要容器移动端适配 */
+  .member-info-container {
+    padding-top: 80px; /* 为固定的顶部面板留出空间 */
+    padding-left: 10px;
+    padding-right: 10px;
+    padding-bottom: 10px;
+  }
+
+  .main-content {
+    width: 100%;
+    padding: 0 10px;
+    margin: 20px auto;
+  }
+
+  .content-area {
+    order: 1; /* 将内容区域移到侧边栏上方 */
+  }
+
+  .member-detail-card {
+    border-radius: 16px;
+  }
+
+  /* 头像和基本信息居中布局 */
+  .member-header {
+    flex-direction: column;
+    padding: 30px 20px;
+    text-align: center;
+  }
+
+  .avatar-section {
+    margin-right: 0;
+    margin-bottom: 20px;
+    align-self: center;
+  }
+
+  .basic-info {
+    text-align: center;
+    
+    h1 {
+      font-size: 24px;
+      margin-bottom: 8px;
+    }
+
+    p {
+      font-size: 16px;
+      margin: 4px 0;
+    }
+  }
+
+  .member-title {
+    font-size: 16px;
+  }
+
+  .member-status {
+    margin-top: 16px;
+  }
+
+  /* 详细信息区域居中 */
+  .detail-sections {
+    padding: 20px;
+  }
+
+  .section-title {
+    font-size: 18px;
+    text-align: center;
+    margin-bottom: 20px;
+  }
+
+  /* 个人信息网格居中 */
+  .info-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    max-width: 400px;
+    margin: 0 auto;
+  }
+
+  .info-item {
+    flex-direction: column;
+    padding: 16px;
+    text-align: center;
+    
+    .label {
+      min-width: auto;
+      margin-right: 0;
+      margin-bottom: 8px;
+      font-size: 14px;
+      color: #64748b;
+    }
+
+    .value {
+      font-size: 15px;
+      font-weight: 600;
+      color: #1e293b;
+    }
+  }
+
+  /* 研究方向标签居中 */
+  .research-areas {
+    text-align: center;
+  }
+
+  .research-tags {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    max-width: 400px;
+    margin: 0 auto;
+  }
+
+  .research-tag {
+    padding: 8px 16px;
+    font-size: 13px;
+  }
+
+  /* 个人简述居中 */
+  .resume-content {
+    max-width: 400px;
+    margin: 0 auto;
+    text-align: center;
+  }
+
+  .resume-text {
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  /* 项目列表居中 */
+  .projects-list-container {
+    max-width: 450px;
+    margin: 0 auto;
+  }
+
+  .project-item-member {
+    padding: 16px;
+    text-align: center;
+  }
+
+  .project-main-member {
+    flex-direction: column;
+    gap: 8px;
+    text-align: center;
+  }
+
+  .project-type-tag-member {
+    align-self: center;
+    margin: 0 0 8px 0;
+  }
+
+  .project-content-member {
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .project-title-member {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 15px;
+    text-align: center;
+  }
+
+  .project-separator-member {
+    display: none; /* 隐藏分隔符，改为换行显示 */
+  }
+
+  .project-leader-member,
+  .project-funding-member,
+  .project-year-member {
+    display: block;
+    margin: 4px 0;
+    font-size: 13px;
+    text-align: center;
+  }
+
+  /* 学术成果居中 */
+  .achievements-list-container {
+    max-width: 450px;
+    margin: 0 auto;
+  }
+
+  .achievement-item-member {
+    padding: 16px;
+    text-align: center;
+  }
+
+  .achievement-main-member {
+    flex-direction: column;
+    gap: 8px;
+    text-align: center;
+  }
+
+  .achievement-content-member {
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .achievement-title-member {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    text-align: center;
+  }
+
+  .achievement-authors-member,
+  .achievement-institution-member,
+  .achievement-year-member {
+    display: block;
+    margin: 4px 0;
+    font-size: 13px;
+    text-align: center;
+  }
+
+  .paper-links {
+    justify-content: center;
+    margin-top: 12px;
+  }
+
+  .paper-link {
+    font-size: 12px;
+    padding: 4px 8px;
+  }
+
+  /* 无数据状态居中 */
+  .no-data {
+    max-width: 300px;
+    margin: 0 auto;
+    padding: 24px;
+    
+    p {
+      font-size: 14px;
+    }
+  }
 }
 </style>

@@ -93,27 +93,22 @@
             :key="project.id"
             class="project-item"
           >
-            <span class="project-number">{{ (currentPage - 1) * pageSize + index + 1 }}.</span>
-            <el-tag 
-              :type="getTypeTagType(project.type)" 
-              size="small" 
-              class="project-type-tag"
-            >
-              {{ getTypeLabel(project.type) }}
-            </el-tag>
-            <el-tag 
-              :type="getTypeTagType(project.type)"
-              size="small" 
-              class="project-status-tag"
-            >
-              {{ getStatusLabel(project.published) }}
-            </el-tag>
+            <div class="project-header">
+              <span class="project-number">{{ (currentPage - 1) * pageSize + index + 1 }}.</span>
+              <el-tag 
+                :type="getTypeTagType(project.type)" 
+                size="small" 
+                class="project-type-tag"
+              >
+                {{ getTypeLabel(project.type) }}
+              </el-tag>
+            </div>
             <div class="project-content">
               <span class="project-title">{{ project.title }}</span>
               <span class="project-separator">,</span>
               <span class="project-leader">负责人：{{ project.leader }}</span>
               <span class="project-separator">,</span>
-              <span class="project-funding">经费：{{ project.fundingAmount }}万元</span>
+              <span class="project-funding">经费 {{ project.fundingAmount && project.fundingAmount !== `0` ? project.fundingAmount + ' 万元' : '未知金额' }}</span>
               <span class="project-separator">,</span>
               <span class="project-year">{{ project.startYear }}-{{ project.endYear }}</span>
               <span class="project-separator">.</span>
@@ -491,10 +486,19 @@ onUnmounted(() => {
 .project-status-tag {
   margin-right: 8px;
   flex-shrink: 0;
+  vertical-align: middle;
 }
 
 .project-type-tag {
-  margin-right: 12px;
+  margin-right: 8px;
+  flex-shrink: 0;
+  vertical-align: middle;
+}
+
+.project-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   flex-shrink: 0;
 }
 
@@ -611,21 +615,32 @@ onUnmounted(() => {
   
   .project-item {
     flex-direction: column;
-    align-items: stretch;
+    align-items: flex-start;
     padding: 15px;
     gap: 8px;
   }
   
-  .project-number {
-    align-self: flex-start;
-    margin-right: 0;
-    margin-bottom: 5px;
+  .project-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
   }
   
+  
   .project-type-tag {
-    align-self: flex-start;
-    margin-right: 0;
-    margin-bottom: 8px;
+    margin-right: 0px;
+    margin-bottom: 0;
+  }
+
+  .project-number,
+  .project-status-tag {
+    margin-right: 8px;
+    margin-bottom: 0;
+  }
+  
+  .project-content {
+    width: 100%;
   }
   
   .project-content {

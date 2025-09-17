@@ -9,7 +9,54 @@ export default [
       title: "DCSI 实验室",
       showLink: false,
       rank: 100
-    }
+    },
+    children: [
+      {
+        path: "",
+        name: "WelcomeHome",
+        component: () => import("@/views/lab/index.vue"),
+        meta: {
+          title: "实验室主页",
+          showLink: false
+        }
+      },
+      {
+        path: "members",
+        name: "WelcomeMembers",
+        component: () => import("@/views/lab/index.vue"),
+        meta: {
+          title: "成员聚合页",
+          showLink: false
+        }
+      },
+      {
+        path: "achievements",
+        name: "WelcomeAchievements",
+        component: () => import("@/views/lab/index.vue"),
+        meta: {
+          title: "成果页",
+          showLink: false
+        }
+      },
+      {
+        path: "projects",
+        name: "WelcomeProjects",
+        component: () => import("@/views/lab/index.vue"),
+        meta: {
+          title: "项目页",
+          showLink: false
+        }
+      },
+      {
+        path: "member/:id",
+        name: "WelcomeMemberDetail",
+        component: () => import("@/views/lab/index.vue"),
+        meta: {
+          title: "成员详情页",
+          showLink: false
+        }
+      }
+    ]
   },
   {
     path: "/login",
