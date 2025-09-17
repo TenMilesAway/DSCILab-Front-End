@@ -69,19 +69,19 @@ export default [
     ]
   },
   {
-    path: "/newsystem/achievement-type",
-    name: "NewSystemAchievementTypeManagement",
+    path: "/newsystem/achievement-category",
+    name: "NewSystemAchievementCategoryManagement",
     component: Layout,
-    redirect: "/newsystem/achievement-type/index",
+    redirect: "/newsystem/achievement-category/index",
     meta: {
       title: "成果类型管理",
       rank: 4
     },
     children: [
       {
-        path: "/newsystem/achievement-type/index",
-        name: "NewSystemAchievementType",
-        component: () => import("@/views/newsystem/achievement-type/index.vue"),
+        path: "/newsystem/achievement-category/index",
+        name: "NewSystemAchievementCategory",
+        component: () => import("@/views/newsystem/achievement-category/index.vue"),
         meta: {
           title: "成果类型管理",
           showLink: true,

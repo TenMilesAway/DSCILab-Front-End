@@ -7,6 +7,7 @@ import { useRenderIcon } from "@/components/ReIcon/src/hooks";
 import Delete from "@iconify-icons/ep/delete";
 import EditPen from "@iconify-icons/ep/edit-pen";
 import { useUserStoreHook } from "@/store/modules/user";
+import { getCategoryTreeApi, type LabAchievementCategoryDTO } from "@/api/newsystem/achievement-category";
 
 import {
   getAchievementListApi,
@@ -33,7 +34,8 @@ export function useHook() {
     type: undefined,
     published: undefined,
     dateStart: undefined,
-    dateEnd: undefined
+    dateEnd: undefined,
+    categoryId: undefined
   });
 
   const formRef = ref();
@@ -45,6 +47,32 @@ export function useHook() {
     currentPage: 1,
     background: true
   });
+
+  // 成果类型映射
+  const categoryMap = ref<Map<number, string>>(new Map());
+
+  // 获取成果类型映射
+  const loadCategoryMap = async () => {
+    try {
+      const response = await getCategoryTreeApi(false);
+      if (response.code === 0) {
+        const map = new Map<number, string>();
+        response.data.forEach(category => {
+          // 添加一级分类
+          map.set(category.id, category.categoryName);
+          // 添加二级分类
+          if (category.children && category.children.length > 0) {
+            category.children.forEach(child => {
+              map.set(child.id, child.categoryName);
+            });
+          }
+        });
+        categoryMap.value = map;
+      }
+    } catch (error) {
+      console.error('获取成果类型映射失败:', error);
+    }
+  };
 
   const columns: TableColumnList = [
     {
@@ -74,35 +102,18 @@ export function useHook() {
       prop: "combinedType",
       minWidth: 120,
       cellRenderer: ({ row }) => {
-        if (row.type === 1 && row.paperType) {
-          const paperTypeMap = {
-            1: "期刊",
-            2: "会议",
-            3: "预印本",
-            4: "专利",
-            5: "软著",
-            6: "标准",
-            7: "专著"
-          };
-          const paperTypeName = paperTypeMap[row.paperType];
-          if (paperTypeName === "期刊" || paperTypeName === "会议") {
-            return `${paperTypeName}论文`;
-          }
-          return paperTypeName || "-";
-        } else if (row.type === 2 && row.projectType) {
-          const projectTypeMap = {
-            1: "横向",
-            2: "国自然面上",
-            3: "国自然青年",
-            4: "北京市教委科技一般",
-            5: "国家级教改",
-            6: "省部级教改",
-            7: "其他教改",
-            8: "其他纵向"
-          };
-          const projectTypeName = projectTypeMap[row.projectType];
-          return projectTypeName ? `${projectTypeName}项目` : "-";
+        // 优先使用新的categoryId显示类型名称
+        if (row.categoryId && categoryMap.value.has(row.categoryId)) {
+          return categoryMap.value.get(row.categoryId);
         }
+        
+        // 如果没有categoryId，显示基础类型
+        if (row.type === 1) {
+          return "论文、专利等";
+        } else if (row.type === 2) {
+          return "项目";
+        }
+        
         return "-";
       }
     },
@@ -328,12 +339,14 @@ export function useHook() {
           achievementType: row?.type === 1 ? "paper" : "project",
           paperType: row?.paperType ?? undefined,
           projectType: row?.projectType ?? undefined,
+          categoryId: row?.categoryId ?? undefined,
 
           githubUrl: row?.type === 1 ? row?.gitUrl ?? "" : "",
-          published: row?.published ?? false,
+          published: row?.published ?? true,
           gitUrl: row?.gitUrl ?? "",
           linkUrl: row?.linkUrl ?? "",
           pdfUrl: row?.pdfUrl ?? "",
+          reference: row?.reference ?? "",
           fundingAmount: row?.fundingAmount ?? undefined
         }
       },
@@ -386,6 +399,7 @@ export function useHook() {
             formData.achievementType === "project"
               ? formData.projectType
               : null,
+          categoryId: formData.categoryId || null,
           venue: formData.journal || null,
           publishDate:
             formData.achievementType === "paper" ? formData.publishDate || null : null,
@@ -480,6 +494,7 @@ export function useHook() {
   };
 
   onMounted(async () => {
+    await loadCategoryMap();
     onSearch();
   });
 

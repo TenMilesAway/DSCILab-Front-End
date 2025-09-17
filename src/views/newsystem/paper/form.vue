@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, onMounted, computed, watch } from "vue";
 import ReCol from "@/components/ReCol";
 import { formRules } from "./rule";
 import { ElButton, ElIcon } from "element-plus";
 import { Plus, Delete } from "@element-plus/icons-vue";
+import { getCategoryTreeApi, type LabAchievementCategoryDTO } from "@/api/newsystem/achievement-category";
 
 interface FormAuthor {
   userId?: number | null; // 内部作者userId；外部作者为null
@@ -21,6 +22,7 @@ interface FormInlineData {
   achievementType: string; // 成果类型：paper/project
   paperType?: number; // 论文类型：1=期刊,2=会议,3=预印本,4=专利,5=软著,6=标准,7=专著
   projectType?: number; // 项目类型：1=横向,2=国自然面上,3=国自然青年,4=北京市教委科技一般,5=国家级教改,6=省部级教改,7=其他教改,8=其他纵向
+  categoryId?: number; // 成果类型ID（新类型系统）
   journal?: string; // 期刊名称（论文）
   publishDate?: string; // 发表日期
   projectStartDate?: string; // 项目开始日期（项目）
@@ -57,21 +59,68 @@ const props = withDefaults(defineProps<FormProps>(), {
     achievementType: "paper",
     paperType: undefined,
     projectType: undefined,
+    categoryId: undefined,
     journal: "",
     publishDate: "",
     projectEndDate: "",
     doi: "",
     githubUrl: "",
-    published: false,
+    published: true,
     gitUrl: "",
     linkUrl: "",
     pdfUrl: "",
+    reference: "",
     fundingAmount: undefined
   })
 });
 
 const newFormInline = ref(props.formInline);
 const formRuleRef = ref();
+
+// 成果类型相关数据
+const categoryTree = ref<LabAchievementCategoryDTO[]>([]);
+const paperCategories = ref<LabAchievementCategoryDTO[]>([]);
+const projectCategories = ref<LabAchievementCategoryDTO[]>([]);
+
+// 获取成果类型树
+const loadCategoryTree = async () => {
+  try {
+    const response = await getCategoryTreeApi(false);
+    if (response.code === 0) {
+      categoryTree.value = response.data;
+      
+      // 分离论文和项目类型
+      categoryTree.value.forEach(category => {
+        if (category.categoryCode === 'PAPER' && category.children) {
+          paperCategories.value = category.children;
+        } else if (category.categoryCode === 'PROJECT' && category.children) {
+          projectCategories.value = category.children;
+        }
+      });
+    }
+  } catch (error) {
+    console.error('获取成果类型失败:', error);
+  }
+};
+
+// 当前可选的类型列表
+const currentCategories = computed(() => {
+  return newFormInline.value.achievementType === 'paper' 
+    ? paperCategories.value 
+    : projectCategories.value;
+});
+
+// 监听成果类型变化，重置二级类型选择
+watch(() => newFormInline.value.achievementType, (newType, oldType) => {
+  if (newType !== oldType && oldType) {
+    // 切换成果类型时重置categoryId
+    newFormInline.value.categoryId = undefined;
+  }
+});
+
+onMounted(() => {
+  loadCategoryTree();
+});
 
 function getFormRuleRef() {
   return formRuleRef.value;
@@ -160,38 +209,35 @@ defineExpose({ getFormRuleRef });
       </re-col>
 
       <re-col :value="12" v-if="newFormInline.achievementType === 'paper'">
-        <el-form-item label="论文类型" prop="paperType">
+        <el-form-item label="论文类型" prop="categoryId">
           <el-select
             class="w-full"
-            v-model="newFormInline.paperType"
+            v-model="newFormInline.categoryId"
             placeholder="请选择论文类型"
           >
-            <el-option label="期刊" :value="1" />
-            <el-option label="会议" :value="2" />
-            <el-option label="预印本" :value="3" />
-            <el-option label="专利" :value="4" />
-            <el-option label="软著" :value="5" />
-            <el-option label="标准" :value="6" />
-            <el-option label="专著" :value="7" />
+            <el-option 
+              v-for="category in currentCategories" 
+              :key="category.id"
+              :label="category.categoryName" 
+              :value="category.id" 
+            />
           </el-select>
         </el-form-item>
       </re-col>
 
       <re-col :value="12" v-if="newFormInline.achievementType === 'project'">
-        <el-form-item label="项目类型" prop="projectType">
+        <el-form-item label="项目类型" prop="categoryId">
           <el-select
             class="w-full"
-            v-model="newFormInline.projectType"
+            v-model="newFormInline.categoryId"
             placeholder="请选择项目类型"
           >
-            <el-option label="横向" :value="1" />
-            <el-option label="国自然面上" :value="2" />
-            <el-option label="国自然青年" :value="3" />
-            <el-option label="北京市教委科技一般" :value="4" />
-            <el-option label="国家级教改" :value="5" />
-            <el-option label="省部级教改" :value="6" />
-            <el-option label="其他教改" :value="7" />
-            <el-option label="其他纵向" :value="8" />
+            <el-option 
+              v-for="category in currentCategories" 
+              :key="category.id"
+              :label="category.categoryName" 
+              :value="category.id" 
+            />
           </el-select>
         </el-form-item>
       </re-col>
