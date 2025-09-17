@@ -106,14 +106,14 @@ export function useHook() {
         if (row.categoryId && categoryMap.value.has(row.categoryId)) {
           return categoryMap.value.get(row.categoryId);
         }
-        
+
         // 如果没有categoryId，显示基础类型
         if (row.type === 1) {
           return "论文、专利等";
         } else if (row.type === 2) {
           return "项目";
         }
-        
+
         return "-";
       }
     },
@@ -336,10 +336,11 @@ export function useHook() {
             ? new Date(row.projectEndDate).toISOString().slice(0, 7)
             : "",
           doi: row?.doi ?? "",
-          achievementType: row?.type === 1 ? "paper" : "project",
+          achievementType: "paper", // 默认值，将通过categoryId的watch自动设置
           paperType: row?.paperType ?? undefined,
           projectType: row?.projectType ?? undefined,
-          categoryId: row?.categoryId ?? undefined,
+          categoryId: row?.type ?? undefined, // 成果类型ID从type字段获取
+          specificCategoryId: row?.categoryId ?? undefined, // 具体类型ID从categoryId字段获取
 
           githubUrl: row?.type === 1 ? row?.gitUrl ?? "" : "",
           published: row?.published ?? true,
@@ -392,14 +393,14 @@ export function useHook() {
 
         const curData: CreateAchievementRequest | UpdateAchievementRequest = {
           title: formData.title,
-          type: formData.achievementType === "paper" ? 1 : 2,
+          type: formData.categoryId || null, // 成果类型ID放在type字段
           paperType:
             formData.achievementType === "paper" ? formData.paperType : null,
           projectType:
             formData.achievementType === "project"
               ? formData.projectType
               : null,
-          categoryId: formData.categoryId || null,
+          categoryId: formData.specificCategoryId || null, // 具体类型ID放在categoryId字段
           venue: formData.journal || null,
           publishDate:
             formData.achievementType === "paper" ? formData.publishDate || null : null,

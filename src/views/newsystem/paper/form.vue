@@ -4,7 +4,7 @@ import ReCol from "@/components/ReCol";
 import { formRules } from "./rule";
 import { ElButton, ElIcon } from "element-plus";
 import { Plus, Delete } from "@element-plus/icons-vue";
-import { getCategoryTreeApi, type LabAchievementCategoryDTO } from "@/api/newsystem/achievement-category";
+import { getDictCategoryTreeApi, type LabAchievementCategoryDTO } from "@/api/newsystem/achievement-category";
 
 interface FormAuthor {
   userId?: number | null; // 内部作者userId；外部作者为null
@@ -19,10 +19,11 @@ interface FormInlineData {
   id?: number;
   title: string; // 成果标题
   authors: FormAuthor[]; // 作者列表
-  achievementType: string; // 成果类型：paper/project
+  achievementType: string; // 成果类型：paper/project/other
   paperType?: number; // 论文类型：1=期刊,2=会议,3=预印本,4=专利,5=软著,6=标准,7=专著
   projectType?: number; // 项目类型：1=横向,2=国自然面上,3=国自然青年,4=北京市教委科技一般,5=国家级教改,6=省部级教改,7=其他教改,8=其他纵向
   categoryId?: number; // 成果类型ID（新类型系统）
+  specificCategoryId?: number; // 具体类型ID（二级分类）
   journal?: string; // 期刊名称（论文）
   publishDate?: string; // 发表日期
   projectStartDate?: string; // 项目开始日期（项目）
@@ -60,6 +61,7 @@ const props = withDefaults(defineProps<FormProps>(), {
     paperType: undefined,
     projectType: undefined,
     categoryId: undefined,
+    specificCategoryId: undefined,
     journal: "",
     publishDate: "",
     projectEndDate: "",
@@ -79,42 +81,60 @@ const formRuleRef = ref();
 
 // 成果类型相关数据
 const categoryTree = ref<LabAchievementCategoryDTO[]>([]);
-const paperCategories = ref<LabAchievementCategoryDTO[]>([]);
-const projectCategories = ref<LabAchievementCategoryDTO[]>([]);
+const topLevelCategories = ref<LabAchievementCategoryDTO[]>([]);
+const currentSubCategories = ref<LabAchievementCategoryDTO[]>([]);
 
 // 获取成果类型树
 const loadCategoryTree = async () => {
   try {
-    const response = await getCategoryTreeApi(false);
+    const response = await getDictCategoryTreeApi();
     if (response.code === 0) {
       categoryTree.value = response.data;
+      topLevelCategories.value = response.data;
       
-      // 分离论文和项目类型
-      categoryTree.value.forEach(category => {
-        if (category.categoryCode === 'PAPER' && category.children) {
-          paperCategories.value = category.children;
-        } else if (category.categoryCode === 'PROJECT' && category.children) {
-          projectCategories.value = category.children;
-        }
-      });
+      // 数据加载完成后，如果是编辑模式且有categoryId，需要初始化二级类型选项
+      if (newFormInline.value.categoryId) {
+        initSubCategories(newFormInline.value.categoryId);
+      }
     }
   } catch (error) {
     console.error('获取成果类型失败:', error);
   }
 };
 
-// 当前可选的类型列表
-const currentCategories = computed(() => {
-  return newFormInline.value.achievementType === 'paper' 
-    ? paperCategories.value 
-    : projectCategories.value;
-});
+// 初始化二级类型选项的函数
+const initSubCategories = (categoryId: number) => {
+  const selectedCategory = topLevelCategories.value.find(cat => cat.id === categoryId);
+  if (selectedCategory && selectedCategory.children) {
+    currentSubCategories.value = selectedCategory.children;
+    
+    // 根据一级类型设置achievementType
+    const categoryName = selectedCategory.categoryName;
+    if (categoryName === '论文') {
+      newFormInline.value.achievementType = 'paper';
+    } else if (categoryName === '项目') {
+      newFormInline.value.achievementType = 'project';
+    } else {
+      newFormInline.value.achievementType = 'other';
+    }
+  } else {
+    currentSubCategories.value = [];
+  }
+};
 
-// 监听成果类型变化，重置二级类型选择
-watch(() => newFormInline.value.achievementType, (newType, oldType) => {
-  if (newType !== oldType && oldType) {
-    // 切换成果类型时重置categoryId
-    newFormInline.value.categoryId = undefined;
+// 监听一级类型变化，更新二级类型选项
+watch(() => newFormInline.value.categoryId, (newCategoryId) => {
+  if (newCategoryId) {
+    initSubCategories(newCategoryId);
+    // 只有在用户主动选择时才重置二级类型选择
+    // 编辑模式下不重置，保持原有的specificCategoryId值
+    if (!props.formInline.id) {
+      newFormInline.value.specificCategoryId = undefined;
+    }
+  } else {
+    currentSubCategories.value = [];
+    newFormInline.value.specificCategoryId = undefined;
+    newFormInline.value.achievementType = 'paper'; // 默认值
   }
 });
 
@@ -196,27 +216,14 @@ defineExpose({ getFormRuleRef });
       </re-col>
 
       <re-col :value="12">
-        <el-form-item label="成果类型" prop="achievementType">
-          <el-select
-            class="w-full"
-            v-model="newFormInline.achievementType"
-            placeholder="请选择成果类型"
-          >
-            <el-option label="论文、专利等" value="paper" />
-            <el-option label="项目" value="project" />
-          </el-select>
-        </el-form-item>
-      </re-col>
-
-      <re-col :value="12" v-if="newFormInline.achievementType === 'paper'">
-        <el-form-item label="论文类型" prop="categoryId">
+        <el-form-item label="成果类型" prop="categoryId">
           <el-select
             class="w-full"
             v-model="newFormInline.categoryId"
-            placeholder="请选择论文类型"
+            placeholder="请选择成果类型"
           >
             <el-option 
-              v-for="category in currentCategories" 
+              v-for="category in topLevelCategories" 
               :key="category.id"
               :label="category.categoryName" 
               :value="category.id" 
@@ -225,15 +232,15 @@ defineExpose({ getFormRuleRef });
         </el-form-item>
       </re-col>
 
-      <re-col :value="12" v-if="newFormInline.achievementType === 'project'">
-        <el-form-item label="项目类型" prop="categoryId">
+      <re-col :value="12" v-if="currentSubCategories.length > 0">
+        <el-form-item label="具体类型" prop="specificCategoryId">
           <el-select
             class="w-full"
-            v-model="newFormInline.categoryId"
-            placeholder="请选择项目类型"
+            v-model="newFormInline.specificCategoryId"
+            placeholder="请选择具体类型"
           >
             <el-option 
-              v-for="category in currentCategories" 
+              v-for="category in currentSubCategories" 
               :key="category.id"
               :label="category.categoryName" 
               :value="category.id" 
@@ -246,9 +253,9 @@ defineExpose({ getFormRuleRef });
       <re-col :value="24">
         <el-form-item
           :label="
-            newFormInline.achievementType === 'paper'
-              ? '作者信息'
-              : '参与人信息'
+            newFormInline.achievementType === 'project'
+              ? '参与人信息'
+              : '作者信息'
           "
           class="author-form-item"
         >
@@ -260,11 +267,11 @@ defineExpose({ getFormRuleRef });
             >
               <div class="author-header">
                 <span class="author-order">
-                  <span v-if="newFormInline.achievementType === 'paper'">
-                    第{{ index + 1 }}作者
+                  <span v-if="newFormInline.achievementType === 'project'">
+                    {{ index === 0 ? "负责人" : "参与人" }}
                   </span>
                   <span v-else>
-                    {{ index === 0 ? "负责人" : "参与人" }}
+                    第{{ index + 1 }}作者
                   </span>
                 </span>
                 <div class="author-actions">
@@ -309,7 +316,7 @@ defineExpose({ getFormRuleRef });
                   </el-col>
                   <el-col
                     :span="8"
-                    v-if="newFormInline.achievementType === 'paper'"
+                    v-if="newFormInline.achievementType === 'paper' || newFormInline.achievementType === 'other'"
                   >
                     <el-form-item>
                       <el-input
@@ -323,7 +330,7 @@ defineExpose({ getFormRuleRef });
                 </el-row>
                 <el-row
                   :gutter="16"
-                  v-if="newFormInline.achievementType === 'paper'"
+                  v-if="newFormInline.achievementType === 'paper' || newFormInline.achievementType === 'other'"
                 >
 
                   <el-col :span="8">
@@ -351,9 +358,9 @@ defineExpose({ getFormRuleRef });
             >
               <el-icon><Plus /></el-icon>
               {{
-                newFormInline.achievementType === "paper"
-                  ? "添加作者"
-                  : "添加参与人"
+                newFormInline.achievementType === "project"
+                  ? "添加参与人"
+                  : "添加作者"
               }}
             </el-button>
           </div>
@@ -362,7 +369,7 @@ defineExpose({ getFormRuleRef });
 
       <re-col
         :value="12"
-        v-if="newFormInline.achievementType === 'paper'"
+        v-if="newFormInline.achievementType === 'paper' || newFormInline.achievementType === 'other'"
       >
         <el-form-item
           label="机构名称"
@@ -371,7 +378,7 @@ defineExpose({ getFormRuleRef });
           <el-input
             v-model="newFormInline.journal"
             clearable
-            placeholder="请输入例如期刊或会议名称"
+            :placeholder="newFormInline.achievementType === 'paper' ? '请输入例如期刊或会议名称' : '请输入相关机构名称'"
           />
         </el-form-item>
       </re-col>
@@ -379,12 +386,12 @@ defineExpose({ getFormRuleRef });
       <re-col :value="12">
         <el-form-item
           :label="
-            newFormInline.achievementType === 'paper' ? '发表年份' : '开始日期'
+            newFormInline.achievementType === 'project' ? '开始日期' : '发表年份'
           "
           prop="publishDate"
         >
           <el-date-picker
-            v-if="newFormInline.achievementType === 'paper'"
+            v-if="newFormInline.achievementType === 'paper' || newFormInline.achievementType === 'other'"
             v-model="newFormInline.publishDate"
             type="year"
             placeholder="请选择年份"
@@ -429,7 +436,7 @@ defineExpose({ getFormRuleRef });
         </el-form-item>
       </re-col>
 
-      <re-col :value="12" v-if="newFormInline.achievementType === 'paper'">
+      <re-col :value="12" v-if="newFormInline.achievementType === 'paper' || newFormInline.achievementType === 'other'">
         <el-form-item
           label="编号"
           prop="doi"
@@ -437,7 +444,7 @@ defineExpose({ getFormRuleRef });
           <el-input
             v-model="newFormInline.doi"
             clearable
-            placeholder="请输入论文doi或专利、软著等编号"
+            :placeholder="newFormInline.achievementType === 'paper' ? '请输入论文doi或专利、软著等编号' : '请输入相关编号'"
           />
         </el-form-item>
       </re-col>
