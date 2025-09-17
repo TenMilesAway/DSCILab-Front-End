@@ -143,3 +143,25 @@ export const batchUpdateSortApi = (data: BatchUpdateSortCommand) => {
 export const deleteCategoryApi = (id: number) => {
   return http.request<void>("delete", `/lab/achievement-categories/${id}`);
 };
+
+/**
+ * 获取成果类型字典（树形结构）
+ * 用于前端下拉选择，仅返回启用的类型
+ */
+export const getDictCategoryTreeApi = () => {
+  return http.request<LabAchievementCategoryDTO[]>(
+    "get",
+    "/lab/dicts/achievement-categories"
+  );
+};
+
+/**
+ * 获取成果类型字典（扁平列表）
+ * 用于简单下拉选择，仅返回启用的类型
+ */
+export const getDictCategoryFlatApi = () => {
+  return http.request<LabAchievementCategoryDTO[]>(
+    "get",
+    "/lab/dicts/achievement-categories/flat"
+  );
+};
