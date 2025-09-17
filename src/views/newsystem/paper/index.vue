@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, onMounted } from "vue";
 import { useHook } from "./hook";
 import { PureTableBar } from "@/components/RePureTableBar";
 import { useRenderIcon } from "@/components/ReIcon/src/hooks";
+import { getCategoryTreeApi, type LabAchievementCategoryDTO } from "@/api/newsystem/achievement-category";
 
 import Delete from "@iconify-icons/ep/delete";
 import EditPen from "@iconify-icons/ep/edit-pen";
@@ -27,6 +28,30 @@ const {
   openDialog,
   getList
 } = useHook();
+
+// 成果类型相关数据
+const categoryTree = ref<LabAchievementCategoryDTO[]>([]);
+const paperCategories = ref<LabAchievementCategoryDTO[]>([]);
+const projectCategories = ref<LabAchievementCategoryDTO[]>([]);
+
+// 获取成果类型树
+const loadCategoryTree = async () => {
+  try {
+    const response = await getCategoryTreeApi(false);
+    if (response.code === 0) {
+      categoryTree.value = response.data;
+      // 分离论文和项目类型
+      paperCategories.value = categoryTree.value.filter(cat => cat.type === 1);
+      projectCategories.value = categoryTree.value.filter(cat => cat.type === 2);
+    }
+  } catch (error) {
+    console.error('获取成果类型失败:', error);
+  }
+};
+
+onMounted(() => {
+  loadCategoryTree();
+});
 </script>
 
 <template>
@@ -45,15 +70,29 @@ const {
           class="!w-[200px]"
         />
       </el-form-item>
-      <el-form-item label="成果类型：" prop="type">
+      <el-form-item label="成果类型：" prop="categoryId">
         <el-select
-          v-model="searchFormParams.type"
+          v-model="searchFormParams.categoryId"
           placeholder="请选择成果类型"
           clearable
-          class="!w-[160px]"
+          class="!w-[200px]"
         >
-          <el-option label="论文、专利等" :value="1" />
-          <el-option label="项目" :value="2" />
+          <el-option-group label="论文、专利等">
+            <el-option
+              v-for="category in paperCategories"
+              :key="category.id"
+              :label="category.name"
+              :value="category.id"
+            />
+          </el-option-group>
+          <el-option-group label="项目">
+            <el-option
+              v-for="category in projectCategories"
+              :key="category.id"
+              :label="category.name"
+              :value="category.id"
+            />
+          </el-option-group>
         </el-select>
       </el-form-item>
       <el-form-item label="发布状态：" prop="published">

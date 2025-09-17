@@ -10,6 +10,7 @@ export interface AchievementListQuery {
   type?: 1 | 2; // 1=论文, 2=项目
   paperType?: number; // 仅type=1生效，1..7
   projectType?: number; // 仅type=2生效，1..8
+  categoryId?: number; // 成果类型ID（新类型系统，推荐传二级分类ID）
   published?: boolean; // 是否发布
   isVerified?: boolean; // 是否审核
   ownerUserId?: number; // 拥有者用户ID
@@ -28,6 +29,7 @@ export interface CreateAchievementRequest {
   type: 1 | 2; // 必填：1=论文, 2=项目
   paperType?: number | null; // type=1时必填：1=期刊,2=会议,3=预印本,4=专利,5=软著,6=标准,7=专著；type=2时必须null
   projectType?: number | null; // type=2时必填：1=横向,2=国自然面上,3=国自然青年,4=北京市教委科技一般,5=国家级教改,6=省部级教改,7=其他教改,8=其他纵向；type=1时必须null
+  categoryId?: number | null; // 成果类型ID（新类型系统，推荐传二级分类ID）
   venue?: string | null; // 可选，<=300
   publishDate?: string | null; // 仅论文；type=1必填；type=2必须null；格式：YYYY
   projectStartDate?: string | null; // 仅项目；type=2必填；格式：YYYY-MM
@@ -55,6 +57,7 @@ export interface UpdateAchievementRequest {
   type?: 1 | 2; // 1=论文, 2=项目
   paperType?: number | null; // type=1时必填：1=期刊,2=会议,3=预印本,4=专利,5=软著,6=标准,7=专著；type=2时必须null
   projectType?: number | null; // type=2时必填：1=横向,2=国自然面上,3=国自然青年,4=北京市教委科技一般,5=国家级教改,6=省部级教改,7=其他教改,8=其他纵向；type=1时必须null
+  categoryId?: number | null; // 成果类型ID（新类型系统，推荐传二级分类ID）
   venue?: string | null; // <=300
   publishDate?: string | null; // 仅论文；type=1必填；type=2必须null；格式：YYYY
   projectStartDate?: string | null; // 仅项目；type=2必填；格式：YYYY-MM
@@ -172,6 +175,7 @@ export interface MyAchievementQuery {
   type?: 1 | 2;
   paperType?: number; // 1..7
   projectType?: number; // 1..8
+  categoryId?: number; // 成果类型ID（新类型系统，推荐传二级分类ID）
   published?: boolean;
   isVerified?: boolean;
   dateStart?: string; // yyyy-MM-dd
@@ -188,6 +192,7 @@ export interface PublicAchievementQuery {
   type?: 1 | 2; // 1=论文, 2=项目
   paperType?: number; // 仅type=1生效，1..7
   projectType?: number; // 仅type=2生效，1..8
+  categoryId?: number; // 成果类型ID（新类型系统，推荐传二级分类ID）
   dateStart?: string; // 开始日期 yyyy-MM-dd
   dateEnd?: string; // 结束日期 yyyy-MM-dd
 }
