@@ -26,14 +26,14 @@ export interface CreateAchievementRequest {
   titleEn?: string | null; // 可选
   description?: string | null; // 可选
   keywords?: string | null; // 可选，<=1000
-  type: 1 | 2; // 必填：1=论文, 2=项目
-  paperType?: number | null; // type=1时必填：1=期刊,2=会议,3=预印本,4=专利,5=软著,6=标准,7=专著；type=2时必须null
-  projectType?: number | null; // type=2时必填：1=横向,2=国自然面上,3=国自然青年,4=北京市教委科技一般,5=国家级教改,6=省部级教改,7=其他教改,8=其他纵向；type=1时必须null
+  // v2接口删除type字段，仅使用categoryId
+  paperType?: number | null; // 论文类型：1=期刊,2=会议,3=预印本,4=专利,5=软著,6=标准,7=专著
+  projectType?: number | null; // 项目类型：1=横向,2=国自然面上,3=国自然青年,4=北京市教委科技一般,5=国家级教改,6=省部级教改,7=其他教改,8=其他纵向
   categoryId?: number | null; // 成果类型ID（新类型系统，推荐传二级分类ID）
   venue?: string | null; // 可选，<=300
-  publishDate?: string | null; // 仅论文；type=1必填；type=2必须null；格式：YYYY
-  projectStartDate?: string | null; // 仅项目；type=2必填；格式：YYYY-MM
-  projectEndDate?: string | null; // 仅项目；可空或>=开始；格式：YYYY-MM
+  publishDate?: string | null; // 论文发表年份；格式：YYYY
+  projectStartDate?: string | null; // 项目开始日期；格式：YYYY-MM
+  projectEndDate?: string | null; // 项目结束日期；可空或>=开始；格式：YYYY-MM
   reference?: string | null;
   linkUrl?: string | null;
   gitUrl?: string | null;
@@ -54,14 +54,14 @@ export interface UpdateAchievementRequest {
   titleEn?: string | null;
   description?: string | null;
   keywords?: string | null; // <=1000
-  type?: 1 | 2; // 1=论文, 2=项目
-  paperType?: number | null; // type=1时必填：1=期刊,2=会议,3=预印本,4=专利,5=软著,6=标准,7=专著；type=2时必须null
-  projectType?: number | null; // type=2时必填：1=横向,2=国自然面上,3=国自然青年,4=北京市教委科技一般,5=国家级教改,6=省部级教改,7=其他教改,8=其他纵向；type=1时必须null
+  // v2接口删除type字段，仅使用categoryId
+  paperType?: number | null; // 论文类型：1=期刊,2=会议,3=预印本,4=专利,5=软著,6=标准,7=专著
+  projectType?: number | null; // 项目类型：1=横向,2=国自然面上,3=国自然青年,4=北京市教委科技一般,5=国家级教改,6=省部级教改,7=其他教改,8=其他纵向
   categoryId?: number | null; // 成果类型ID（新类型系统，推荐传二级分类ID）
   venue?: string | null; // <=300
-  publishDate?: string | null; // 仅论文；type=1必填；type=2必须null；格式：YYYY
-  projectStartDate?: string | null; // 仅项目；type=2必填；格式：YYYY-MM
-  projectEndDate?: string | null; // 仅项目；可空或>=开始；格式：YYYY-MM
+  publishDate?: string | null; // 论文发表年份；格式：YYYY
+  projectStartDate?: string | null; // 项目开始日期；格式：YYYY-MM
+  projectEndDate?: string | null; // 项目结束日期；可空或>=开始；格式：YYYY-MM
   reference?: string | null;
   linkUrl?: string | null;
   gitUrl?: string | null;
@@ -262,7 +262,7 @@ export const getAchievementDetailApi = (id: number) => {
  * 创建成果
  */
 export const createAchievementApi = (data: CreateAchievementRequest) => {
-  return http.request<LabAchievementDTO>("post", "/lab/achievements", {
+  return http.request<LabAchievementDTO>("post", "/v2/lab/achievements", {
     data
   });
 };
@@ -274,7 +274,7 @@ export const updateAchievementApi = (
   id: number,
   data: UpdateAchievementRequest
 ) => {
-  return http.request<LabAchievementDTO>("put", `/lab/achievements/${id}`, {
+  return http.request<LabAchievementDTO>("put", `/v2/lab/achievements/${id}`, {
     data
   });
 };

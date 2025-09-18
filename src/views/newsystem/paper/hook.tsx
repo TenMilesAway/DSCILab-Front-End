@@ -393,7 +393,7 @@ export function useHook() {
 
         const curData: CreateAchievementRequest | UpdateAchievementRequest = {
           title: formData.title,
-          type: formData.categoryId || null, // 成果类型ID放在type字段
+          // 删除type字段，v2接口不再需要
           paperType:
             formData.achievementType === "paper" ? formData.paperType : null,
           projectType:
