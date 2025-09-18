@@ -339,8 +339,7 @@ export function useHook() {
           achievementType: "paper", // 默认值，将通过categoryId的watch自动设置
           paperType: row?.paperType ?? undefined,
           projectType: row?.projectType ?? undefined,
-          categoryId: row?.type ?? undefined, // 成果类型ID从type字段获取
-          specificCategoryId: row?.categoryId ?? undefined, // 具体类型ID从categoryId字段获取
+          categoryId: row?.categoryId ?? undefined, // 成果类型ID（v2接口使用叶子节点categoryId）
 
           githubUrl: row?.type === 1 ? row?.gitUrl ?? "" : "",
           published: row?.published ?? true,
