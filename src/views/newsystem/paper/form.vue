@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, computed, watch } from "vue";
+import { ref, onMounted, computed, watch, nextTick } from "vue";
 import ReCol from "@/components/ReCol";
 import { formRules } from "./rule";
 import { ElButton, ElIcon } from "element-plus";
@@ -94,7 +94,12 @@ const loadCategoryTree = async () => {
       
       // 数据加载完成后，如果是编辑模式且有categoryId，需要初始化二级类型选项
       if (newFormInline.value.categoryId) {
+        isInitializing.value = true; // 标记为初始化状态
         initSubCategories(newFormInline.value.categoryId);
+        // 延迟重置初始化状态，确保watch不会在初始化时清空数据
+        nextTick(() => {
+          isInitializing.value = false;
+        });
       }
     }
   } catch (error) {
@@ -104,31 +109,80 @@ const loadCategoryTree = async () => {
 
 // 初始化二级类型选项的函数
 const initSubCategories = (categoryId: number) => {
-  const selectedCategory = topLevelCategories.value.find(cat => cat.id === categoryId);
-  if (selectedCategory && selectedCategory.children) {
-    currentSubCategories.value = selectedCategory.children;
-    
-    // 根据一级类型设置achievementType
-    const categoryName = selectedCategory.categoryName;
-    if (categoryName === '论文') {
-      newFormInline.value.achievementType = 'paper';
-    } else if (categoryName === '项目') {
-      newFormInline.value.achievementType = 'project';
+  // 首先在所有类型中查找（包括一级和二级）
+  let selectedCategory: LabAchievementCategoryDTO | undefined;
+  let parentCategory: LabAchievementCategoryDTO | undefined;
+  
+  // 先查找是否为一级类型
+  selectedCategory = topLevelCategories.value.find(cat => cat.id === categoryId);
+  
+  if (!selectedCategory) {
+    // 如果不是一级类型，查找是否为二级类型
+    for (const topCategory of topLevelCategories.value) {
+      if (topCategory.children) {
+        const foundChild = topCategory.children.find(child => child.id === categoryId);
+        if (foundChild) {
+          selectedCategory = foundChild;
+          parentCategory = topCategory;
+          break;
+        }
+      }
+    }
+  }
+  
+  if (selectedCategory) {
+    if (parentCategory) {
+      // 如果是二级类型，设置父类型的子类型列表，并设置正确的一级类型ID
+      currentSubCategories.value = parentCategory.children || [];
+      newFormInline.value.categoryId = parentCategory.id; // 设置一级类型ID
+      newFormInline.value.specificCategoryId = selectedCategory.id; // 设置二级类型ID
+      
+      // 根据父类型设置achievementType
+      const categoryName = parentCategory.categoryName;
+      if (categoryName === '论文') {
+        newFormInline.value.achievementType = 'paper';
+      } else if (categoryName === '项目') {
+        newFormInline.value.achievementType = 'project';
+      } else {
+        newFormInline.value.achievementType = 'other';
+      }
+    } else if (selectedCategory.children) {
+      // 如果是一级类型且有子类型
+      currentSubCategories.value = selectedCategory.children;
+      
+      // 根据一级类型设置achievementType
+      const categoryName = selectedCategory.categoryName;
+      if (categoryName === '论文') {
+        newFormInline.value.achievementType = 'paper';
+      } else if (categoryName === '项目') {
+        newFormInline.value.achievementType = 'project';
+      } else {
+        newFormInline.value.achievementType = 'other';
+      }
     } else {
-      newFormInline.value.achievementType = 'other';
+      // 如果是一级类型但没有子类型
+      currentSubCategories.value = [];
     }
   } else {
     currentSubCategories.value = [];
   }
 };
 
+// 标记是否为初始化状态
+const isInitializing = ref(false);
+
 // 监听一级类型变化，更新二级类型选项
-watch(() => newFormInline.value.categoryId, (newCategoryId) => {
+watch(() => newFormInline.value.categoryId, (newCategoryId, oldCategoryId) => {
+  // 如果正在初始化，跳过watch处理
+  if (isInitializing.value) {
+    return;
+  }
+  
   if (newCategoryId) {
     initSubCategories(newCategoryId);
-    // 只有在用户主动选择时才重置二级类型选择
-    // 编辑模式下不重置，保持原有的specificCategoryId值
-    if (!props.formInline.id) {
+    // 当一级类型发生变化时，总是清空二级类型选择
+    // 无论是新增模式还是编辑模式，只要用户主动切换一级类型就清空二级类型
+    if (oldCategoryId !== undefined && oldCategoryId !== newCategoryId) {
       newFormInline.value.specificCategoryId = undefined;
     }
   } else {
