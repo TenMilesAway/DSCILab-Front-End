@@ -21,6 +21,7 @@ export interface ApiProject {
   status?: number;
   published?: boolean;
   url?: string;
+  reference?: string;
 }
 
 /**

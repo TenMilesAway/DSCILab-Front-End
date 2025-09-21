@@ -136,25 +136,8 @@
                         {{ getProjectTypeLabel(project.projectType) }}
                       </el-tag>
                       <div class="project-content-member">
-                        <span class="project-title-member">{{
-                          project.title
-                        }}</span>
-                        <span class="project-separator-member">,</span>
-                        <span class="project-leader-member"
-                          >负责人：{{ getProjectLeader(project.authors) }}</span
-                        >
-                        <span class="project-separator-member">,</span>
-                        <span class="project-funding-member"
-                          >经费 {{ project.fundingAmount && project.fundingAmount !== `0` ? project.fundingAmount + ' 万元' : '未知金额' }}</span
-                        >
-                        <span class="project-separator-member">,</span>
-                        <span class="project-year-member">{{
-                          getProjectYear(
-                            project.projectStartDate,
-                            project.projectEndDate
-                          )
-                        }}</span>
-                        <span class="project-separator-member">.</span>
+                        <span v-if="project.reference" class="project-reference-member">{{ project.reference }}</span>
+                        <span v-else class="project-no-reference-member">暂无引用信息</span>
                       </div>
                     </div>
                   </div>
@@ -189,47 +172,17 @@
                       </el-tag>
                       <div class="achievement-content-member">
                         <span
-                          v-if="
-                            achievement.authors &&
-                            achievement.authors.length > 0
-                          "
-                          class="achievement-authors-member"
+                          v-if="achievement.reference"
+                          class="achievement-reference-member"
                         >
-                          <span
-                            v-for="(author, authorIndex) in getSortedAuthors(
-                              achievement.authors
-                            )"
-                            :key="authorIndex"
-                            class="author-name-member"
-                            >{{ author.name
-                            }}<span
-                              v-if="
-                                authorIndex <
-                                getSortedAuthors(achievement.authors).length - 1
-                              "
-                              >,
-                            </span></span
-                          >
+                          {{ achievement.reference }}
                         </span>
-                        <span class="achievement-separator-member">.</span>
-                        <span class="achievement-title-member">{{
-                          achievement.title
-                        }}</span>
-                        <span class="achievement-separator-member">,</span>
                         <span
-                          v-if="achievement.venue"
-                          class="achievement-institution-member"
+                          v-else
+                          class="achievement-reference-member"
                         >
-                          {{ achievement.venue }}
+                          暂无引用信息
                         </span>
-                        <span class="achievement-separator-member">,</span>
-                        <span
-                          v-if="achievement.publishDate"
-                          class="achievement-year-member"
-                        >
-                          {{ getPublishYear(achievement.publishDate) }}
-                        </span>
-                        <span class="achievement-separator-member">.</span>
                       </div>
                     </div>
                     <div class="achievement-actions-container-member">
@@ -1396,10 +1349,7 @@ const handlePdfDownload = (url: string) => {
     font-size: 13px;
   }
 
-  .achievement-authors-member,
-  .achievement-title-member,
-  .achievement-institution-member,
-  .achievement-year-member {
+  .achievement-reference-member {
     font-size: 13px;
   }
 
@@ -1913,35 +1863,10 @@ const handlePdfDownload = (url: string) => {
   line-height: 1.6;
 }
 
-.achievement-authors-member {
-  font-weight: 600;
+.achievement-reference-member {
+  font-size: 14px;
+  line-height: 1.6;
   color: #374151;
-}
-
-.author-name-member {
-  font-weight: normal;
-  color: #374151;
-}
-
-.achievement-title-member {
-  font-weight: 700;
-  color: #1e293b;
-}
-
-.achievement-institution-member {
-  font-style: italic;
-  font-weight: 500;
-  color: #64748b;
-}
-
-.achievement-year-member {
-  font-weight: 600;
-  color: #374151;
-}
-
-.achievement-separator-member {
-  margin: 0 2px;
-  color: #64748b;
 }
 
 .achievement-actions-container-member {
@@ -2585,12 +2510,12 @@ const handlePdfDownload = (url: string) => {
     line-height: 1.5;
   }
 
-  .achievement-title-member {
+  .achievement-reference-member {
     display: block;
-    margin-bottom: 8px;
-    font-size: 15px;
-    font-weight: 600;
+    font-size: 14px;
+    line-height: 1.6;
     text-align: center;
+    color: #333;
   }
 
   .achievement-authors-member,

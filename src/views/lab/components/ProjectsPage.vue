@@ -104,14 +104,18 @@
               </el-tag>
             </div>
             <div class="project-content">
-              <span class="project-title">{{ project.title }}</span>
-              <span class="project-separator">,</span>
-              <span class="project-leader">负责人：{{ project.leader }}</span>
-              <span class="project-separator">,</span>
-              <span class="project-funding">经费 {{ project.fundingAmount && project.fundingAmount !== `0` ? project.fundingAmount + ' 万元' : '未知金额' }}</span>
-              <span class="project-separator">,</span>
-              <span class="project-year">{{ project.startYear }}-{{ project.endYear }}</span>
-              <span class="project-separator">.</span>
+              <span 
+                v-if="project.reference" 
+                class="project-reference"
+              >
+                {{ project.reference }}
+              </span>
+              <span 
+                v-else 
+                class="project-reference"
+              >
+                暂无引用信息
+              </span>
             </div>
           </div>
         </div>
@@ -150,6 +154,7 @@ interface Project {
   startYear: number
   endYear: number
   published: boolean
+  reference?: string
 }
 
 // 数据转换函数
@@ -181,7 +186,8 @@ const convertApiDataToProject = (apiData: ApiProject): Project => {
     fundingAmount: apiData.fundingAmount || '0',
     startYear: startYear,
     endYear: endYear,
-    published: apiData.published || false
+    published: apiData.published || false,
+    reference: apiData.reference || ''
   }
 }
 
