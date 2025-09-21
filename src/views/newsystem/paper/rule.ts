@@ -51,12 +51,7 @@ const formRules = reactive(<FormRules>{
   doi: [
     {
       max: 100,
-      message: "DOI长度不能超过100个字符",
-      trigger: "blur"
-    },
-    {
-      pattern: /^(10\.\d{4,}\/.+)?$/,
-      message: "DOI格式不正确，应以10.开头",
+      message: "编号长度不能超过100个字符",
       trigger: "blur"
     }
   ],
