@@ -10,6 +10,8 @@ export interface ApiProject {
   description?: string;
   projectStartDate?: string;
   projectEndDate?: string;
+  categoryId?: number;
+  categoryName?: string;
   authors?: Array<{
     name: string;
     visible: boolean;

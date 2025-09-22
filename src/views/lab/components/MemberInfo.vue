@@ -129,11 +129,11 @@
                   >
                     <div class="project-main-member">
                       <el-tag
-                        :type="getProjectTypeTagType(project.projectType) as '' | 'success' | 'warning' | 'danger' | 'info'"
+                        :type="getProjectTypeTagType(project) as '' | 'success' | 'warning' | 'danger' | 'info'"
                         size="small"
                         class="project-type-tag-member"
                       >
-                        {{ getProjectTypeLabel(project.projectType) }}
+                        {{ getProjectTypeLabel(project) }}
                       </el-tag>
                       <div class="project-content-member">
                         <span v-if="project.reference" class="project-reference-member">{{ project.reference }}</span>
@@ -164,11 +164,11 @@
                   >
                     <div class="achievement-main-member">
                       <el-tag
-                        :type="getPaperTypeTagType(achievement.paperType) as '' | 'success' | 'warning' | 'danger' | 'info'"
+                        :type="getPaperTypeTagType(achievement) as '' | 'success' | 'warning' | 'danger' | 'info'"
                         size="small"
                         class="achievement-type-tag-member"
                       >
-                        {{ getPaperTypeLabel(achievement.paperType) }}
+                        {{ getPaperTypeLabel(achievement) }}
                       </el-tag>
                       <div class="achievement-content-member">
                         <span
@@ -279,6 +279,8 @@ import { Link, Download } from "@element-plus/icons-vue";
 import { ElMessage } from "element-plus";
 import { type ApiAchievement, getAchievementsListApi } from "@/api/lab/achievements";
 import { type ApiProject, getProjectsListApi } from "@/api/lab/projects";
+import { getAchievementCategoriesApi, type AchievementCategoryDTO } from '@/api/lab/achievementCategory';
+import { getProjectCategoriesApi, type ProjectCategoryDTO } from '@/api/lab/projectCategory';
 
 // 定义 Github 图标组件
 const _Github = {
@@ -342,15 +344,74 @@ const internalAchievements = ref<ApiAchievement[]>([]);
 // 内部项目数据状态
 const internalProjects = ref<ApiProject[]>([]);
 
+// 成果分类数据状态
+const achievementCategories = ref<AchievementCategoryDTO[]>([]);
+
+// 项目分类数据状态
+const projectCategories = ref<ProjectCategoryDTO[]>([]);
+
+// 加载成果分类数据的函数
+const loadAchievementCategories = async () => {
+  try {
+    const result = await getAchievementCategoriesApi(1);
+    
+    if (result && result.code === 0 && result.data && Array.isArray(result.data)) {
+      achievementCategories.value = result.data.map(category => ({
+        id: category.id,
+        categoryName: category.categoryName,
+        categoryCode: category.categoryCode || '',
+        sortOrder: category.sortOrder || 0,
+        color: category.color || 'primary'
+      }));
+    } else {
+      console.error('获取成果分类数据格式错误:', result);
+    }
+  } catch (error) {
+    console.error('加载成果分类失败:', error);
+  }
+};
+
+// 加载项目分类数据的函数
+const loadProjectCategories = async () => {
+  try {
+    const result = await getProjectCategoriesApi(2);
+    
+    if (result && result.code === 0 && result.data && Array.isArray(result.data)) {
+      projectCategories.value = result.data
+        .map(category => ({
+          id: category.id,
+          categoryName: category.categoryName,
+          categoryCode: category.categoryCode || '',
+          sortOrder: category.sortOrder || 0,
+          color: category.color || 'primary'
+        }))
+        .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
+    } else {
+      console.error('获取项目分类数据格式错误:', result);
+    }
+  } catch (error) {
+    console.error('加载项目分类失败:', error);
+    ElMessage.error('加载项目分类失败，请稍后重试');
+  }
+};
+
 // 获取成果数据的函数
 const fetchAchievements = async () => {
   if (!props.member) return;
   
   try {
-    const response = await getAchievementsListApi({ type: 1 });
+    const response = await getAchievementsListApi();
     if (response.code === 0 && response.data && response.data.rows) {
-      // 根据当前用户的 id 筛选成果数据
+      // 获取有效的分类ID列表
+      const validCategoryIds = achievementCategories.value.map(category => category.id);
+      
+      // 先按有效分类ID筛选，再按当前用户筛选
       const filteredAchievements = response.data.rows.filter(achievement => {
+        // 检查是否属于有效分类
+        const isValidCategory = validCategoryIds.includes(Number(achievement.categoryId));
+        if (!isValidCategory) return false;
+        
+        // 检查作者信息
         if (!achievement.authors || !Array.isArray(achievement.authors)) {
           return false;
         }
@@ -374,10 +435,18 @@ const fetchProjects = async () => {
   if (!props.member) return;
   
   try {
-    const response = await getProjectsListApi({ type: 2 });
+    const response = await getProjectsListApi();
     if (response.code === 0 && response.data && response.data.rows) {
-      // 根据当前用户的 id 筛选项目数据
+      // 获取有效的分类ID列表
+      const validCategoryIds = projectCategories.value.map(category => category.id);
+      
+      // 先按有效分类ID筛选，再按当前用户筛选
       const filteredProjects = response.data.rows.filter(project => {
+        // 检查是否属于有效分类
+        const isValidCategory = validCategoryIds.includes(Number(project.categoryId));
+        if (!isValidCategory) return false;
+        
+        // 检查作者信息
         if (!project.authors || !Array.isArray(project.authors)) {
           return false;
         }
@@ -397,12 +466,14 @@ const fetchProjects = async () => {
 };
 
 // 监听member变化，重置头像加载状态和动画状态，并获取成果和项目数据
-watch(() => props.member, (newMember) => {
+watch(() => props.member, async (newMember) => {
   isAvatarLoaded.value = false;
   isContentVisible.value = false;
   
-  // 如果有新的成员，获取成果和项目数据
+  // 如果有新的成员，先加载分类数据，再获取成果和项目数据
   if (newMember) {
+    await loadAchievementCategories();
+    await loadProjectCategories(); // 确保项目分类数据先加载
     fetchAchievements();
     fetchProjects();
   }
@@ -432,9 +503,7 @@ const avatarUrl = computed(() => {
 
 // 按时间排序的项目列表（从新到旧）
 const sortedProjects = computed(() => {
-  console.log('原始参与项目数据:', internalProjects.value);
   if (!internalProjects.value || internalProjects.value.length === 0) {
-    console.log('参与项目数据为空');
     return [];
   }
 
@@ -451,7 +520,6 @@ const sortedProjects = computed(() => {
     return currentMemberAuthor && currentMemberAuthor.visible;
   });
 
-  console.log('过滤后的参与项目数据:', visibleProjects);
   return [...visibleProjects].sort((a, b) => {
     // 优先使用项目开始时间排序
     const aDate = a.projectStartDate
@@ -466,9 +534,7 @@ const sortedProjects = computed(() => {
 
 // 按时间排序的成果列表（从新到旧）
 const sortedAchievements = computed(() => {
-  console.log('原始学术成果数据:', internalAchievements.value);
   if (!internalAchievements.value || internalAchievements.value.length === 0) {
-    console.log('学术成果数据为空');
     return [];
   }
 
@@ -485,7 +551,6 @@ const sortedAchievements = computed(() => {
     return currentMemberAuthor && currentMemberAuthor.visible;
   });
 
-  console.log('过滤后的学术成果数据:', visibleAchievements);
   return [...visibleAchievements].sort((a, b) => {
     // 优先使用发表时间排序
     const aDate = a.publishDate ? new Date(a.publishDate).getTime() : 0;
@@ -683,61 +748,51 @@ const getPublishYear = (publishDate: string) => {
 };
 
 // 获取论文类型标签类型
-const getPaperTypeTagType = (paperType?: number) => {
-  const typeMap: Record<number, string> = {
-    1: "primary", // 期刊
-    2: "success", // 会议
-    3: "warning", // 预印本
-    4: "danger", // 专利
-    5: "info", // 软著
-    6: "info", // 标准
-    7: "primary" // 专著
-  };
-  return typeMap[paperType || 7] || "info";
+const getPaperTypeTagType = (achievement: any) => {
+  // 通过 categoryId 查找对应的分类颜色
+  if (achievement && achievement.categoryId) {
+    const foundCategory = achievementCategories.value.find(
+      category => category.id === achievement.categoryId
+    )
+    return foundCategory ? foundCategory.color || "info" : "info"
+  }
+  return "info"
 };
 
 // 获取论文类型标签文本
-const getPaperTypeLabel = (paperType?: number) => {
-  const typeMap: Record<number, string> = {
-    1: "期刊",
-    2: "会议",
-    3: "预印本",
-    4: "专利",
-    5: "软著",
-    6: "标准",
-    7: "专著"
-  };
-  return typeMap[paperType || 7] || "其他";
+const getPaperTypeLabel = (achievement: any) => {
+  // 通过 categoryId 查找对应的分类名称
+  if (achievement && achievement.categoryId) {
+    const foundCategory = achievementCategories.value.find(
+      category => category.id === achievement.categoryId
+    )
+    return foundCategory ? foundCategory.categoryName : "其他"
+  }
+  return "其他"
 };
 
 // 获取项目类型标签类型
-const getProjectTypeTagType = (projectType?: number) => {
-  const typeMap: Record<number, string> = {
-    1: "warning", // 横向
-    2: "danger", // 国自然面上
-    3: "primary", // 国自然青年
-    4: "success", // 北京市教委科技一般
-    5: "success", // 国家级教改
-    6: "primary", // 省部级教改
-    7: "info", // 其他教改
-    8: "info" // 其他纵向
-  };
-  return typeMap[projectType || 1] || "info";
+const getProjectTypeTagType = (project: any) => {
+  // 通过 categoryId 查找对应的分类颜色
+  if (project && project.categoryId) {
+    const foundCategory = projectCategories.value.find(
+      category => category.id === project.categoryId
+    )
+    return foundCategory ? foundCategory.color || "info" : "info"
+  }
+  return "info"
 };
 
 // 获取项目类型标签文本
-const getProjectTypeLabel = (projectType?: number) => {
-  const typeMap: Record<number, string> = {
-    1: "横向",
-    2: "国自然面上",
-    3: "国自然青年",
-    4: "北京市教委科技一般",
-    5: "国家级教改",
-    6: "省部级教改",
-    7: "其他教改",
-    8: "其他纵向"
-  };
-  return typeMap[projectType || 1] || "其他";
+const getProjectTypeLabel = (project: any) => {
+  // 通过 categoryId 查找对应的分类名称
+  if (project && project.categoryId) {
+    const foundCategory = projectCategories.value.find(
+      category => category.id === project.categoryId
+    )
+    return foundCategory ? foundCategory.categoryName : "其他"
+  }
+  return "其他"
 };
 
 // 从项目日期中提取年份

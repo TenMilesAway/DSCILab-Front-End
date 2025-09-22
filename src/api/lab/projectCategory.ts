@@ -1,9 +1,9 @@
 import { http } from "@/utils/http";
 
 /**
- * 成果分类数据结构
+ * 项目分类数据结构
  */
-export interface AchievementCategoryDTO {
+export interface ProjectCategoryDTO {
   id: number;
   parentId: number | null;
   categoryCode: string;
@@ -18,7 +18,7 @@ export interface AchievementCategoryDTO {
   parentName: string | null;
   createTime: string;
   updateTime: string;
-  children: AchievementCategoryDTO[];
+  children: ProjectCategoryDTO[];
   canDelete: boolean;
   canEdit: boolean;
   hasChildren: boolean;
@@ -30,10 +30,10 @@ export interface AchievementCategoryDTO {
 }
 
 /**
- * 获取成果分类列表
+ * 获取项目分类列表
  */
-export const getAchievementCategoriesApi = (parentId?: number) => {
-  return http.request<ResponseData<AchievementCategoryDTO[]>>(
+export const getProjectCategoriesApi = (parentId?: number) => {
+  return http.request<ResponseData<ProjectCategoryDTO[]>>(
     "get", 
     "/open/achievement-categories/children", 
     { params: parentId ? { parentId } : {} }

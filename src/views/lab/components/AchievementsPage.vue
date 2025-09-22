@@ -80,7 +80,6 @@
               <div class="achievement-header">
                 <span class="achievement-number">{{ (currentPage - 1) * pageSize + index + 1 }}.</span>
                 <el-tag 
-                  :type="getTypeTagType(achievement.type)" 
                   size="small" 
                   class="achievement-type-tag"
                 >
@@ -164,7 +163,7 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { Search, Link, House, Download } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
-import { getPublicAchievementsApi, type PublicAchievementDTO } from '@/api/newsystem/paper'
+import { getAchievementsListApi, type ApiAchievement } from '@/api/lab/achievements'
 import { getAchievementCategoriesApi, type AchievementCategoryDTO } from '@/api/lab/achievementCategory'
 
 // 成果类型定义
@@ -172,10 +171,9 @@ interface Achievement {
   id: number
   title: string
   authors: string[]
-  type: 'journal' | 'conference' | 'preprint' | 'patent' | 'software' | 'standard' | 'monograph'
+  type: string
   year: number
   institution: string
-  published: boolean
   githubUrl?: string
   projectUrl?: string
   pdfUrl?: string
@@ -279,73 +277,6 @@ const getTypeLabel = (type: string) => {
   return foundCategory ? foundCategory.categoryName : type
 }
 
-const getTypeTagType = (type: string) => {
-  // 查找对应的分类
-  const foundCategory = achievementCategories.value.find(
-    item => item.categoryCode.toLowerCase() === type
-  )
-  // 如果找到分类且有颜色属性，则使用该颜色，否则使用默认映射
-  if (foundCategory && foundCategory.color) {
-    return foundCategory.color
-  }
-  
-  // 默认颜色映射
-  const defaultTypes: Record<string, string> = {
-    journal: 'primary',
-    conference: 'success',
-    preprint: 'warning',
-    patent: 'danger',
-    software: 'info',
-    standard: '',
-    monograph: 'primary'
-  }
-  return defaultTypes[type] || ''
-}
-
-
-// 获取状态标签类型
-const getStatusTagType = (type: string, published: boolean) => {
-  // 将字符串类型映射为数字类型，与MemberInfo.vue保持一致
-  const typeToNumberMap = {
-    journal: 1,
-    conference: 2,
-    preprint: 3,
-    patent: 4,
-    software: 5,
-    standard: 6,
-    monograph: 7
-  }
-  
-  const paperType = typeToNumberMap[type] || 7
-  
-  // 基础类型颜色映射（与MemberInfo.vue保持一致）
-  const baseTypeColors: Record<number, string> = {
-    1: 'primary', // 期刊
-    2: 'success', // 会议
-    3: 'warning', // 预印本
-    4: 'danger',  // 专利
-    5: 'info',    // 软著
-    6: '',        // 标准
-    7: 'primary'  // 专著
-  }
-  
-  // 如果未发布，使用稍微不同的色调表示状态
-  if (!published) {
-    const unpublishedColors: Record<number, string> = {
-      1: 'primary',        // 期刊：使用默认灰色调
-      2: 'success', // 会议：从success变为warning
-      3: 'warning',    // 预印本：从warning变为info
-      4: 'danger', // 专利：从danger变为warning
-      5: 'info',        // 软著：使用默认灰色调
-      6: '',    // 标准
-      7: 'primary'     // 专著：从primary变为info
-    }
-    return unpublishedColors[paperType] || ''
-  }
-  
-  return baseTypeColors[paperType] || ''
-}
-
 const handleCategorySelect = (index: string) => {
   activeCategory.value = index
   currentPage.value = 1
@@ -389,29 +320,13 @@ const handlePdfDownload = (url: string) => {
 }
 
 // 数据转换函数
-const convertApiDataToAchievement = (apiData: PublicAchievementDTO): Achievement => {
+const convertApiDataToAchievement = (apiData: ApiAchievement): Achievement => {
   // 使用categoryId直接映射到对应的分类
   let type = 'other'
   
   // 如果有categoryId，则使用映射关系获取对应的分类代码
   if (apiData.categoryId && categoryMap.value[apiData.categoryId]) {
     type = categoryMap.value[apiData.categoryId]
-  }
-  
-  // 如果没有找到映射，使用默认映射
-  const defaultTypeMap: Record<number, string> = {
-    1: 'journal',    // 期刊
-    2: 'conference', // 会议
-    3: 'preprint',   // 预印本
-    4: 'patent',     // 专利
-    5: 'software',   // 软著
-    6: 'standard',   // 标准
-    7: 'monograph'   // 专著
-  }
-  
-  // 如果没有通过categoryId找到映射，尝试使用paperType
-  if (type === 'other' && apiData.paperType && defaultTypeMap[apiData.paperType]) {
-    type = defaultTypeMap[apiData.paperType]
   }
   
   // 从 publishDate 中提取年份
@@ -433,7 +348,6 @@ const convertApiDataToAchievement = (apiData: PublicAchievementDTO): Achievement
     type: type,
     year: year,
     institution: apiData.venue || '', // venue 字段映射为 institution
-    published: apiData.published !== false, // 处理published字段
     githubUrl: apiData.gitUrl,
     projectUrl: apiData.linkUrl,
     pdfUrl: apiData.pdfUrl,
@@ -447,8 +361,9 @@ const convertApiDataToAchievement = (apiData: PublicAchievementDTO): Achievement
 const loadAchievementCategories = async () => {
   try {
     // 从新的接口获取成员分类数据
-    const response = await fetch('http://10.157.134.211:8080/open/achievement-categories/children?parentId=1')
-    const result = await response.json()
+    // const response = await fetch('http://10.157.134.211:8080/open/achievement-categories/children?parentId=1')
+    // const result = await response.json()
+    const result = await getAchievementCategoriesApi(1)
     
     // 检查响应格式并提取数据
     if (result && result.code === 0 && result.data && Array.isArray(result.data)) {
@@ -481,50 +396,29 @@ const loadAchievementCategories = async () => {
 const loadAchievements = async () => {
   loading.value = true
   try {
-    // 从新的接口获取所有成果数据
-    const response = await fetch('http://10.157.134.211:8080/open/achievements')
-    const result = await response.json()
-    
-    // 检查响应格式并提取数据
-    if (result && result.code === 0 && result.data) {
-      let achievementsData = []
-      
-      // 处理不同的数据结构
-      if (Array.isArray(result.data)) {
-        achievementsData = result.data
-      } else if (result.data.rows && Array.isArray(result.data.rows)) {
-        achievementsData = result.data.rows
-      } else if (result.data.list && Array.isArray(result.data.list)) {
-        achievementsData = result.data.list
-      } else {
-        console.error('无法识别的成果数据结构:', result.data)
-        ElMessage.error('成果数据结构不正确')
-        achievements.value = []
-        return
-      }
-      
-      // 获取有效的分类ID数组
+    const response = await getAchievementsListApi()
+    if (response.code === 0 && response.data?.rows) {
+      // 获取有效的分类ID列表
       const validCategoryIds = achievementCategories.value.map(category => category.id)
       
-      // 筛选出categoryId存在于分类数组中的成果数据
-      const filteredData = achievementsData.filter(achievement => {
-        return achievement.categoryId && validCategoryIds.includes(achievement.categoryId)
+      // 筛选出属于有效分类的成果数据
+      const filteredAchievements = response.data.rows.filter(achievement => {
+        return validCategoryIds.includes(Number(achievement.categoryId))
       })
       
       // 转换数据格式
-      achievements.value = filteredData.map(convertApiDataToAchievement)
+      achievements.value = filteredAchievements.map(convertApiDataToAchievement)
     } else {
-      console.error('获取成果数据格式错误:', result)
-      ElMessage.error('获取成果数据格式错误')
+      ElMessage.error('获取成果数据失败')
       achievements.value = []
     }
   } catch (error) {
-     console.error('加载成果数据失败:', error)
-     ElMessage.error('网络错误，请稍后重试')
-     achievements.value = []
-   } finally {
-     loading.value = false
-   }
+    console.error('加载成果数据失败:', error)
+    ElMessage.error('网络错误，请稍后重试')
+    achievements.value = []
+  } finally {
+    loading.value = false
+  }
 }
 
 // 生命周期
