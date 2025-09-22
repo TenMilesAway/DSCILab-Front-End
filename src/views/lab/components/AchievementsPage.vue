@@ -13,26 +13,12 @@
         <el-menu-item index="all">
           <span>全部成果</span>
         </el-menu-item>
-        <el-menu-item index="journal">
-          <span>期刊</span>
-        </el-menu-item>
-        <el-menu-item index="conference">
-          <span>会议</span>
-        </el-menu-item>
-        <el-menu-item index="preprint">
-          <span>预印本</span>
-        </el-menu-item>
-        <el-menu-item index="patent">
-          <span>专利</span>
-        </el-menu-item>
-        <el-menu-item index="software">
-          <span>软著</span>
-        </el-menu-item>
-        <el-menu-item index="standard">
-          <span>标准</span>
-        </el-menu-item>
-        <el-menu-item index="monograph">
-          <span>专著</span>
+        <el-menu-item 
+          v-for="category in achievementCategories" 
+          :key="category.id" 
+          :index="category.id"
+        >
+          <span>{{ category.categoryName }}</span>
         </el-menu-item>
       </el-menu>
     </div>
@@ -94,7 +80,6 @@
               <div class="achievement-header">
                 <span class="achievement-number">{{ (currentPage - 1) * pageSize + index + 1 }}.</span>
                 <el-tag 
-                  :type="getTypeTagType(achievement.type)" 
                   size="small" 
                   class="achievement-type-tag"
                 >
@@ -102,16 +87,18 @@
                 </el-tag>
               </div>
               <div class="achievement-content">
-                <span class="achievement-authors">{{ achievement.authors.join(', ') }}</span>
-                <span class="achievement-separator">.</span>
-                <span class="achievement-title">{{ achievement.title }}</span>
-                <template v-if="achievement.institution">
-                  <span class="achievement-separator">,</span>
-                  <span class="achievement-institution">{{ achievement.institution }}</span>
-                </template>
-                <span class="achievement-separator">,</span>
-                <span class="achievement-year">{{ achievement.year }}</span>
-                <span class="achievement-separator">.</span>
+                <span 
+                  v-if="achievement.reference" 
+                  class="achievement-reference"
+                >
+                  {{ achievement.reference }}
+                </span>
+                <span 
+                  v-else 
+                  class="achievement-reference"
+                >
+                  暂无引用信息
+                </span>
               </div>
             </div>
             <div class="achievement-actions-container">
@@ -177,19 +164,22 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { Search, Link, House, Download } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { getAchievementsListApi, type ApiAchievement } from '@/api/lab/achievements'
+import { getAchievementCategoriesApi, type AchievementCategoryDTO } from '@/api/lab/achievementCategory'
 
 // 成果类型定义
 interface Achievement {
   id: number
   title: string
   authors: string[]
-  type: 'journal' | 'conference' | 'preprint' | 'patent' | 'software' | 'standard' | 'monograph'
+  type: string
   year: number
   institution: string
-  published: boolean
   githubUrl?: string
   projectUrl?: string
   pdfUrl?: string
+  reference?: string
+  categoryId: string | number  // 添加分类ID字段
+  categoryName: string         // 添加分类名称字段
 }
 
 // 响应式数据
@@ -200,6 +190,8 @@ const searchKeyword = ref('')
 const currentPage = ref(1)
 const pageSize = ref(20)
 const achievements = ref<Achievement[]>([])
+const achievementCategories = ref<AchievementCategoryDTO[]>([])
+const categoryMap = ref<Record<string, string>>({}) // 分类代码到类型的映射
 
 // 响应式屏幕尺寸检测
 const screenWidth = ref(window.innerWidth)
@@ -234,7 +226,10 @@ const filteredAchievements = computed(() => {
 
   // 按分类筛选
   if (activeCategory.value !== 'all') {
-    filtered = filtered.filter(item => item.type === activeCategory.value)
+    // 使用categoryId作为筛选条件
+    filtered = filtered.filter(item => {
+      return item.categoryId === activeCategory.value
+    })
   }
 
   // 按年份筛选
@@ -263,106 +258,23 @@ const paginatedAchievements = computed(() => {
 
 // 方法
 const getCategoryTitle = (category: string) => {
-  const titles = {
-    all: '全部成果',
-    journal: '期刊论文',
-    conference: '会议论文',
-    preprint: '预印本',
-    patent: '专利',
-    software: '软件著作权',
-    standard: '标准',
-    monograph: '专著'
+  if (category === 'all') {
+    return '全部成果'
   }
-  return titles[category] || '全部成果'
+  
+  // 查找对应的分类名称
+  const foundCategory = achievementCategories.value.find(
+    item => item.id === category
+  )
+  return foundCategory ? foundCategory.categoryName : '全部成果'
 }
 
 const getTypeLabel = (type: string) => {
-  const labels = {
-    journal: '期刊',
-    conference: '会议',
-    preprint: '预印本',
-    patent: '专利',
-    software: '软著',
-    standard: '标准',
-    monograph: '专著'
-  }
-  return labels[type] || type
-}
-
-const getTypeTagType = (type: string) => {
-  const types = {
-    journal: 'primary',
-    conference: 'success',
-    preprint: 'warning',
-    patent: 'danger',
-    software: 'info',
-    standard: '',
-    monograph: 'primary'
-  }
-  return types[type] || ''
-}
-
-// 获取状态标签文本
-const getStatusLabel = (type: string, published: boolean) => {
-  if (published) {
-    // published = true 时
-    if (['journal', 'conference', 'standard', 'monograph', 'preprint'].includes(type)) {
-      return '已发表'
-    } else if (['patent', 'software'].includes(type)) {
-      return '已授权'
-    }
-  } else {
-    // published = false 时
-    if (['journal', 'conference', 'standard', 'monograph', 'preprint'].includes(type)) {
-      return '投递中'
-    } else if (['patent', 'software'].includes(type)) {
-      return '受理中'
-    }
-  }
-  return ''
-}
-
-// 获取状态标签类型
-const getStatusTagType = (type: string, published: boolean) => {
-  // 将字符串类型映射为数字类型，与MemberInfo.vue保持一致
-  const typeToNumberMap = {
-    journal: 1,
-    conference: 2,
-    preprint: 3,
-    patent: 4,
-    software: 5,
-    standard: 6,
-    monograph: 7
-  }
-  
-  const paperType = typeToNumberMap[type] || 7
-  
-  // 基础类型颜色映射（与MemberInfo.vue保持一致）
-  const baseTypeColors: Record<number, string> = {
-    1: 'primary', // 期刊
-    2: 'success', // 会议
-    3: 'warning', // 预印本
-    4: 'danger',  // 专利
-    5: 'info',    // 软著
-    6: '',        // 标准
-    7: 'primary'  // 专著
-  }
-  
-  // 如果未发布，使用稍微不同的色调表示状态
-  if (!published) {
-    const unpublishedColors: Record<number, string> = {
-      1: 'primary',        // 期刊：使用默认灰色调
-      2: 'success', // 会议：从success变为warning
-      3: 'warning',    // 预印本：从warning变为info
-      4: 'danger', // 专利：从danger变为warning
-      5: 'info',        // 软著：使用默认灰色调
-      6: '',    // 标准
-      7: 'primary'     // 专著：从primary变为info
-    }
-    return unpublishedColors[paperType] || ''
-  }
-  
-  return baseTypeColors[paperType] || ''
+  // 查找对应的分类名称
+  const foundCategory = achievementCategories.value.find(
+    item => item.categoryCode.toLowerCase() === type
+  )
+  return foundCategory ? foundCategory.categoryName : type
 }
 
 const handleCategorySelect = (index: string) => {
@@ -409,31 +321,74 @@ const handlePdfDownload = (url: string) => {
 
 // 数据转换函数
 const convertApiDataToAchievement = (apiData: ApiAchievement): Achievement => {
-  // 根据 paperType 数字映射到字符串类型
-  const typeMap: Record<number, Achievement['type']> = {
-    1: 'journal',    // 期刊
-    2: 'conference', // 会议
-    3: 'preprint',   // 预印本
-    4: 'patent',     // 专利
-    5: 'software',   // 软著
-    6: 'standard',   // 标准
-    7: 'monograph'   // 专著
+  // 使用categoryId直接映射到对应的分类
+  let type = 'other'
+  
+  // 如果有categoryId，则使用映射关系获取对应的分类代码
+  if (apiData.categoryId && categoryMap.value[apiData.categoryId]) {
+    type = categoryMap.value[apiData.categoryId]
   }
   
   // 从 publishDate 中提取年份
   const year = apiData.publishDate ? new Date(apiData.publishDate).getFullYear() : new Date().getFullYear()
   
+  // 查找分类名称
+  let categoryName = ''
+  if (apiData.categoryId) {
+    const category = achievementCategories.value.find(cat => cat.id === apiData.categoryId)
+    if (category) {
+      categoryName = category.categoryName
+    }
+  }
+  
   return {
     id: apiData.id,
     title: apiData.title,
     authors: apiData.authors ? apiData.authors.map(author => author.name) : [],
-    type: typeMap[apiData.paperType],
+    type: type,
     year: year,
     institution: apiData.venue || '', // venue 字段映射为 institution
-    published: apiData.published !== false, // 处理published字段
     githubUrl: apiData.gitUrl,
     projectUrl: apiData.linkUrl,
-    pdfUrl: apiData.pdfUrl
+    pdfUrl: apiData.pdfUrl,
+    reference: apiData.reference || '', // 添加reference字段
+    categoryId: apiData.categoryId || '', // 添加categoryId字段
+    categoryName: categoryName // 添加categoryName字段
+  }
+}
+
+// 加载成果分类
+const loadAchievementCategories = async () => {
+  try {
+    // 从新的接口获取成员分类数据
+    // const response = await fetch('http://10.157.134.211:8080/open/achievement-categories/children?parentId=1')
+    // const result = await response.json()
+    const result = await getAchievementCategoriesApi(1)
+    
+    // 检查响应格式并提取数据
+    if (result && result.code === 0 && result.data && Array.isArray(result.data)) {
+      // 保存分类数据，包含 id 和 categoryName
+      achievementCategories.value = result.data.map(category => ({
+        id: category.id,
+        categoryName: category.categoryName,
+        categoryCode: category.categoryCode || '',
+        sortOrder: category.sortOrder || 0,
+        color: category.color || 'primary'
+      }))
+      
+      // 创建分类代码到类型的映射（使用id作为键）
+      const newCategoryMap: Record<number, string> = {}
+      achievementCategories.value.forEach(category => {
+        newCategoryMap[category.id] = category.categoryCode ? category.categoryCode.toLowerCase() : 'other'
+      })
+      categoryMap.value = newCategoryMap
+    } else {
+      console.error('获取成果分类数据格式错误:', result)
+      ElMessage.error('获取成果分类数据格式错误')
+    }
+  } catch (error) {
+    console.error('加载成果分类失败:', error)
+    ElMessage.error('加载成果分类失败')
   }
 }
 
@@ -441,26 +396,36 @@ const convertApiDataToAchievement = (apiData: ApiAchievement): Achievement => {
 const loadAchievements = async () => {
   loading.value = true
   try {
-    const response = await getAchievementsListApi({ type: 1 })
-    if (response.code === 0 && response.data) {
-      // 显示所有成果
-      achievements.value = response.data.rows.map(convertApiDataToAchievement)
+    const response = await getAchievementsListApi()
+    if (response.code === 0 && response.data?.rows) {
+      // 获取有效的分类ID列表
+      const validCategoryIds = achievementCategories.value.map(category => category.id)
+      
+      // 筛选出属于有效分类的成果数据
+      const filteredAchievements = response.data.rows.filter(achievement => {
+        return validCategoryIds.includes(Number(achievement.categoryId))
+      })
+      
+      // 转换数据格式
+      achievements.value = filteredAchievements.map(convertApiDataToAchievement)
     } else {
       ElMessage.error('获取成果数据失败')
       achievements.value = []
     }
   } catch (error) {
-     console.error('加载成果数据失败:', error)
-     ElMessage.error('网络错误，请稍后重试')
-     achievements.value = []
-   } finally {
-     loading.value = false
-   }
+    console.error('加载成果数据失败:', error)
+    ElMessage.error('网络错误，请稍后重试')
+    achievements.value = []
+  } finally {
+    loading.value = false
+  }
 }
 
 // 生命周期
-onMounted(() => {
-  loadAchievements()
+onMounted(async () => {
+  // 先加载成果分类，再加载成果数据
+  await loadAchievementCategories()
+  await loadAchievements()
   window.addEventListener('resize', updateScreenWidth)
 })
 
@@ -691,42 +656,10 @@ onUnmounted(() => {
   font-size: 14px;
 }
 
-.achievement-authors {
-  color: #2c3e50;
-  font-weight: 400;
+.achievement-reference {
+  color: #374151;
   font-size: 14px;
-}
-
-.achievement-title {
-  color: #2c3e50;
-  font-weight: 600;
-  font-size: 14px;
-}
-
-.achievement-journal {
-  color: #34495e;
-  font-style: italic;
-  font-weight: 400;
-  font-size: 14px;
-}
-
-.achievement-year {
-  color: #2c3e50;
-  font-weight: 400;
-  font-size: 14px;
-}
-
-.achievement-institution {
-  color: #34495e;
-  font-style: italic;
-  font-weight: 400;
-  font-size: 14px;
-}
-
-.achievement-separator {
-  color: #2c3e50;
-  margin: 0 3px;
-  font-weight: 400;
+  line-height: 1.6;
 }
 
 .pagination {
@@ -909,10 +842,7 @@ onUnmounted(() => {
     font-size: 13px;
   }
   
-  .achievement-authors,
-  .achievement-title,
-  .achievement-institution,
-  .achievement-year {
+  .achievement-reference {
     font-size: 13px;
   }
   
@@ -957,10 +887,7 @@ onUnmounted(() => {
     font-size: 12px;
   }
   
-  .achievement-authors,
-  .achievement-title,
-  .achievement-institution,
-  .achievement-year {
+  .achievement-reference {
     font-size: 12px;
   }
   

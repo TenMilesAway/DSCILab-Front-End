@@ -224,6 +224,8 @@ export interface PublicAchievementDTO {
   paperTypeDesc: string | null;
   projectType: number | null;
   projectTypeDesc: string | null;
+  categoryId: number | null;
+  categoryDesc: string | null;
   venue: string | null;
   publishDate: string | null; // 论文：YYYY；项目：null
   projectStartDate: string | null; // 项目：YYYY-MM；论文：null

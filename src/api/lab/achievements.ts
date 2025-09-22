@@ -6,25 +6,43 @@ import { http } from "@/utils/http";
 export interface ApiAchievement {
   id: number;
   title: string;
-  paperType?: number;
-  description?: string;
-  publishDate?: string;
+  titleEn?: string | null;
+  description?: string | null;
+  keywords?: string | null;
+  type?: 1 | 2;
+  typeDesc?: string; // "论文"/"项目"
+  paperType?: number | null;
+  paperTypeDesc?: string | null;
+  projectType?: number | null;
+  projectTypeDesc?: string | null;
+  categoryId?: number | null;
+  categoryDesc?: string | null;
+  venue?: string | null;
+  publishDate?: string | null; // 论文：YYYY；项目：null
+  projectStartDate?: string | null; // 项目：YYYY-MM；论文：null
+  projectEndDate?: string | null; // 项目：YYYY-MM；论文：null
+  reference?: string | null;
+  linkUrl?: string | null;
+  gitUrl?: string | null;
+  homepageUrl?: string | null;
+  pdfUrl?: string | null;
+  doi?: string | null;
+  fundingAmount?: number | null;
   authors?: Array<{
     name: string;
-    visible: boolean;
-    userId?: number;
-    authorOrder?: number;
-    isCorresponding?: boolean;
-  }>;
+    nameEn?: string | null;
+    affiliation?: string | null;
+    authorOrder: number;
+    isCorresponding: boolean;
+    role?: string | null;
+  }>; // 仅详情接口返回
+  extra?: string | object | null;
+  createTime?: string;
+  // 保留原有字段以兼容现有代码
   journal?: string;
-  venue?: string;
-  doi?: string;
   tags?: string[];
   status?: number;
   published?: boolean;
-  gitUrl?: string;
-  linkUrl?: string;
-  pdfUrl?: string;
 }
 
 /**

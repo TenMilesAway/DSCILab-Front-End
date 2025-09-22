@@ -13,29 +13,12 @@
         <el-menu-item index="all">
           <span>全部项目</span>
         </el-menu-item>
-        <el-menu-item index="nsfc_general">
-          <span>国自然面上</span>
-        </el-menu-item>
-        <el-menu-item index="nsfc_youth">
-          <span>国自然青年</span>
-        </el-menu-item>
-        <el-menu-item index="beijing_edu">
-          <span>北京市教委科技一般</span>
-        </el-menu-item>
-        <el-menu-item index="national_edu_reform">
-          <span>国家级教改</span>
-        </el-menu-item>
-        <el-menu-item index="provincial_edu_reform">
-          <span>省部级教改</span>
-        </el-menu-item>
-        <el-menu-item index="other_edu_reform">
-          <span>其它教改</span>
-        </el-menu-item>
-        <el-menu-item index="horizontal">
-          <span>横向</span>
-        </el-menu-item>
-        <el-menu-item index="other_vertical">
-          <span>其它纵向</span>
+        <el-menu-item 
+          v-for="category in projectCategories" 
+          :key="category.id"
+          :index="category.categoryCode"
+        >
+          <span>{{ category.categoryName }}</span>
         </el-menu-item>
       </el-menu>
     </div>
@@ -104,14 +87,18 @@
               </el-tag>
             </div>
             <div class="project-content">
-              <span class="project-title">{{ project.title }}</span>
-              <span class="project-separator">,</span>
-              <span class="project-leader">负责人：{{ project.leader }}</span>
-              <span class="project-separator">,</span>
-              <span class="project-funding">经费 {{ project.fundingAmount && project.fundingAmount !== `0` ? project.fundingAmount + ' 万元' : '未知金额' }}</span>
-              <span class="project-separator">,</span>
-              <span class="project-year">{{ project.startYear }}-{{ project.endYear }}</span>
-              <span class="project-separator">.</span>
+              <span 
+                v-if="project.reference" 
+                class="project-reference"
+              >
+                {{ project.reference }}
+              </span>
+              <span 
+                v-else 
+                class="project-reference"
+              >
+                暂无引用信息
+              </span>
             </div>
           </div>
         </div>
@@ -138,6 +125,7 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { Search } from '@element-plus/icons-vue'
 import { getProjectsListApi, type ApiProject } from '@/api/lab/projects'
+import { getProjectCategoriesApi, type ProjectCategoryDTO } from '@/api/lab/projectCategory'
 import { ElMessage } from 'element-plus'
 
 // 项目类型定义
@@ -145,11 +133,14 @@ interface Project {
   id: number
   title: string
   leader: string
-  type: 'horizontal' | 'nsfc_general' | 'nsfc_youth' | 'other_vertical' | 'beijing_edu' | 'national_edu_reform' | 'provincial_edu_reform' | 'other_edu_reform'
+  type: string
   fundingAmount: string
   startYear: number
   endYear: number
   published: boolean
+  reference?: string
+  categoryId?: number
+  categoryName?: string
 }
 
 // 数据转换函数
@@ -173,6 +164,15 @@ const convertApiDataToProject = (apiData: ApiProject): Project => {
   const startYear = apiData.projectStartDate ? new Date(apiData.projectStartDate).getFullYear() : new Date().getFullYear()
   const endYear = apiData.projectEndDate ? new Date(apiData.projectEndDate).getFullYear() : new Date().getFullYear()
   
+  // 动态获取项目分类名称
+  let categoryName = ''
+  if (apiData.categoryId) {
+    const category = projectCategories.value.find(cat => cat.id === apiData.categoryId)
+    if (category) {
+      categoryName = category.categoryName
+    }
+  }
+  
   return {
     id: apiData.id,
     title: apiData.title,
@@ -181,7 +181,10 @@ const convertApiDataToProject = (apiData: ApiProject): Project => {
     fundingAmount: apiData.fundingAmount || '0',
     startYear: startYear,
     endYear: endYear,
-    published: apiData.published || false
+    published: apiData.published || false,
+    reference: apiData.reference || '',
+    categoryId: apiData.categoryId, // 添加categoryId字段
+    categoryName: categoryName // 添加categoryName字段
   }
 }
 
@@ -193,6 +196,24 @@ const searchKeyword = ref('')
 const currentPage = ref(1)
 const pageSize = ref(20)
 const projects = ref<Project[]>([])
+
+// 项目分类数据
+const projectCategories = ref<ProjectCategoryDTO[]>([])
+
+// 加载项目分类数据
+const loadProjectCategories = async () => {
+  try {
+    const response = await getProjectCategoriesApi(2) // 获取parentId=2的项目分类数据
+    if (response.code === 0 && response.data && response.data.length > 0) {
+      // 按sortOrder排序
+      const sortedCategories = [...response.data].sort((a, b) => a.sortOrder - b.sortOrder)
+      projectCategories.value = sortedCategories
+    }
+  } catch (error) {
+    console.error('加载项目分类失败:', error)
+    ElMessage.error('加载项目分类失败')
+  }
+}
 
 // 响应式屏幕尺寸检测
 const screenWidth = ref(window.innerWidth)
@@ -227,7 +248,12 @@ const filteredProjects = computed(() => {
 
   // 按分类筛选
   if (activeCategory.value !== 'all') {
-    filtered = filtered.filter(item => item.type === activeCategory.value)
+    // 使用categoryId进行筛选，而不是type
+    filtered = filtered.filter(item => {
+      // 查找对应的分类
+      const category = projectCategories.value.find(cat => cat.categoryCode === activeCategory.value)
+      return category && item.categoryId === category.id
+    })
   }
 
   // 按年份筛选
@@ -258,18 +284,15 @@ const paginatedProjects = computed(() => {
 
 // 方法
 const getCategoryTitle = (category: string) => {
-  const titles = {
-    all: '全部项目',
-    horizontal: '横向项目',
-    nsfc_general: '国自然面上项目',
-    nsfc_youth: '国自然青年项目',
-    other_vertical: '其它纵向项目',
-    beijing_edu: '北京市教委科技一般项目',
-    national_edu_reform: '国家级教改项目',
-    provincial_edu_reform: '省部级教改项目',
-    other_edu_reform: '其它教改项目'
+  if (category === 'all') {
+    return '全部项目'
   }
-  return titles[category] || '全部项目'
+  
+  // 查找对应的分类名称，使用 categoryCode 进行匹配
+  const foundCategory = projectCategories.value.find(
+    item => item.categoryCode === category
+  )
+  return foundCategory ? foundCategory.categoryName : '全部项目'
 }
 
 const getTypeLabel = (type: string) => {
@@ -331,10 +354,22 @@ const handleCurrentChange = (val: number) => {
 const loadProjects = async () => {
   loading.value = true
   try {
-    const response = await getProjectsListApi({ type: 2 })
+    const response = await getProjectsListApi()
     if (response.code === 0 && response.data?.rows) {
-      // 显示所有项目
-      projects.value = response.data.rows.map(convertApiDataToProject)
+      // 获取有效的分类ID列表
+      const validCategoryIds = projectCategories.value.map(category => category.id)
+      
+      // 先按有效分类ID筛选，再转换数据
+      const filteredProjects = response.data.rows.filter(project => {
+        // 如果项目有categoryId，检查是否在有效分类列表中
+        if (project.categoryId) {
+          return validCategoryIds.includes(Number(project.categoryId))
+        }
+        // 如果没有categoryId，暂时保留（可根据需要调整）
+        return true
+      })
+      
+      projects.value = filteredProjects.map(convertApiDataToProject)
     } else {
       ElMessage.error('获取项目数据失败')
       projects.value = []
@@ -349,7 +384,9 @@ const loadProjects = async () => {
 }
 
 // 生命周期
-onMounted(() => {
+onMounted(async () => {
+  // 先加载项目分类数据，再加载项目数据
+  await loadProjectCategories()
   loadProjects()
   window.addEventListener('resize', updateScreenWidth)
 })
