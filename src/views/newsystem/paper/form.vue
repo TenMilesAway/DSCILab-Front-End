@@ -28,7 +28,7 @@ interface FormInlineData {
   publishDate?: string; // 发表日期
   projectStartDate?: string; // 项目开始日期（项目）
   projectEndDate?: string; // 项目结束日期（项目）
-  doi?: string; // DOI
+  doi?: string; // 编号（DOI、专利号、软著登记号等）
 
   githubUrl?: string; // GitHub链接（项目）
   published?: boolean; // 发表状态：论文是否发表/项目是否结项
@@ -498,7 +498,7 @@ defineExpose({ getFormRuleRef });
           <el-input
             v-model="newFormInline.doi"
             clearable
-            :placeholder="newFormInline.achievementType === 'paper' ? '请输入论文doi或专利、软著等编号' : '请输入相关编号'"
+            placeholder="请输入相关编号（如DOI、专利号、软著登记号等）"
           />
         </el-form-item>
       </re-col>

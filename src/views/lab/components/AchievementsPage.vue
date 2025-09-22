@@ -446,22 +446,30 @@ const convertApiDataToAchievement = (apiData: PublicAchievementDTO): Achievement
 // 加载成果分类
 const loadAchievementCategories = async () => {
   try {
-    const response = await getAchievementCategoriesApi(1) // 获取id=1的成果分类数据
-    if (response.code === 0 && response.data && response.data.length > 0) {
-      // 找到id=1的分类
-      const paperCategory = response.data.find(item => item.id === 1)
-      if (paperCategory && paperCategory.children && paperCategory.children.length > 0) {
-        // 按sortOrder排序
-        const sortedCategories = [...paperCategory.children].sort((a, b) => a.sortOrder - b.sortOrder)
-        achievementCategories.value = sortedCategories
-        
-        // 创建分类代码到类型的映射（使用id作为键）
-        const newCategoryMap: Record<number, string> = {}
-        sortedCategories.forEach(category => {
-          newCategoryMap[category.id] = category.categoryCode.toLowerCase()
-        })
-        categoryMap.value = newCategoryMap
-      }
+    // 从新的接口获取成员分类数据
+    const response = await fetch('http://10.157.134.211:8080/open/achievement-categories/children?parentId=1')
+    const result = await response.json()
+    
+    // 检查响应格式并提取数据
+    if (result && result.code === 0 && result.data && Array.isArray(result.data)) {
+      // 保存分类数据，包含 id 和 categoryName
+      achievementCategories.value = result.data.map(category => ({
+        id: category.id,
+        categoryName: category.categoryName,
+        categoryCode: category.categoryCode || '',
+        sortOrder: category.sortOrder || 0,
+        color: category.color || 'primary'
+      }))
+      
+      // 创建分类代码到类型的映射（使用id作为键）
+      const newCategoryMap: Record<number, string> = {}
+      achievementCategories.value.forEach(category => {
+        newCategoryMap[category.id] = category.categoryCode ? category.categoryCode.toLowerCase() : 'other'
+      })
+      categoryMap.value = newCategoryMap
+    } else {
+      console.error('获取成果分类数据格式错误:', result)
+      ElMessage.error('获取成果分类数据格式错误')
     }
   } catch (error) {
     console.error('加载成果分类失败:', error)
@@ -473,12 +481,41 @@ const loadAchievementCategories = async () => {
 const loadAchievements = async () => {
   loading.value = true
   try {
-    const response = await getPublicAchievementsApi({ type: 1 })
-    if (response.code === 0 && response.data) {
-      // 显示所有成果
-      achievements.value = response.data.rows.map(convertApiDataToAchievement)
+    // 从新的接口获取所有成果数据
+    const response = await fetch('http://10.157.134.211:8080/open/achievements')
+    const result = await response.json()
+    
+    // 检查响应格式并提取数据
+    if (result && result.code === 0 && result.data) {
+      let achievementsData = []
+      
+      // 处理不同的数据结构
+      if (Array.isArray(result.data)) {
+        achievementsData = result.data
+      } else if (result.data.rows && Array.isArray(result.data.rows)) {
+        achievementsData = result.data.rows
+      } else if (result.data.list && Array.isArray(result.data.list)) {
+        achievementsData = result.data.list
+      } else {
+        console.error('无法识别的成果数据结构:', result.data)
+        ElMessage.error('成果数据结构不正确')
+        achievements.value = []
+        return
+      }
+      
+      // 获取有效的分类ID数组
+      const validCategoryIds = achievementCategories.value.map(category => category.id)
+      
+      // 筛选出categoryId存在于分类数组中的成果数据
+      const filteredData = achievementsData.filter(achievement => {
+        return achievement.categoryId && validCategoryIds.includes(achievement.categoryId)
+      })
+      
+      // 转换数据格式
+      achievements.value = filteredData.map(convertApiDataToAchievement)
     } else {
-      ElMessage.error('获取成果数据失败')
+      console.error('获取成果数据格式错误:', result)
+      ElMessage.error('获取成果数据格式错误')
       achievements.value = []
     }
   } catch (error) {
