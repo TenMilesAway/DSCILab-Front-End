@@ -264,7 +264,7 @@ export function useHook() {
         ? row.authors.map((author, index) => ({
           userId: author.userId || null,
           name: author.name,
-          nameEn: author.nameEn || null,
+          email: author.email || null,
           authorOrder: index + 1,
           isCorresponding: author.isCorresponding || false,
           visible: author.visible !== false
@@ -273,7 +273,7 @@ export function useHook() {
           {
             userId: null,
             name: "",
-            nameEn: null,
+            email: null,
             authorOrder: 1,
             isCorresponding: true,
             visible: true
@@ -364,20 +364,12 @@ export function useHook() {
               visible: author.visible
             };
 
-            // 论文类型包含所有字段，项目类型只包含基础字段
-            if (formData.achievementType === "paper") {
-              return {
-                ...baseAuthor,
-                nameEn: author.nameEn?.trim() || null,
-                isCorresponding: author.isCorresponding
-              };
-            } else {
-              return {
-                ...baseAuthor,
-                nameEn: null,
-                isCorresponding: false
-              };
-            }
+            // 所有类型都包含邮箱字段
+            return {
+              ...baseAuthor,
+              email: author.email?.trim() || null,
+              isCorresponding: formData.achievementType === "paper" ? author.isCorresponding : false
+            };
           });
 
         const curData: CreateAchievementRequest | UpdateAchievementRequest = {
@@ -459,7 +451,7 @@ export function useHook() {
         type: searchFormParams.type,
         paperType: searchFormParams.paperType,
         projectType: searchFormParams.projectType,
-        categoryId: searchFormParams.categoryId,
+        categoryId: searchFormParams.type, // 将type字段映射到categoryId参数
         published: searchFormParams.published,
         isVerified: searchFormParams.isVerified,
         dateStart: searchFormParams.dateStart,
