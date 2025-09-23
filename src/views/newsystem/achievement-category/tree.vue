@@ -58,8 +58,29 @@
               >
                 系统
               </el-tag>
+              <span class="sort-number">{{ data.sortOrder }}</span>
             </div>
             <div class="node-actions">
+              <el-button
+                link
+                type="info"
+                size="small"
+                @click.stop="moveUp(data)"
+                :disabled="data.isSystem || !canMoveUp(data)"
+                title="上移"
+              >
+                ↑
+              </el-button>
+              <el-button
+                link
+                type="info"
+                size="small"
+                @click.stop="moveDown(data)"
+                :disabled="data.isSystem || !canMoveDown(data)"
+                title="下移"
+              >
+                ↓
+              </el-button>
               <el-button
                 link
                 type="primary"
@@ -199,6 +220,8 @@ import {
 
 import AddFill from "@iconify-icons/ri/add-circle-line";
 import Refresh from "@iconify-icons/ep/refresh";
+import ArrowUp from "@iconify-icons/ri/arrow-up-s-line";
+import ArrowDown from "@iconify-icons/ri/arrow-down-s-line";
 
 defineOptions({
   name: "AchievementCategoryTree"
@@ -408,6 +431,93 @@ const toggleStatus = async (row: LabAchievementCategoryDTO) => {
   }
 };
 
+// 获取同级别的所有节点
+const getSiblings = (targetNode: LabAchievementCategoryDTO): LabAchievementCategoryDTO[] => {
+  if (!targetNode.parentId) {
+    // 一级类型，获取所有一级类型
+    return treeData.value.filter(item => !item.parentId);
+  } else {
+    // 二级类型，获取同一父级下的所有二级类型
+    const parent = findNodeById(treeData.value, targetNode.parentId);
+    return parent?.children || [];
+  }
+};
+
+// 根据ID查找节点
+const findNodeById = (nodes: LabAchievementCategoryDTO[], id: number): LabAchievementCategoryDTO | null => {
+  for (const node of nodes) {
+    if (node.id === id) {
+      return node;
+    }
+    if (node.children) {
+      const found = findNodeById(node.children, id);
+      if (found) return found;
+    }
+  }
+  return null;
+};
+
+// 判断是否可以上移
+const canMoveUp = (node: LabAchievementCategoryDTO): boolean => {
+  const siblings = getSiblings(node);
+  const sortedSiblings = siblings.sort((a, b) => a.sortOrder - b.sortOrder);
+  return sortedSiblings.indexOf(node) > 0;
+};
+
+// 判断是否可以下移
+const canMoveDown = (node: LabAchievementCategoryDTO): boolean => {
+  const siblings = getSiblings(node);
+  const sortedSiblings = siblings.sort((a, b) => a.sortOrder - b.sortOrder);
+  return sortedSiblings.indexOf(node) < sortedSiblings.length - 1;
+};
+
+// 上移节点
+const moveUp = async (node: LabAchievementCategoryDTO) => {
+  if (!canMoveUp(node)) return;
+  
+  const siblings = getSiblings(node);
+  const sortedSiblings = siblings.sort((a, b) => a.sortOrder - b.sortOrder);
+  const currentIndex = sortedSiblings.indexOf(node);
+  
+  if (currentIndex > 0) {
+    const prevNode = sortedSiblings[currentIndex - 1];
+    // 交换排序号
+    const tempSortOrder = node.sortOrder;
+    await updateNodeSortOrder(node.id, prevNode.sortOrder);
+    await updateNodeSortOrder(prevNode.id, tempSortOrder);
+  }
+};
+
+// 下移节点
+const moveDown = async (node: LabAchievementCategoryDTO) => {
+  if (!canMoveDown(node)) return;
+  
+  const siblings = getSiblings(node);
+  const sortedSiblings = siblings.sort((a, b) => a.sortOrder - b.sortOrder);
+  const currentIndex = sortedSiblings.indexOf(node);
+  
+  if (currentIndex < sortedSiblings.length - 1) {
+    const nextNode = sortedSiblings[currentIndex + 1];
+    // 交换排序号
+    const tempSortOrder = node.sortOrder;
+    await updateNodeSortOrder(node.id, nextNode.sortOrder);
+    await updateNodeSortOrder(nextNode.id, tempSortOrder);
+  }
+};
+
+// 更新节点排序号
+const updateNodeSortOrder = async (id: number, sortOrder: number) => {
+  try {
+    await updateCategoryApi(id, { sortOrder });
+    ElMessage.success("排序更新成功");
+    getTreeData(); // 刷新数据
+  } catch (error) {
+    console.error("排序更新失败:", error);
+    ElMessage.error("排序更新失败");
+    throw error;
+  }
+};
+
 // 初始化
 onMounted(() => {
   getTreeData();
@@ -461,6 +571,20 @@ onMounted(() => {
   flex: 1;
 }
 
+.sort-number {
+  margin-left: auto;
+  margin-right: 8px;
+  font-size: 14px;
+  color: #999;
+  font-weight: 500;
+  min-width: 20px;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
 .node-icon {
   margin-right: 8px;
   color: var(--el-color-primary);
@@ -472,8 +596,31 @@ onMounted(() => {
 
 .node-actions {
   display: flex;
-  gap: 8px;
+  gap: 4px;
   opacity: 0;
   transition: opacity 0.2s;
+  
+  .el-button {
+    padding: 4px 6px;
+    
+    &.is-disabled {
+      opacity: 0.3;
+    }
+    
+    &[title="上移"], &[title="下移"] {
+        opacity: 1 !important;
+        font-size: 16px;
+        font-weight: bold;
+        color: var(--el-color-info);
+        
+        &:hover {
+          color: var(--el-color-info-dark-2);
+        }
+        
+        &.is-disabled {
+          opacity: 0.3 !important;
+        }
+      }
+  }
 }
 </style>

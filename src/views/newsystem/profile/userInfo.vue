@@ -249,7 +249,6 @@ function submit() {
       >
         <!-- 管理员显示所有选项 -->
         <template v-if="props.user.identity === 1">
-          <el-option label="实验室负责人" :value="0" />
           <el-option label="教授" :value="1" />
           <el-option label="副教授" :value="2" />
           <el-option label="讲师" :value="3" />
@@ -263,9 +262,8 @@ function submit() {
           <el-option label="硕士研究生" :value="5" />
           <el-option label="本科生" :value="6" />
         </template>
-        <!-- 教师只能选择实验室负责人、教授副教授讲师 -->
+        <!-- 教师只能选择教授副教授讲师 -->
         <template v-else-if="props.user.identity === 2">
-          <el-option label="实验室负责人" :value="0" />
           <el-option label="教授" :value="1" />
           <el-option label="副教授" :value="2" />
           <el-option label="讲师" :value="3" />
