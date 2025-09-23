@@ -79,11 +79,11 @@
             <div class="project-header">
               <span class="project-number">{{ (currentPage - 1) * pageSize + index + 1 }}.</span>
               <el-tag 
-                :type="getTypeTagType(project.type)" 
+                :type="getTypeTagType(project)" 
                 size="small" 
                 class="project-type-tag"
               >
-                {{ getTypeLabel(project.type) }}
+                {{ getTypeLabel(project) }}
               </el-tag>
             </div>
             <div class="project-content">
@@ -133,7 +133,6 @@ interface Project {
   id: number
   title: string
   leader: string
-  type: string
   fundingAmount: string
   startYear: number
   endYear: number
@@ -145,18 +144,6 @@ interface Project {
 
 // 数据转换函数
 const convertApiDataToProject = (apiData: ApiProject): Project => {
-  // 根据 projectType 数字映射到字符串类型
-  const typeMap: Record<number, Project['type']> = {
-    1: 'horizontal',            // 横向
-    2: 'nsfc_general',          // 国自然面上
-    3: 'nsfc_youth',            // 国自然青年
-    4: 'beijing_edu',           // 北京市教委科技一般
-    5: 'national_edu_reform',   // 国家级教改
-    6: 'provincial_edu_reform', // 省部级教改
-    7: 'other_edu_reform',      // 其他教改
-    8: 'other_vertical'         // 其他纵向
-  }
-  
   // 找到 authorOrder 为 1 的负责人
   const leader = apiData.authors?.find(author => author.authorOrder === 1)?.name || '未知'
   
@@ -177,7 +164,6 @@ const convertApiDataToProject = (apiData: ApiProject): Project => {
     id: apiData.id,
     title: apiData.title,
     leader: leader,
-    type: typeMap[apiData.projectType] || 'horizontal',
     fundingAmount: apiData.fundingAmount || '0',
     startYear: startYear,
     endYear: endYear,
@@ -295,32 +281,26 @@ const getCategoryTitle = (category: string) => {
   return foundCategory ? foundCategory.categoryName : '全部项目'
 }
 
-const getTypeLabel = (type: string) => {
-  const labels = {
-    horizontal: '横向',
-    nsfc_general: '国自然面上',
-    nsfc_youth: '国自然青年',
-    other_vertical: '其它纵向',
-    beijing_edu: '北京市教委科技一般',
-    national_edu_reform: '国家级教改',
-    provincial_edu_reform: '省部级教改',
-    other_edu_reform: '其它教改'
+const getTypeLabel = (project: any) => {
+  // 通过 categoryId 查找对应的分类名称
+  if (project && project.categoryId) {
+    const foundCategory = projectCategories.value.find(
+      category => category.id === project.categoryId
+    )
+    return foundCategory ? foundCategory.categoryName : "其他"
   }
-  return labels[type] || type
+  return "其他"
 }
 
-const getTypeTagType = (type: string) => {
-  const types = {
-    horizontal: 'warning',
-    nsfc_general: 'danger',
-    nsfc_youth: 'primary',
-    other_vertical: 'info',
-    beijing_edu: 'success',
-    national_edu_reform: '',
-    provincial_edu_reform: 'primary',
-    other_edu_reform: 'info'
+const getTypeTagType = (project: any) => {
+  // 通过 categoryId 查找对应的分类颜色
+  if (project && project.categoryId) {
+    const foundCategory = projectCategories.value.find(
+      category => category.id === project.categoryId
+    )
+    return foundCategory ? foundCategory.color || "info" : "info"
   }
-  return types[type] || ''
+  return "info"
 }
 
 const getStatusLabel = (published: boolean) => {
