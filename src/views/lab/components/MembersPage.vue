@@ -65,7 +65,7 @@ const props = withDefaults(defineProps<Props>(), {
   subtitle: "我们拥有一支专业的研究团队"
 });
 
-const activeCategory = ref<string>("directors"); // 默认选中负责人
+const activeCategory = ref<string>("teachers"); // 默认选中教师
 const searchKeyword = ref<string>(""); // 搜索关键词
 
 // 获取实际使用的成员数据
@@ -95,7 +95,6 @@ const getAcademicStatusTitle = (
   enrollmentYear?: number
 ): string => {
   const statusMap: Record<number, string> = {
-    0: "实验室负责人",
     1: "教授",
     2: "副教授",
     3: "讲师",
@@ -104,7 +103,7 @@ const getAcademicStatusTitle = (
     6: "本科生"
   };
 
-  if (academicStatus === null) return "其他";
+  if (academicStatus === null || academicStatus === undefined) return "其他";
 
   const baseTitle = statusMap[academicStatus] || "其他";
 
@@ -128,7 +127,6 @@ const getTitleColor = (academicStatus: number | null, hasGraduation: boolean): s
 
   // 根据职级层次设置颜色，从深到浅
   const colorMap: Record<number, string> = {
-    0: "#8b0000", // 实验室负责人 - 深红色
     1: "#dc2626", // 教授 - 红色
     2: "#ea580c", // 副教授 - 橙红色
     3: "#d97706", // 讲师 - 橙色
@@ -156,11 +154,10 @@ const getCategoryByAcademicStatus = (
 
   switch (academicStatus) {
     case 0:
-      return "directors"; // 实验室负责人
     case 1:
     case 2:
     case 3:
-      return "teachers"; // 教授、副教授、讲师
+      return "teachers"; // 实验室负责人、教授、副教授、讲师
     case 4:
       return "phd_students"; // 博士生
     case 5:
@@ -208,7 +205,8 @@ const fetchMembersFromApi = async () => {
               : undefined,
           category,
           originalTitle: title,
-          academicStatus: user.academicStatus
+          academicStatus: user.academicStatus,
+          graduationYear: user.graduationYear
         };
       });
 
@@ -231,7 +229,6 @@ const fetchMembersFromApi = async () => {
 
 // 分类配置
 const categories = [
-  { key: "directors", name: "负责人" },
   { key: "teachers", name: "教师" },
   { key: "phd_students", name: "博士生" },
   { key: "master_students", name: "硕士生" },
@@ -258,6 +255,25 @@ const currentCategoryMembers = computed(() => {
         member.title.toLowerCase().includes(keyword) ||
         (member.graduation && member.graduation.toLowerCase().includes(keyword))
     );
+  }
+
+  // 对已毕业学生按毕业年份从近到远排序
+  if (activeCategory.value === "graduates") {
+    filteredMembers.sort((a, b) => {
+      // 如果有毕业年份，按年份降序排列（从近到远）
+      if (a.graduationYear && b.graduationYear) {
+        return b.graduationYear - a.graduationYear;
+      }
+      // 如果只有一个有毕业年份，有年份的排在前面
+      if (a.graduationYear && !b.graduationYear) {
+        return -1;
+      }
+      if (!a.graduationYear && b.graduationYear) {
+        return 1;
+      }
+      // 如果都没有毕业年份，按姓名排序
+      return a.name.localeCompare(b.name);
+    });
   }
 
   return filteredMembers;
