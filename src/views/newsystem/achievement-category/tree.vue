@@ -31,9 +31,12 @@
         :props="treeProps"
         :expand-on-click-node="false"
         :highlight-current="true"
+        :default-expanded-keys="expandedKeys"
         node-key="id"
         class="category-tree"
         @node-click="handleNodeClick"
+        @node-expand="handleNodeExpand"
+        @node-collapse="handleNodeCollapse"
       >
         <template #default="{ node, data }">
           <div class="tree-node">
@@ -204,7 +207,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, computed } from "vue";
+import { ref, reactive, onMounted, computed, nextTick } from "vue";
 import { ElMessage } from "element-plus";
 import { useRenderIcon } from "@/components/ReIcon/src/hooks";
 import {
@@ -231,6 +234,9 @@ defineOptions({
 const treeRef = ref();
 const treeData = ref<LabAchievementCategoryDTO[]>([]);
 const selectedParentId = ref<number | null>(null);
+
+// 展开状态管理
+const expandedKeys = ref<number[]>([]);
 
 // 树形配置
 const treeProps = {
@@ -293,6 +299,33 @@ const getTreeData = async () => {
   } catch (error) {
     console.error("获取树形数据失败:", error);
     ElMessage.error("获取数据失败");
+  }
+};
+
+// 保存当前展开状态（简化版本）
+const saveExpandedState = () => {
+  // expandedKeys已经通过事件监听实时维护，无需额外操作
+  console.log('保存展开状态:', expandedKeys.value);
+};
+
+// 恢复展开状态（简化版本）
+const restoreExpandedState = () => {
+  // 由于使用了:default-expanded-keys绑定，数据更新后会自动恢复
+  console.log('展开状态将自动恢复:', expandedKeys.value);
+};
+
+// 处理节点展开事件
+const handleNodeExpand = (data: LabAchievementCategoryDTO) => {
+  if (!expandedKeys.value.includes(data.id)) {
+    expandedKeys.value.push(data.id);
+  }
+};
+
+// 处理节点折叠事件
+const handleNodeCollapse = (data: LabAchievementCategoryDTO) => {
+  const index = expandedKeys.value.indexOf(data.id);
+  if (index > -1) {
+    expandedKeys.value.splice(index, 1);
   }
 };
 
@@ -407,7 +440,7 @@ const handleSubmit = async () => {
   }
 };
 
-// 删除
+// 删除分类
 const handleDelete = async (row: LabAchievementCategoryDTO) => {
   try {
     await deleteCategoryApi(row.id);
