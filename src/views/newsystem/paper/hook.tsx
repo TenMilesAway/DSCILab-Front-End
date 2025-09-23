@@ -7,7 +7,7 @@ import { useRenderIcon } from "@/components/ReIcon/src/hooks";
 import Delete from "@iconify-icons/ep/delete";
 import EditPen from "@iconify-icons/ep/edit-pen";
 import { useUserStoreHook } from "@/store/modules/user";
-import { getCategoryTreeApi, type LabAchievementCategoryDTO } from "@/api/newsystem/achievement-category";
+import { getDictCategoryTreeApi, type LabAchievementCategoryDTO } from "@/api/newsystem/achievement-category";
 
 import {
   getAchievementListApi,
@@ -18,6 +18,7 @@ import {
   toggleMyAchievementVisibilityApi,
   type AchievementListQuery,
   type MyAchievementQuery,
+  type MyAchievementExtendedQuery,
   type LabAchievementDTO,
   type CreateAchievementRequest,
   type UpdateAchievementRequest
@@ -27,15 +28,20 @@ import {
 // AchievementListQuery, LabAchievementDTO, CreateAchievementRequest, UpdateAchievementRequest
 
 export function useHook() {
-  const searchFormParams = reactive<AchievementListQuery>({
+  const searchFormParams = reactive<MyAchievementExtendedQuery>({
     pageNum: 1,
     pageSize: 10,
     keyword: undefined,
     type: undefined,
+    paperType: undefined,
+    projectType: undefined,
     published: undefined,
+    isVerified: undefined,
     dateStart: undefined,
     dateEnd: undefined,
-    categoryId: undefined
+    categoryId: undefined,
+    ownerName: undefined,
+    authorName: undefined
   });
 
   const formRef = ref();
@@ -54,7 +60,7 @@ export function useHook() {
   // 获取成果类型映射
   const loadCategoryMap = async () => {
     try {
-      const response = await getCategoryTreeApi(false);
+      const response = await getDictCategoryTreeApi();
       if (response.code === 0) {
         const map = new Map<number, string>();
         response.data.forEach(category => {
@@ -122,25 +128,15 @@ export function useHook() {
       prop: "timeDisplay",
       minWidth: 100,
       cellRenderer: ({ row }) => {
-        if (row.type === 2) {
-          // 项目显示年月
-          if (row.projectStartDate) {
-            const date = new Date(row.projectStartDate);
-            return `${date.getFullYear()}-${String(
-              date.getMonth() + 1
-            ).padStart(2, "0")}`;
-          }
-          return "-";
-        } else {
-          // 论文显示年份
-          if (row.publishYear) {
-            return row.publishYear;
-          } else if (row.publishDate) {
-            const date = new Date(row.publishDate);
-            return date.getFullYear().toString();
-          }
-          return "-";
+        // 统一逻辑：优先显示publishDate提取的年份，如果没有，使用projectStartDate提取的年份
+        if (row.publishDate) {
+          const date = new Date(row.publishDate);
+          return date.getFullYear().toString();
+        } else if (row.projectStartDate) {
+          const date = new Date(row.projectStartDate);
+          return date.getFullYear().toString();
         }
+        return "-";
       }
     },
     {
@@ -292,15 +288,40 @@ export function useHook() {
           title: row?.title ?? "",
           authors: authors,
           journal: row?.venue ?? "",
-          publishDate: row?.type === 1
-            ? // 论文类型：使用publishDate提取年份
-            row?.publishDate
-              ? new Date(row.publishDate).getFullYear().toString()
-              : ""
-            : // 项目类型：使用projectStartDate提取年月
-            row?.projectStartDate
-              ? new Date(row.projectStartDate).toISOString().slice(0, 7)
-              : "",
+          // 项目开始日期：统一使用projectStartDate字段
+          projectStartDate: row?.projectStartDate
+            ? new Date(row.projectStartDate).toISOString().slice(0, 7)
+            : "",
+          // 发表年份/日期：仅用于论文类型
+          publishDate: (() => {
+            // 优先使用新类型系统判断
+            if (row?.categoryId && categoryMap.value.has(row.categoryId)) {
+              const categoryName = categoryMap.value.get(row.categoryId);
+              const isProject = categoryName?.includes('项目');
+
+              if (!isProject) {
+                // 论文类型：优先使用publishYear，其次使用publishDate提取年份
+                if (row?.publishYear) {
+                  return row.publishYear.toString();
+                } else if (row?.publishDate) {
+                  return new Date(row.publishDate).getFullYear().toString();
+                }
+              }
+            }
+
+            // 兜底逻辑：使用旧的type字段判断
+            if (row?.type === 1) {
+              // 论文类型：优先使用publishYear，其次使用publishDate提取年份
+              if (row?.publishYear) {
+                return row.publishYear.toString();
+              } else if (row?.publishDate) {
+                return new Date(row.publishDate).getFullYear().toString();
+              }
+            }
+
+            return "";
+          })(),
+          // 项目结束日期：统一使用projectEndDate字段
           projectEndDate: row?.projectEndDate
             ? new Date(row.projectEndDate).toISOString().slice(0, 7)
             : "",
@@ -374,7 +395,7 @@ export function useHook() {
             formData.achievementType === "paper" ? formData.publishDate || null : null,
           projectStartDate:
             formData.achievementType === "project"
-              ? formData.publishDate || null
+              ? formData.projectStartDate || null
               : null,
           projectEndDate:
             formData.achievementType === "project"
@@ -431,14 +452,20 @@ export function useHook() {
       data = result.data;
     } else {
       // 教师和学生使用my-achievements接口
-      const myParams: MyAchievementQuery = {
+      const myParams: MyAchievementExtendedQuery = {
         pageNum: searchFormParams.pageNum,
         pageSize: searchFormParams.pageSize,
         keyword: searchFormParams.keyword,
         type: searchFormParams.type,
+        paperType: searchFormParams.paperType,
+        projectType: searchFormParams.projectType,
+        categoryId: searchFormParams.categoryId,
         published: searchFormParams.published,
+        isVerified: searchFormParams.isVerified,
         dateStart: searchFormParams.dateStart,
-        dateEnd: searchFormParams.dateEnd
+        dateEnd: searchFormParams.dateEnd,
+        ownerName: searchFormParams.ownerName,
+        authorName: searchFormParams.authorName
       };
       const result = await getMyAchievementsApi(myParams);
       data = result.data;

@@ -182,6 +182,12 @@ export interface MyAchievementQuery {
   dateEnd?: string; // yyyy-MM-dd
 }
 
+// 扩展的我的成果查询接口，包含ownerName和authorName参数
+export interface MyAchievementExtendedQuery extends MyAchievementQuery {
+  ownerName?: string; // 拥有者姓名（模糊匹配 real_name/english_name；仅在"我的范围"内过滤）
+  authorName?: string; // 作者姓名（模糊匹配作者表 name/name_en + 内部作者姓名；仅在"我的范围"内过滤）
+}
+
 /**
  * 公开端成果查询参数
  */

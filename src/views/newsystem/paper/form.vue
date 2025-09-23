@@ -442,7 +442,7 @@ defineExpose({ getFormRuleRef });
           :label="
             newFormInline.achievementType === 'project' ? '开始日期' : '发表年份'
           "
-          prop="publishDate"
+          :prop="newFormInline.achievementType === 'project' ? 'projectStartDate' : 'publishDate'"
         >
           <el-date-picker
             v-if="newFormInline.achievementType === 'paper' || newFormInline.achievementType === 'other'"
@@ -455,7 +455,7 @@ defineExpose({ getFormRuleRef });
           />
           <el-date-picker
             v-else
-            v-model="newFormInline.publishDate"
+            v-model="newFormInline.projectStartDate"
             type="month"
             placeholder="请选择年月"
             format="YYYY-MM"
