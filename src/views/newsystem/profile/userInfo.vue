@@ -88,6 +88,18 @@ watch(
   { immediate: true, deep: true }
 );
 
+// 监听状态变化，当选择在读/在职时自动清空毕业/离职相关信息
+watch(
+  () => userModel.status,
+  (newStatus) => {
+    // 当状态为1（在读/在职）时，清空毕业/离职年份和去向
+    if (newStatus === 1) {
+      userModel.graduationYear = undefined;
+      userModel.graduationDest = "";
+    }
+  }
+);
+
 console.log(userModel);
 console.log(props.user);
 
