@@ -369,7 +369,9 @@ defineExpose({ getFormRuleRef });
                     </el-form-item>
                   </el-col>
                   <el-col :span="8">
-                    <el-form-item>
+                    <el-form-item
+                      :prop="`authors.${index}.email`"
+                    >
                       <el-input
                         v-model="author.email"
                         placeholder="邮箱（可选）"
@@ -487,7 +489,7 @@ defineExpose({ getFormRuleRef });
         </el-form-item>
       </re-col>
 
-      <re-col :value="12">
+      <re-col :value="24">
         <el-form-item
           label="编号"
           prop="doi"
@@ -495,7 +497,7 @@ defineExpose({ getFormRuleRef });
           <el-input
             v-model="newFormInline.doi"
             clearable
-            :placeholder="newFormInline.achievementType === 'project' ? '请输入项目编号' : '请输入相关编号（如DOI、专利号、软著登记号等）'"
+            placeholder="请输入相关编号（如DOI、专利号、软著登记号、项目编号等）"
           />
         </el-form-item>
       </re-col>

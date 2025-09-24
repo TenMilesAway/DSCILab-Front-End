@@ -11,14 +11,11 @@ import { getDictCategoryTreeApi, type LabAchievementCategoryDTO } from "@/api/ne
 
 import {
   getAchievementListApi,
-  getMyAchievementsApi,
   createAchievementApi,
   updateAchievementApi,
   deleteAchievementApi,
   toggleMyAchievementVisibilityApi,
   type AchievementListQuery,
-  type MyAchievementQuery,
-  type MyAchievementExtendedQuery,
   type LabAchievementDTO,
   type CreateAchievementRequest,
   type UpdateAchievementRequest
@@ -28,7 +25,7 @@ import {
 // AchievementListQuery, LabAchievementDTO, CreateAchievementRequest, UpdateAchievementRequest
 
 export function useHook() {
-  const searchFormParams = reactive<MyAchievementExtendedQuery>({
+  const searchFormParams = reactive<AchievementListQuery>({
     pageNum: 1,
     pageSize: 10,
     keyword: undefined,
@@ -39,9 +36,8 @@ export function useHook() {
     isVerified: undefined,
     dateStart: undefined,
     dateEnd: undefined,
-    categoryId: undefined,
-    ownerName: undefined,
-    authorName: undefined
+    parentCategoryId: undefined,
+    ownerUserId: undefined
   });
 
   const formRef = ref();
@@ -361,15 +357,22 @@ export function useHook() {
               userId: author.userId,
               name: author.name.trim(),
               authorOrder: index + 1,
-              visible: author.visible
+              visible: author.visible,
+              email: author.email?.trim() || null
             };
 
-            // 所有类型都包含邮箱字段
-            return {
-              ...baseAuthor,
-              email: author.email?.trim() || null,
-              isCorresponding: formData.achievementType === "paper" ? author.isCorresponding : false
-            };
+            // 论文和其他类型包含通讯作者字段，项目类型不包含
+            if (formData.achievementType !== "project") {
+              return {
+                ...baseAuthor,
+                isCorresponding: author.isCorresponding
+              };
+            } else {
+              return {
+                ...baseAuthor,
+                isCorresponding: false
+              };
+            }
           });
 
         const curData: CreateAchievementRequest | UpdateAchievementRequest = {
@@ -384,7 +387,7 @@ export function useHook() {
           categoryId: formData.specificCategoryId || null, // 具体类型ID放在categoryId字段
           venue: formData.journal || null,
           publishDate:
-            formData.achievementType === "paper" ? formData.publishDate || null : null,
+            formData.achievementType !== "project" ? formData.publishDate || null : null,
           projectStartDate:
             formData.achievementType === "project"
               ? formData.projectStartDate || null
@@ -433,35 +436,9 @@ export function useHook() {
     searchFormParams.pageNum = pagination.currentPage;
     searchFormParams.pageSize = pagination.pageSize;
 
-    // 获取当前用户信息
-    const currentUser = useUserStoreHook().currentUserInfo;
-    const userIdentity = currentUser?.userInfo?.identity; // 1=管理员, 2=教师, 3=学生
-
-    let data;
-    if (userIdentity === 1) {
-      // 管理员使用原接口
-      const result = await getAchievementListApi({ ...searchFormParams });
-      data = result.data;
-    } else {
-      // 教师和学生使用my-achievements接口
-      const myParams: MyAchievementExtendedQuery = {
-        pageNum: searchFormParams.pageNum,
-        pageSize: searchFormParams.pageSize,
-        keyword: searchFormParams.keyword,
-        type: searchFormParams.type,
-        paperType: searchFormParams.paperType,
-        projectType: searchFormParams.projectType,
-        categoryId: searchFormParams.type, // 将type字段映射到categoryId参数
-        published: searchFormParams.published,
-        isVerified: searchFormParams.isVerified,
-        dateStart: searchFormParams.dateStart,
-        dateEnd: searchFormParams.dateEnd,
-        ownerName: searchFormParams.ownerName,
-        authorName: searchFormParams.authorName
-      };
-      const result = await getMyAchievementsApi(myParams);
-      data = result.data;
-    }
+    // 统一使用lab/achievements接口
+    const result = await getAchievementListApi({ ...searchFormParams });
+    const data = result.data;
 
     // 为每个成果初始化myVisibility字段，默认为true（显示）
     dataList.value = data.rows.map(item => ({

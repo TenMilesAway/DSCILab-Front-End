@@ -10,7 +10,7 @@ export interface AchievementListQuery {
   type?: 1 | 2; // 1=论文, 2=项目
   paperType?: number; // 仅type=1生效，1..7
   projectType?: number; // 仅type=2生效，1..8
-  categoryId?: number; // 成果类型ID（新类型系统，推荐传二级分类ID）
+  parentCategoryId?: number; // 成果类型ID（新类型系统，推荐传二级分类ID）
   published?: boolean; // 是否发布
   isVerified?: boolean; // 是否审核
   ownerUserId?: number; // 拥有者用户ID
@@ -118,7 +118,7 @@ export interface AchievementAuthorDTO {
   achievementId: number;
   userId: number | null;
   name: string | null;
-  nameEn: string | null;
+  email: string | null;
   affiliation: string | null;
   authorOrder: number;
   isCorresponding: boolean;
@@ -139,7 +139,6 @@ export interface CreateAuthorRequest {
   phone?: string | null; // 未传userId时用于自动绑定
   studentNumber?: string | null; // 未传userId时用于自动绑定
   name?: string | null; // 姓名（外部作者必填；自动绑定失败则作为外部作者保存）
-  nameEn?: string | null; // 英文姓名
   affiliation?: string | null;
   authorOrder: number; // 作者顺序（>0，同一成果下唯一）
   isCorresponding?: boolean; // 是否通讯作者
@@ -157,7 +156,6 @@ export interface UpdateAuthorRequest {
   phone?: string | null; // 未传userId时用于自动绑定
   studentNumber?: string | null; // 未传userId时用于自动绑定
   name?: string | null; // 姓名
-  nameEn?: string | null; // 英文姓名
   affiliation?: string | null;
   authorOrder?: number | null; // 作者顺序（传入时需保证唯一）
   isCorresponding?: boolean | null; // 是否通讯作者
@@ -175,7 +173,7 @@ export interface MyAchievementQuery {
   type?: 1 | 2;
   paperType?: number; // 1..7
   projectType?: number; // 1..8
-  categoryId?: number; // 成果类型ID（新类型系统，推荐传二级分类ID）
+  parentCategoryId?: number; // 成果类型ID（新类型系统，推荐传二级分类ID）
   published?: boolean;
   isVerified?: boolean;
   dateStart?: string; // yyyy-MM-dd
@@ -198,7 +196,7 @@ export interface PublicAchievementQuery {
   type?: 1 | 2; // 1=论文, 2=项目
   paperType?: number; // 仅type=1生效，1..7
   projectType?: number; // 仅type=2生效，1..8
-  categoryId?: number; // 成果类型ID（新类型系统，推荐传二级分类ID）
+  parentCategoryId?: number; // 成果类型ID（新类型系统，推荐传二级分类ID）
   dateStart?: string; // 开始日期 yyyy-MM-dd
   dateEnd?: string; // 结束日期 yyyy-MM-dd
 }
@@ -208,7 +206,7 @@ export interface PublicAchievementQuery {
  */
 export interface PublicAuthorDTO {
   name: string;
-  nameEn: string | null;
+  email: string | null;
   affiliation: string | null;
   authorOrder: number;
   isCorresponding: boolean;
