@@ -22,6 +22,19 @@ const state = reactive({
 /** 用户名 */
 const currentUserInfo = useUserStoreHook()?.currentUserInfo;
 
+// 根据身份和状态值返回对应的状态文本
+function getStatusText(status: number, identity: number) {
+  if (!status) return '';
+  
+  if (identity === 2) {
+    // 教师
+    return status === 1 ? '在职' : '离职';
+  } else {
+    // 学生
+    return status === 1 ? '在读' : '毕业';
+  }
+}
+
 // 获取用户详细信息
 function getUser() {
   state.loading = true;
@@ -122,13 +135,9 @@ onMounted(() => {
                   state.user.email
                 }}</el-descriptions-item>
 
-                <!-- 教师显示入职年份，学生显示入学年份 -->
-                <el-descriptions-item
-                  v-if="state.user.enrollmentYear"
-                  :label="(state.user.identity || currentUserInfo.identity) === 2 ? '入职年份' : '入学年份'"
-                >{{
-                  state.user.enrollmentYear
-                }}</el-descriptions-item>
+                <el-descriptions-item label="状态">
+                  {{ getStatusText(state.user.status, state.user.identity || currentUserInfo.identity) }}
+                </el-descriptions-item>
 
                 <!-- 教师显示离职年份，学生显示毕业年份 -->
                 <el-descriptions-item
@@ -143,6 +152,14 @@ onMounted(() => {
                   :label="(state.user.identity || currentUserInfo.identity) === 2 ? '离职去向' : '毕业去向'"
                   >{{ state.user.graduationDest }}</el-descriptions-item
                 >
+
+                <!-- 教师显示入职年份，学生显示入学年份 -->
+                <el-descriptions-item
+                  v-if="state.user.enrollmentYear"
+                  :label="(state.user.identity || currentUserInfo.identity) === 2 ? '入职年份' : '入学年份'"
+                >{{
+                  state.user.enrollmentYear
+                }}</el-descriptions-item>
               </el-descriptions>
             </el-row>
           </div>

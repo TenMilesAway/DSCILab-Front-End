@@ -6,7 +6,7 @@ export default [
     name: "Welcome",
     component: () => import("@/views/lab/index.vue"),
     meta: {
-      title: "DCSI 实验室",
+      title: "DSCI 实验室",
       showLink: false,
       rank: 100
     },
@@ -63,7 +63,7 @@ export default [
     name: "Login",
     component: () => import("@/views/login/index.vue"),
     meta: {
-      title: "DCSI 实验室前台管理系统登录",
+      title: "DSCI 实验室前台管理系统登录",
       showLink: false,
       rank: 101
     }
