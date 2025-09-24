@@ -450,7 +450,6 @@ const fetchProjects = async () => {
         if (!project.authors || !Array.isArray(project.authors)) {
           return false;
         }
-        
         // 检查当前用户是否存在于 authors 字段中
         return project.authors.some(author => 
           author.name === props.member?.name
@@ -511,9 +510,9 @@ const sortedProjects = computed(() => {
   const visibleProjects = internalProjects.value.filter(project => {
     if (!project.authors || !props.member) return false;
     
-    // 查找当前成员在作者列表中的记录
+    // 查找当前成员在作者列表中的记录，使用id匹配而不是name
     const currentMemberAuthor = project.authors.find(author => 
-      author.name === props.member.name
+      author.userId === props.member.id
     );
     
     // 如果找到当前成员且visible为true，则显示该项目
@@ -542,9 +541,9 @@ const sortedAchievements = computed(() => {
   const visibleAchievements = internalAchievements.value.filter(achievement => {
     if (!achievement.authors || !props.member) return false;
     
-    // 查找当前成员在作者列表中的记录
+    // 查找当前成员在作者列表中的记录，使用id匹配而不是name
     const currentMemberAuthor = achievement.authors.find(author => 
-      author.name === props.member.name
+      author.userId === props.member.id
     );
     
     // 如果找到当前成员且visible为true，则显示该成果
