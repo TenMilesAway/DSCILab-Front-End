@@ -9,7 +9,7 @@ import { getDictCategoryTreeApi, type LabAchievementCategoryDTO } from "@/api/ne
 interface FormAuthor {
   userId?: number | null; // 内部作者userId；外部作者为null
   name: string; // 作者姓名
-  nameEn?: string | null; // 英文姓名
+  email?: string | null; // 邮箱
   authorOrder: number; // 作者顺序
   isCorresponding: boolean; // 是否通讯作者
   visible?: boolean; // 是否可见（仅内部作者）
@@ -50,7 +50,7 @@ const props = withDefaults(defineProps<FormProps>(), {
     authors: [
       {
         name: "",
-        nameEn: null,
+        email: null,
         authorOrder: 1,
         isCorresponding: true,
         visible: true,
@@ -205,7 +205,7 @@ const addAuthor = () => {
   const newOrder = newFormInline.value.authors.length + 1;
   newFormInline.value.authors.push({
     name: "",
-    nameEn: null,
+    email: null,
     authorOrder: newOrder,
     isCorresponding: false,
     visible: true,
@@ -368,14 +368,13 @@ defineExpose({ getFormRuleRef });
                       />
                     </el-form-item>
                   </el-col>
-                  <el-col
-                    :span="8"
-                    v-if="newFormInline.achievementType === 'paper' || newFormInline.achievementType === 'other'"
-                  >
-                    <el-form-item>
+                  <el-col :span="8">
+                    <el-form-item
+                      :prop="`authors.${index}.email`"
+                    >
                       <el-input
-                        v-model="author.nameEn"
-                        placeholder="英文姓名（可选）"
+                        v-model="author.email"
+                        placeholder="邮箱（可选）"
                         clearable
                       />
                     </el-form-item>
@@ -490,7 +489,7 @@ defineExpose({ getFormRuleRef });
         </el-form-item>
       </re-col>
 
-      <re-col :value="12" v-if="newFormInline.achievementType === 'paper' || newFormInline.achievementType === 'other'">
+      <re-col :value="24">
         <el-form-item
           label="编号"
           prop="doi"
@@ -498,7 +497,7 @@ defineExpose({ getFormRuleRef });
           <el-input
             v-model="newFormInline.doi"
             clearable
-            placeholder="请输入相关编号（如DOI、专利号、软著登记号等）"
+            placeholder="请输入相关编号（如DOI、专利号、软著登记号、项目编号等）"
           />
         </el-form-item>
       </re-col>

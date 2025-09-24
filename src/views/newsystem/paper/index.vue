@@ -71,9 +71,9 @@ onMounted(() => {
           class="!w-[200px]"
         />
       </el-form-item>
-      <el-form-item label="成果类型：" prop="categoryId">
+      <el-form-item label="成果类型：" prop="parentCategoryId">
         <el-select
-          v-model="searchFormParams.categoryId"
+          v-model="searchFormParams.parentCategoryId"
           placeholder="请选择一级成果类型"
           clearable
           class="!w-[200px]"
