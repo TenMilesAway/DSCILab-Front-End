@@ -166,6 +166,7 @@ export interface UpdateProfileRequest {
   researchArea?: string;
   phone?: string;
   email?: string;
+  status?: number; // 状态：1=在读/在职,2=毕业/离职
   enrollmentYear?: number; // 入学/入职年份
   graduationYear?: number;
   graduationDest?: string;
