@@ -47,6 +47,7 @@ const userModel = reactive<UpdateProfileRequest>({
   researchArea: props.user.researchArea || props.user.research_area || "",
   phone: props.user.phone || "",
   email: props.user.email || "",
+  status: props.user.status || undefined,
   enrollmentYear: props.user.enrollmentYear || undefined,
   graduationYear:
     props.user.graduationYear || props.user.graduation_year || undefined,
@@ -73,6 +74,7 @@ watch(
       researchAreaTags.value = researchArea ? researchArea.split('，').filter(tag => tag.trim()) : [];
       userModel.phone = newUser.phone || "";
       userModel.email = newUser.email || "";
+      userModel.status = newUser.status || undefined;
       userModel.enrollmentYear = newUser.enrollmentYear || undefined;
       userModel.graduationYear =
         newUser.graduationYear || newUser.graduation_year || undefined;
@@ -84,6 +86,18 @@ watch(
     }
   },
   { immediate: true, deep: true }
+);
+
+// 监听状态变化，当选择在读/在职时自动清空毕业/离职相关信息
+watch(
+  () => userModel.status,
+  (newStatus) => {
+    // 当状态为1（在读/在职）时，清空毕业/离职年份和去向
+    if (newStatus === 1) {
+      userModel.graduationYear = undefined;
+      userModel.graduationDest = "";
+    }
+  }
 );
 
 console.log(userModel);
@@ -201,6 +215,10 @@ function submit() {
       // 特殊处理academicStatus，确保0值不被转换为null
       if (userModel.academicStatus === 0) {
         submitData.academicStatus = 0;
+      }
+      // 特殊处理status，确保数字值不被转换为null
+      if (typeof userModel.status === 'number') {
+        submitData.status = userModel.status;
       }
       
       console.log("发送的数据:", submitData);
@@ -334,20 +352,6 @@ function submit() {
         :placeholder="props.user.identity === 2 ? '请输入入职年份' : '请输入入学年份'"
       />
     </el-form-item>
-    <el-form-item :label="props.user.identity === 2 ? '离职年份' : '毕业年份'">
-      <el-input
-        v-model.number="userModel.graduationYear"
-        type="number"
-        :placeholder="props.user.identity === 2 ? '请输入离职年份' : '请输入毕业年份'"
-      />
-    </el-form-item>
-    <el-form-item :label="props.user.identity === 2 ? '离职去向' : '毕业去向'">
-      <el-input
-        v-model="userModel.graduationDest"
-        maxlength="100"
-        :placeholder="props.user.identity === 2 ? '请输入离职去向' : '请输入毕业去向'"
-      />
-    </el-form-item>
     <el-form-item label="个人简介">
       <el-input
         v-model="userModel.resume"
@@ -355,6 +359,42 @@ function submit() {
         :rows="4"
         maxlength="500"
         placeholder="请输入个人简介"
+      />
+    </el-form-item>
+    <el-form-item label="状态">
+      <el-select
+        v-model="userModel.status"
+        placeholder="请选择状态"
+        clearable
+      >
+        <el-option 
+          :label="props.user.identity === 2 ? '在职' : '在读'" 
+          :value="1" 
+        />
+        <el-option 
+          :label="props.user.identity === 2 ? '离职' : '毕业'" 
+          :value="2" 
+        />
+      </el-select>
+    </el-form-item>
+    <el-form-item 
+      v-if="userModel.status === 2"
+      :label="props.user.identity === 2 ? '离职年份' : '毕业年份'"
+    >
+      <el-input
+        v-model.number="userModel.graduationYear"
+        type="number"
+        :placeholder="props.user.identity === 2 ? '请输入离职年份' : '请输入毕业年份'"
+      />
+    </el-form-item>
+    <el-form-item 
+      v-if="userModel.status === 2"
+      :label="props.user.identity === 2 ? '离职去向' : '毕业去向'"
+    >
+      <el-input
+        v-model="userModel.graduationDest"
+        maxlength="100"
+        :placeholder="props.user.identity === 2 ? '请输入离职去向' : '请输入毕业去向'"
       />
     </el-form-item>
     <el-form-item>
