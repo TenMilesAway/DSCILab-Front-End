@@ -497,7 +497,7 @@ const avatarUrl = computed(() => {
     return import.meta.env.VITE_APP_BASE_API + userPhoto;
   }
   // 默认头像
-  return "/src/assets/lab/default_avatar.png";
+  return import.meta.env.VITE_APP_BASE_API + "/src/assets/lab/default_user_avatar.png";
 });
 
 // 按时间排序的项目列表（从新到旧）
@@ -663,6 +663,8 @@ const handleImageLoad = () => {
 const handleImageError = (event: Event) => {
   const img = event.target as HTMLImageElement;
   const defaultAvatar = "/src/assets/lab/default_user_avatar.png";
+  // 部署时
+  // const defaultAvatar = "/static/png/default_user_avatar.png";
   // 防止无限循环，只有当前src不是默认头像时才切换
   if (img.src !== window.location.origin + defaultAvatar) {
     img.src = defaultAvatar;
