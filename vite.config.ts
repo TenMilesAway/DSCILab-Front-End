@@ -48,6 +48,11 @@ export default ({ command, mode }: ConfigEnv): UserConfigExport => {
           target: "http://10.157.134.211:8080",
           changeOrigin: true,
           rewrite: path => path.replace(/^\/dev-api/, "")
+        },
+        "/prod-api": {
+          target: "http://0.0.0.0:8080",
+          changeOrigin: true,
+          rewrite: path => path.replace(/^\/prod-api/, "")
         }
       }
     },

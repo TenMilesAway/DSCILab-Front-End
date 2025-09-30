@@ -25,7 +25,7 @@ export default [
         name: "WelcomeMembers",
         component: () => import("@/views/lab/index.vue"),
         meta: {
-          title: "成员聚合页",
+          title: "成员页",
           showLink: false
         }
       },
