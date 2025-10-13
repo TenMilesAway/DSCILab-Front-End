@@ -38,7 +38,7 @@ export default ({ command, mode }: ConfigEnv): UserConfigExport => {
     // 服务端渲染
     server: {
       // 是否开启 https
-      https: true,
+      https: false,
       // 端口号
       port: VITE_PORT,
       host: "0.0.0.0",
@@ -48,6 +48,11 @@ export default ({ command, mode }: ConfigEnv): UserConfigExport => {
           target: "http://10.157.134.211:8080",
           changeOrigin: true,
           rewrite: path => path.replace(/^\/dev-api/, "")
+        },
+        "/prod-api": {
+          target: "http://47.94.241.161:8080",
+          changeOrigin: true,
+          rewrite: path => path.replace(/^\/prod-api/, "")
         }
       }
     },

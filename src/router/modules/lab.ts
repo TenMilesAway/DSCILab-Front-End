@@ -21,16 +21,6 @@ const labRouter: RouteRecordRaw = {
         title: "成员管理",
         showLink: true
       }
-    },
-    {
-      path: "/lab/members/detail/:id",
-      name: "MemberDetail",
-      component: () => import("@/views/lab/components/MemberDetail.vue"),
-      meta: {
-        title: "成员详情",
-        showLink: false,
-        activePath: "/lab/members"
-      }
     }
   ]
 };
