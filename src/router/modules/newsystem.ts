@@ -53,7 +53,7 @@ export default [
     redirect: "/newsystem/paper/index",
     meta: {
       title: "成果管理",
-      rank: 3
+      rank: 4
     },
     children: [
       {
@@ -69,13 +69,35 @@ export default [
     ]
   },
   {
+    path: "/newsystem/project",
+    name: "NewSystemProjectManagement",
+    component: Layout,
+    redirect: "/newsystem/project/index",
+    meta: {
+      title: "项目管理",
+      rank: 3
+    },
+    children: [
+      {
+        path: "/newsystem/project/index",
+        name: "NewSystemProject",
+        component: () => import("@/views/newsystem/project/index.vue"),
+        meta: {
+          title: "项目管理",
+          showLink: true,
+          showParent: false
+        }
+      }
+    ]
+  },
+  {
     path: "/newsystem/achievement-category",
     name: "NewSystemAchievementCategoryManagement",
     component: Layout,
     redirect: "/newsystem/achievement-category/index",
     meta: {
       title: "成果类型管理",
-      rank: 4
+      rank: 5
     },
     children: [
       {
@@ -98,7 +120,7 @@ export default [
     redirect: "/newsystem/news/index",
     meta: {
       title: "新闻活动",
-      rank: 5,
+      rank: 6,
       showLink: false
     },
     children: [

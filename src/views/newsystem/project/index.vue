@@ -12,7 +12,7 @@ import Refresh from "@iconify-icons/ep/refresh";
 import AddFill from "@iconify-icons/ri/add-circle-line";
 
 defineOptions({
-  name: "NewSystemPaper"
+  name: "NewSystemProject"
 });
 
 const formRef = ref();
@@ -29,29 +29,26 @@ const {
   getList
 } = useHook();
 
-// 成果类型相关数据
+// 项目类型相关数据
 const categoryTree = ref<LabAchievementCategoryDTO[]>([]);
 const topLevelCategories = ref<LabAchievementCategoryDTO[]>([]);
 const paperCategories = ref<LabAchievementCategoryDTO[]>([]);
 const projectCategories = ref<LabAchievementCategoryDTO[]>([]);
 
-// 获取成果类型树
-  const loadCategoryTree = async () => {
-    try {
-      const response = await getDictCategoryTreeApi();
-      if (response.code === 0) {
-        categoryTree.value = response.data;
-        // 隐藏"项目"这一项，其余一级成果类型保持显示
-        topLevelCategories.value = response.data.filter(
-          cat => cat.categoryName !== '项目' && (cat.categoryCode ? cat.categoryCode.toLowerCase() !== 'project' : true)
-        );
-        paperCategories.value = topLevelCategories.value;
-        projectCategories.value = []; // 在成果管理页不展示项目类型
-      }
-    } catch (error) {
-      console.error('获取成果类型失败:', error);
+// 获取项目类型树
+const loadCategoryTree = async () => {
+  try {
+    const response = await getDictCategoryTreeApi();
+    if (response.code === 0) {
+      categoryTree.value = response.data;
+      topLevelCategories.value = response.data; // 一级项目类型
+      paperCategories.value = categoryTree.value.filter(cat => cat.type === 1);
+      projectCategories.value = categoryTree.value.filter(cat => cat.type === 2);
     }
-  };
+  } catch (error) {
+    console.error('获取项目类型失败:', error);
+  }
+};
 
 onMounted(() => {
   loadCategoryTree();
@@ -69,26 +66,12 @@ onMounted(() => {
       <el-form-item label="关键词：" prop="keyword">
         <el-input
           v-model="searchFormParams.keyword"
-          placeholder="请输入成果名称关键词"
+          placeholder="请输入项目名称关键词"
           clearable
           class="!w-[200px]"
         />
       </el-form-item>
-      <el-form-item label="成果类型：" prop="parentCategoryId">
-        <el-select
-          v-model="searchFormParams.parentCategoryId"
-          placeholder="请选择一级成果类型"
-          clearable
-          class="!w-[200px]"
-        >
-          <el-option
-            v-for="category in topLevelCategories"
-            :key="category.id"
-            :label="category.categoryName"
-            :value="category.id"
-          />
-        </el-select>
-      </el-form-item>
+      <!-- 已隐藏：项目类型筛选（默认在钩子中按“项目”进行筛选） -->
       <el-form-item>
         <el-button
           type="primary"
@@ -105,7 +88,7 @@ onMounted(() => {
     </el-form>
 
     <PureTableBar
-      title="成果管理"
+      title="项目管理"
       :columns="columns"
       :showDensity="false"
       :showColumnSetting="false"
@@ -117,7 +100,7 @@ onMounted(() => {
           :icon="useRenderIcon(AddFill)"
           @click="openDialog('新增')"
         >
-          新增成果
+          新增项目
         </el-button>
       </template>
       <template v-slot="{ dynamicColumns }">

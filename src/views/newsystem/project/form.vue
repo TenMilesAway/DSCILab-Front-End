@@ -12,17 +12,18 @@ interface FormAuthor {
   email?: string | null; // 邮箱
   authorOrder: number; // 作者顺序
   isCorresponding: boolean; // 是否通讯作者
+  isLeader: boolean; // 是否负责人（项目）
   visible?: boolean; // 是否可见（仅内部作者）
 }
 
 interface FormInlineData {
   id?: number;
-  title: string; // 成果标题
+  title: string; // 项目标题
   authors: FormAuthor[]; // 作者列表
-  achievementType: string; // 成果类型：paper/project/other
+  achievementType: string; // 项目类型：paper/project/other
   paperType?: number; // 论文类型：1=期刊,2=会议,3=预印本,4=专利,5=软著,6=标准,7=专著
   projectType?: number; // 项目类型：1=横向,2=国自然面上,3=国自然青年,4=北京市教委科技一般,5=国家级教改,6=省部级教改,7=其他教改,8=其他纵向
-  categoryId?: number; // 成果类型ID（新类型系统）
+  categoryId?: number; // 项目类型ID（新类型系统）
   specificCategoryId?: number; // 具体类型ID（二级分类）
   journal?: string; // 期刊名称（论文）
   publishDate?: string; // 发表日期
@@ -32,9 +33,6 @@ interface FormInlineData {
 
   githubUrl?: string; // GitHub链接（项目）
   published?: boolean; // 发表状态：论文是否发表/项目是否结项
-  gitUrl?: string; // Git链接
-  linkUrl?: string; // 相关链接
-  pdfUrl?: string; // PDF链接
   reference?: string; // 前端展示引用
   fundingAmount?: number; // 项目经费（万元）
 }
@@ -53,6 +51,7 @@ const props = withDefaults(defineProps<FormProps>(), {
         email: null,
         authorOrder: 1,
         isCorresponding: true,
+        isLeader: false,
         visible: true,
         userId: null
       }
@@ -68,9 +67,6 @@ const props = withDefaults(defineProps<FormProps>(), {
     doi: "",
     githubUrl: "",
     published: true,
-    gitUrl: "",
-    linkUrl: "",
-    pdfUrl: "",
     reference: "",
     fundingAmount: undefined
   })
@@ -79,21 +75,18 @@ const props = withDefaults(defineProps<FormProps>(), {
 const newFormInline = ref(props.formInline);
 const formRuleRef = ref();
 
-// 成果类型相关数据
+// 项目类型相关数据
 const categoryTree = ref<LabAchievementCategoryDTO[]>([]);
 const topLevelCategories = ref<LabAchievementCategoryDTO[]>([]);
 const currentSubCategories = ref<LabAchievementCategoryDTO[]>([]);
 
-// 获取成果类型树
+// 获取项目类型树
 const loadCategoryTree = async () => {
   try {
     const response = await getDictCategoryTreeApi();
     if (response.code === 0) {
       categoryTree.value = response.data;
-      // 隐藏“项目”这一项，其余一级成果类型保持显示
-      topLevelCategories.value = response.data.filter(
-        cat => cat.categoryName !== '项目' && (cat.categoryCode ? cat.categoryCode.toLowerCase() !== 'project' : true)
-      );
+      topLevelCategories.value = response.data;
       
       // 数据加载完成后，如果是编辑模式且有categoryId，需要初始化二级类型选项
       if (newFormInline.value.categoryId) {
@@ -106,7 +99,7 @@ const loadCategoryTree = async () => {
       }
     }
   } catch (error) {
-    console.error('获取成果类型失败:', error);
+    console.error('获取项目类型失败:', error);
   }
 };
 
@@ -211,6 +204,7 @@ const addAuthor = () => {
     email: null,
     authorOrder: newOrder,
     isCorresponding: false,
+    isLeader: false,
     visible: true,
     userId: null
   });
@@ -248,6 +242,17 @@ const moveAuthorDown = (index: number) => {
   }
 };
 
+// 负责人勾选：确保同一项目仅可选择一位负责人
+function onLeaderToggle(selectedIndex: number) {
+  if (newFormInline.value.achievementType !== 'project') return;
+  const authors = newFormInline.value.authors;
+  if (authors[selectedIndex].isLeader) {
+    authors.forEach((a, idx) => {
+      if (idx !== selectedIndex) a.isLeader = false;
+    });
+  }
+}
+
 defineExpose({ getFormRuleRef });
 </script>
 
@@ -261,40 +266,25 @@ defineExpose({ getFormRuleRef });
     <el-row :gutter="30">
       <!-- 基本信息 -->
       <re-col :value="24">
-        <el-form-item label="成果名称" prop="title">
+        <el-form-item label="项目名称" prop="title">
           <el-input
             v-model="newFormInline.title"
             clearable
-            placeholder="请输入成果名称"
+            placeholder="请输入项目名称"
             type="textarea"
             :rows="2"
           />
         </el-form-item>
       </re-col>
 
-      <re-col :value="12">
-        <el-form-item label="成果类型" prop="categoryId">
-          <el-select
-            class="w-full"
-            v-model="newFormInline.categoryId"
-            placeholder="请选择成果类型"
-          >
-            <el-option 
-              v-for="category in topLevelCategories" 
-              :key="category.id"
-              :label="category.categoryName" 
-              :value="category.id" 
-            />
-          </el-select>
-        </el-form-item>
-      </re-col>
+      <!-- 已隐藏：项目类型（一级分类）选择，默认由外层钩子按“项目”传入 categoryId -->
 
       <re-col :value="12" v-if="currentSubCategories.length > 0">
-        <el-form-item label="具体类型" prop="specificCategoryId">
+        <el-form-item label="项目类型" prop="specificCategoryId">
           <el-select
             class="w-full"
             v-model="newFormInline.specificCategoryId"
-            placeholder="请选择具体类型"
+            placeholder="请选择项目类型"
           >
             <el-option 
               v-for="category in currentSubCategories" 
@@ -325,7 +315,7 @@ defineExpose({ getFormRuleRef });
               <div class="author-header">
                 <span class="author-order">
                   <span v-if="newFormInline.achievementType === 'project'">
-                    {{ index === 0 ? "负责人" : "参与人" }}
+                    参与人
                   </span>
                   <span v-else>
                     第{{ index + 1 }}作者
@@ -366,7 +356,7 @@ defineExpose({ getFormRuleRef });
                     >
                       <el-input
                         v-model="author.name"
-                        placeholder="作者姓名"
+                        :placeholder="newFormInline.achievementType === 'project' ? '姓名' : '作者姓名'"
                         clearable
                       />
                     </el-form-item>
@@ -383,6 +373,18 @@ defineExpose({ getFormRuleRef });
                     </el-form-item>
                   </el-col>
 
+                </el-row>
+                <el-row
+                  :gutter="16"
+                  v-if="newFormInline.achievementType === 'project'"
+                >
+                  <el-col :span="8">
+                    <el-form-item>
+                      <el-checkbox v-model="author.isLeader" @change="onLeaderToggle(index)">
+                        负责人
+                      </el-checkbox>
+                    </el-form-item>
+                  </el-col>
                 </el-row>
                 <el-row
                   :gutter="16"
@@ -492,7 +494,7 @@ defineExpose({ getFormRuleRef });
         </el-form-item>
       </re-col>
 
-      <re-col :value="24">
+      <re-col :value="newFormInline.achievementType === 'project' ? 12 : 24">
         <el-form-item
           label="编号"
           prop="doi"
@@ -500,47 +502,19 @@ defineExpose({ getFormRuleRef });
           <el-input
             v-model="newFormInline.doi"
             clearable
-            placeholder="请输入相关编号（如DOI、专利号、软著登记号、项目编号等）"
+            placeholder="请输入相关编号"
           />
         </el-form-item>
       </re-col>
 
-      <re-col :value="12">
-        <el-form-item label="Git链接" prop="gitUrl">
-          <el-input
-            v-model="newFormInline.gitUrl"
-            clearable
-            placeholder="请输入Git链接"
-          />
-        </el-form-item>
-      </re-col>
 
-      <re-col :value="12">
-        <el-form-item label="相关链接" prop="linkUrl">
-          <el-input
-            v-model="newFormInline.linkUrl"
-            clearable
-            placeholder="请输入相关链接"
-          />
-        </el-form-item>
-      </re-col>
-
-      <re-col :value="12">
-        <el-form-item label="PDF链接" prop="pdfUrl">
-          <el-input
-            v-model="newFormInline.pdfUrl"
-            clearable
-            placeholder="请输入PDF链接"
-          />
-        </el-form-item>
-      </re-col>
 
       <re-col :value="24">
         <el-form-item label="前端展示引用" prop="reference" style="white-space: nowrap;">
           <el-input
             v-model="newFormInline.reference"
             clearable
-            placeholder="请输入用于在前端页面进行展示的成果引用格式"
+            placeholder="请输入用于在前端页面进行展示的项目引用格式"
           />
         </el-form-item>
       </re-col>

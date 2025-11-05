@@ -1,29 +1,28 @@
 import { http } from "@/utils/http";
 
 /**
- * 成果列表查询参数
+ * 项目列表查询参数
  */
-export interface AchievementListQuery {
+export interface ProjectListQuery {
   pageNum?: number; // 页码，默认1
   pageSize?: number; // 每页大小，默认100
   keyword?: string; // 关键词，匹配 title/keywords
   type?: 1 | 2; // 1=论文, 2=项目
   paperType?: number; // 仅type=1生效，1..7
   projectType?: number; // 仅type=2生效，1..8
-  parentCategoryId?: number; // 成果类型ID（新类型系统，推荐传二级分类ID）
+  categoryId?: number; // 二级分类ID（叶子分类）；当传入时服务端忽略type
+  parentCategoryId?: number; // 项目类型ID（新类型系统，推荐传二级分类ID）
   published?: boolean; // 是否发布
   isVerified?: boolean; // 是否审核
   ownerUserId?: number; // 拥有者用户ID
   dateStart?: string; // 开始日期 yyyy-MM-dd
   dateEnd?: string; // 结束日期 yyyy-MM-dd
-  /** 当请求非项目成果列表时，传递 true；与 type 互斥 */
-  excludeProject?: boolean;
 }
 
 /**
- * 创建成果请求参数
+ * 创建项目请求参数
  */
-export interface CreateAchievementRequest {
+export interface CreateProjectRequest {
   title: string; // 必填，<=500
   titleEn?: string | null; // 可选
   description?: string | null; // 可选
@@ -31,7 +30,7 @@ export interface CreateAchievementRequest {
   // v2接口删除type字段，仅使用categoryId
   paperType?: number | null; // 论文类型：1=期刊,2=会议,3=预印本,4=专利,5=软著,6=标准,7=专著
   projectType?: number | null; // 项目类型：1=横向,2=国自然面上,3=国自然青年,4=北京市教委科技一般,5=国家级教改,6=省部级教改,7=其他教改,8=其他纵向
-  categoryId?: number | null; // 成果类型ID（新类型系统，推荐传二级分类ID）
+  categoryId?: number | null; // 项目类型ID（新类型系统，推荐传二级分类ID）
   venue?: string | null; // 可选，<=300
   publishDate?: string | null; // 论文发表年份；格式：YYYY
   projectStartDate?: string | null; // 项目开始日期；格式：YYYY-MM
@@ -49,9 +48,9 @@ export interface CreateAchievementRequest {
 }
 
 /**
- * 更新成果请求参数
+ * 更新项目请求参数
  */
-export interface UpdateAchievementRequest {
+export interface UpdateProjectRequest {
   title?: string; // <=500
   titleEn?: string | null;
   description?: string | null;
@@ -59,7 +58,7 @@ export interface UpdateAchievementRequest {
   // v2接口删除type字段，仅使用categoryId
   paperType?: number | null; // 论文类型：1=期刊,2=会议,3=预印本,4=专利,5=软著,6=标准,7=专著
   projectType?: number | null; // 项目类型：1=横向,2=国自然面上,3=国自然青年,4=北京市教委科技一般,5=国家级教改,6=省部级教改,7=其他教改,8=其他纵向
-  categoryId?: number | null; // 成果类型ID（新类型系统，推荐传二级分类ID）
+  categoryId?: number | null; // 项目类型ID（新类型系统，推荐传二级分类ID）
   venue?: string | null; // <=300
   publishDate?: string | null; // 论文发表年份；格式：YYYY
   projectStartDate?: string | null; // 项目开始日期；格式：YYYY-MM
@@ -76,9 +75,9 @@ export interface UpdateAchievementRequest {
 }
 
 /**
- * 成果返回数据结构
+ * 项目返回数据结构
  */
-export interface LabAchievementDTO {
+export interface LabProjectDTO {
   id: number;
   title: string;
   titleEn: string | null;
@@ -105,8 +104,8 @@ export interface LabAchievementDTO {
   ownerUserName: string | null;
   published: boolean;
   isVerified: boolean;
-  myVisibility?: boolean; // 我的成果可见性（仅在my-achievements接口中返回）
-  authors?: AchievementAuthorDTO[]; // 可选：作者DTO
+  myVisibility?: boolean; // 我的项目可见性（仅在my-projects接口中返回）
+  authors?: ProjectAuthorDTO[]; // 可选：作者DTO
   extra: string | object | null;
   createTime: string;
   updateTime: string;
@@ -115,9 +114,9 @@ export interface LabAchievementDTO {
 /**
  * 作者数据结构
  */
-export interface AchievementAuthorDTO {
+export interface ProjectAuthorDTO {
   id: number;
-  achievementId: number;
+  projectId: number;
   userId: number | null;
   name: string | null;
   email: string | null;
@@ -142,7 +141,7 @@ export interface CreateAuthorRequest {
   studentNumber?: string | null; // 未传userId时用于自动绑定
   name?: string | null; // 姓名（外部作者必填；自动绑定失败则作为外部作者保存）
   affiliation?: string | null;
-  authorOrder: number; // 作者顺序（>0，同一成果下唯一）
+  authorOrder: number; // 作者顺序（>0，同一项目下唯一）
   isCorresponding?: boolean; // 是否通讯作者
   role?: string | null; // 角色
   visible?: boolean; // 仅对内部作者生效
@@ -166,39 +165,40 @@ export interface UpdateAuthorRequest {
 }
 
 /**
- * 我的成果查询参数
+ * 我的项目查询参数
  */
-export interface MyAchievementQuery {
+export interface MyProjectQuery {
   pageNum?: number;
   pageSize?: number;
   keyword?: string;
   type?: 1 | 2;
   paperType?: number; // 1..7
   projectType?: number; // 1..8
-  parentCategoryId?: number; // 成果类型ID（新类型系统，推荐传二级分类ID）
+  categoryId?: number; // 二级分类ID（叶子分类）；当传入时服务端忽略type
+  parentCategoryId?: number; // 项目类型ID（新类型系统，推荐传二级分类ID）
   published?: boolean;
   isVerified?: boolean;
   dateStart?: string; // yyyy-MM-dd
   dateEnd?: string; // yyyy-MM-dd
 }
 
-// 扩展的我的成果查询接口，包含ownerName和authorName参数
-export interface MyAchievementExtendedQuery extends MyAchievementQuery {
+// 扩展的我的项目查询接口，包含ownerName和authorName参数
+export interface MyProjectExtendedQuery extends MyProjectQuery {
   ownerName?: string; // 拥有者姓名（模糊匹配 real_name/english_name；仅在"我的范围"内过滤）
   authorName?: string; // 作者姓名（模糊匹配作者表 name/name_en + 内部作者姓名；仅在"我的范围"内过滤）
 }
 
 /**
- * 公开端成果查询参数
+ * 公开端项目查询参数
  */
-export interface PublicAchievementQuery {
+export interface PublicProjectQuery {
   pageNum?: number; // 页码，默认1
   pageSize?: number; // 每页大小，默认100
   keyword?: string; // 关键词，匹配 title/keywords
   type?: 1 | 2; // 1=论文, 2=项目
   paperType?: number; // 仅type=1生效，1..7
   projectType?: number; // 仅type=2生效，1..8
-  parentCategoryId?: number; // 成果类型ID（新类型系统，推荐传二级分类ID）
+  parentCategoryId?: number; // 项目类型ID（新类型系统，推荐传二级分类ID）
   dateStart?: string; // 开始日期 yyyy-MM-dd
   dateEnd?: string; // 结束日期 yyyy-MM-dd
 }
@@ -216,9 +216,9 @@ export interface PublicAuthorDTO {
 }
 
 /**
- * 公开端成果信息
+ * 公开端项目信息
  */
-export interface PublicAchievementDTO {
+export interface PublicProjectDTO {
   id: number;
   title: string;
   titleEn: string | null;
@@ -248,65 +248,65 @@ export interface PublicAchievementDTO {
   createTime: string;
 }
 
-// ==================== 成果管理 API ====================
+// ==================== 项目管理 API ====================
 
 /**
- * 获取成果列表
+ * 获取项目列表
  */
-export const getAchievementListApi = (params?: AchievementListQuery) => {
+export const getProjectListApi = (params?: ProjectListQuery) => {
   return http.request<
-    ResponseData<{ total: number; rows: LabAchievementDTO[] }>
+    ResponseData<{ total: number; rows: LabProjectDTO[] }>
   >("get", "/lab/achievements", { params });
 };
 
 /**
- * 获取成果详情
+ * 获取项目详情
  */
-export const getAchievementDetailApi = (id: number) => {
-  return http.request<LabAchievementDTO>("get", `/lab/achievements/${id}`);
+export const getProjectDetailApi = (id: number) => {
+  return http.request<LabProjectDTO>("get", `/lab/achievements/${id}`);
 };
 
 /**
- * 创建成果
+ * 创建项目
  */
-export const createAchievementApi = (data: CreateAchievementRequest) => {
-  return http.request<LabAchievementDTO>("post", "/v2/lab/achievements", {
+export const createProjectApi = (data: CreateProjectRequest) => {
+  return http.request<LabProjectDTO>("post", "/v2/lab/achievements", {
     data
   });
 };
 
 /**
- * 更新成果
+ * 更新项目
  */
-export const updateAchievementApi = (
+export const updateProjectApi = (
   id: number,
-  data: UpdateAchievementRequest
+  data: UpdateProjectRequest
 ) => {
-  return http.request<LabAchievementDTO>("put", `/v2/lab/achievements/${id}`, {
+  return http.request<LabProjectDTO>("put", `/v2/lab/achievements/${id}`, {
     data
   });
 };
 
 /**
- * 删除成果（软删除）
+ * 删除项目（软删除）
  */
-export const deleteAchievementApi = (id: number) => {
+export const deleteProjectApi = (id: number) => {
   return http.request<void>("delete", `/lab/achievements/${id}`);
 };
 
 /**
- * 发布/取消发布成果
+ * 发布/取消发布项目
  */
-export const publishAchievementApi = (id: number, published: boolean) => {
+export const publishProjectApi = (id: number, published: boolean) => {
   return http.request<void>("put", `/lab/achievements/${id}/publish`, {
     params: { published }
   });
 };
 
 /**
- * 审核/取消审核成果
+ * 审核/取消审核项目
  */
-export const verifyAchievementApi = (id: number, verified: boolean) => {
+export const verifyProjectApi = (id: number, verified: boolean) => {
   return http.request<void>("put", `/lab/achievements/${id}/verify`, {
     params: { verified }
   });
@@ -315,54 +315,54 @@ export const verifyAchievementApi = (id: number, verified: boolean) => {
 // ==================== 作者管理 API ====================
 
 /**
- * 获取成果作者列表
+ * 获取项目作者列表
  */
-export const getAchievementAuthorsApi = (achievementId: number) => {
-  return http.request<AchievementAuthorDTO[]>(
+export const getProjectAuthorsApi = (projectId: number) => {
+  return http.request<ProjectAuthorDTO[]>(
     "get",
-    `/lab/achievements/${achievementId}/authors`
+    `/lab/achievements/${projectId}/authors`
   );
 };
 
 /**
- * 添加成果作者
+ * 添加项目作者
  */
-export const addAchievementAuthorApi = (
-  achievementId: number,
+export const addProjectAuthorApi = (
+  projectId: number,
   data: CreateAuthorRequest
 ) => {
-  return http.request<AchievementAuthorDTO>(
+  return http.request<ProjectAuthorDTO>(
     "post",
-    `/lab/achievements/${achievementId}/authors`,
+    `/lab/achievements/${projectId}/authors`,
     { data }
   );
 };
 
 /**
- * 更新成果作者
+ * 更新项目作者
  */
-export const updateAchievementAuthorApi = (
-  achievementId: number,
+export const updateProjectAuthorApi = (
+  projectId: number,
   authorId: number,
   data: UpdateAuthorRequest
 ) => {
-  return http.request<AchievementAuthorDTO>(
+  return http.request<ProjectAuthorDTO>(
     "put",
-    `/lab/achievements/${achievementId}/authors/${authorId}`,
+    `/lab/achievements/${projectId}/authors/${authorId}`,
     { data }
   );
 };
 
 /**
- * 删除成果作者（软删除）
+ * 删除项目作者（软删除）
  */
-export const deleteAchievementAuthorApi = (
-  achievementId: number,
+export const deleteProjectAuthorApi = (
+  projectId: number,
   authorId: number
 ) => {
   return http.request<void>(
     "delete",
-    `/lab/achievements/${achievementId}/authors/${authorId}`
+    `/lab/achievements/${projectId}/authors/${authorId}`
   );
 };
 
@@ -370,13 +370,13 @@ export const deleteAchievementAuthorApi = (
  * 调整作者顺序
  */
 export const reorderAuthorApi = (
-  achievementId: number,
+  projectId: number,
   authorId: number,
   newOrder: number
 ) => {
   return http.request<void>(
     "put",
-    `/lab/achievements/${achievementId}/authors/${authorId}/reorder`,
+    `/lab/achievements/${projectId}/authors/${authorId}/reorder`,
     { params: { newOrder } }
   );
 };
@@ -385,13 +385,13 @@ export const reorderAuthorApi = (
  * 切换作者可见性
  */
 export const toggleAuthorVisibilityApi = (
-  achievementId: number,
+  projectId: number,
   authorId: number,
   visible: boolean
 ) => {
   return http.request<void>(
     "put",
-    `/lab/achievements/${achievementId}/authors/${authorId}/visibility`,
+    `/lab/achievements/${projectId}/authors/${authorId}/visibility`,
     { params: { visible } }
   );
 };
@@ -399,24 +399,24 @@ export const toggleAuthorVisibilityApi = (
 // ==================== 用户自助端 API ====================
 
 /**
- * 获取我的成果列表
+ * 获取我的项目列表
  */
-export const getMyAchievementsApi = (params?: MyAchievementQuery) => {
+export const getMyProjectsApi = (params?: MyProjectQuery) => {
   return http.request<
-    ResponseData<{ total: number; rows: LabAchievementDTO[] }>
+    ResponseData<{ total: number; rows: LabProjectDTO[] }>
   >("get", "/lab/my-achievements", { params });
 };
 
 /**
- * 切换我的成果可见性
+ * 切换我的项目可见性
  */
-export const toggleMyAchievementVisibilityApi = (
-  achievementId: number,
+export const toggleMyProjectVisibilityApi = (
+  projectId: number,
   visible: boolean
 ) => {
   return http.request<void>(
     "put",
-    `/lab/my-achievements/${achievementId}/visibility`,
+    `/lab/my-achievements/${projectId}/visibility`,
     { params: { visible } }
   );
 };
@@ -424,19 +424,19 @@ export const toggleMyAchievementVisibilityApi = (
 // ==================== 公开端 API ====================
 
 /**
- * 获取公开成果列表
+ * 获取公开项目列表
  */
-export const getPublicAchievementsApi = (params?: PublicAchievementQuery) => {
+export const getPublicProjectsApi = (params?: PublicProjectQuery) => {
   return http.request<
-    ResponseData<{ total: number; rows: PublicAchievementDTO[] }>
+    ResponseData<{ total: number; rows: PublicProjectDTO[] }>
   >("get", "/open/achievements", { params });
 };
 
 /**
- * 获取公开成果详情
+ * 获取公开项目详情
  */
-export const getPublicAchievementDetailApi = (id: number) => {
-  return http.request<ResponseData<PublicAchievementDTO>>(
+export const getPublicProjectDetailApi = (id: number) => {
+  return http.request<ResponseData<PublicProjectDTO>>(
     "get",
     `/open/achievements/${id}`
   );
