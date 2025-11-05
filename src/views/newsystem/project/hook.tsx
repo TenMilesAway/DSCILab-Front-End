@@ -10,22 +10,22 @@ import { useUserStoreHook } from "@/store/modules/user";
 import { getDictCategoryTreeApi, type LabAchievementCategoryDTO } from "@/api/newsystem/achievement-category";
 
 import {
-  getAchievementListApi,
-  createAchievementApi,
-  updateAchievementApi,
-  deleteAchievementApi,
-  toggleMyAchievementVisibilityApi,
-  type AchievementListQuery,
-  type LabAchievementDTO,
-  type CreateAchievementRequest,
-  type UpdateAchievementRequest
-} from "@/api/newsystem/paper";
+  getProjectListApi,
+  createProjectApi,
+  updateProjectApi,
+  deleteProjectApi,
+  toggleMyProjectVisibilityApi,
+  type ProjectListQuery,
+  type LabProjectDTO,
+  type CreateProjectRequest,
+  type UpdateProjectRequest
+} from "@/api/newsystem/project";
 
-// 使用从paper.ts导入的接口类型
-// AchievementListQuery, LabAchievementDTO, CreateAchievementRequest, UpdateAchievementRequest
+// 使用从project.ts导入的接口类型
+// ProjectListQuery, LabProjectDTO, CreateProjectRequest, UpdateProjectRequest
 
 export function useHook() {
-  const searchFormParams = reactive<AchievementListQuery>({
+  const searchFormParams = reactive<ProjectListQuery>({
     pageNum: 1,
     pageSize: 10,
     keyword: undefined,
@@ -37,9 +37,7 @@ export function useHook() {
     dateStart: undefined,
     dateEnd: undefined,
     parentCategoryId: undefined,
-    ownerUserId: undefined,
-    // 默认在成果管理列表中排除“项目”类型
-    excludeProject: true
+    ownerUserId: undefined
   });
 
   const formRef = ref();
@@ -52,10 +50,11 @@ export function useHook() {
     background: true
   });
 
-  // 成果类型映射
+  // 项目类型映射
   const categoryMap = ref<Map<number, string>>(new Map());
+  const defaultProjectTopId = ref<number | undefined>(undefined);
 
-  // 获取成果类型映射
+  // 获取项目类型映射
   const loadCategoryMap = async () => {
     try {
       const response = await getDictCategoryTreeApi();
@@ -72,21 +71,40 @@ export function useHook() {
           }
         });
         categoryMap.value = map;
+
+        // 设置默认筛选为“项目”一级类型（仅首次加载时）
+        const projectTop = response.data.find(category => {
+          // 部分环境后端返回`type`字段：1=论文，2=项目；若无则回退按名称匹配
+          const isProjectByType = (category as any)?.type === 2;
+          const isProjectByName = category.categoryName?.includes("项目");
+          return isProjectByType || isProjectByName;
+        });
+        defaultProjectTopId.value = projectTop?.id;
+        if (!searchFormParams.parentCategoryId) {
+          if (projectTop) {
+            // 选择“项目”一级类型，避免与旧type字段冲突
+            searchFormParams.parentCategoryId = projectTop.id;
+            searchFormParams.type = undefined;
+          } else if (searchFormParams.type === undefined) {
+            // 兜底：若无法识别“项目”一级类型，默认按旧type筛选为项目
+            searchFormParams.type = 2;
+          }
+        }
       }
     } catch (error) {
-      console.error('获取成果类型映射失败:', error);
+      console.error('获取项目类型映射失败:', error);
     }
   };
 
   const columns: TableColumnList = [
     {
-      label: "成果ID",
+      label: "项目ID",
       prop: "id",
       width: 90,
       fixed: "left"
     },
     {
-      label: "成果名称",
+      label: "项目名称",
       prop: "title",
       minWidth: 200,
       showOverflowTooltip: true
@@ -199,11 +217,11 @@ export function useHook() {
   ];
 
   // 使用真实的API调用
-  // getAchievementListApi, createAchievementApi, updateAchievementApi, deleteAchievementApi 已从 paper.ts 导入
+  // getProjectListApi, createProjectApi, updateProjectApi, deleteProjectApi 已从 project.ts 导入
 
   async function handleAdd(row, done) {
-    await createAchievementApi(row as CreateAchievementRequest).then(() => {
-      message(`您新增了成果《${row.title}》`, {
+    await createProjectApi(row as CreateProjectRequest).then(() => {
+      message(`您新增了项目《${row.title}》`, {
         type: "success"
       });
       done();
@@ -212,9 +230,9 @@ export function useHook() {
   }
 
   async function handleUpdate({ id, data }, done) {
-    await updateAchievementApi(id, data as UpdateAchievementRequest).then(
+    await updateProjectApi(id, data as UpdateProjectRequest).then(
       () => {
-        message(`您修改了成果《${data.title}》`, {
+        message(`您修改了项目《${data.title}》`, {
           type: "success"
         });
         done();
@@ -224,17 +242,17 @@ export function useHook() {
   }
 
   async function handleDelete(row) {
-    await deleteAchievementApi(row.id).then(() => {
-      message(`您删除了成果《${row.title}》`, { type: "success" });
+    await deleteProjectApi(row.id).then(() => {
+      message(`您删除了项目《${row.title}》`, { type: "success" });
       getList();
     });
   }
 
   async function onVisibilityChange({ row }) {
     try {
-      await toggleMyAchievementVisibilityApi(row.id, row.myVisibility);
+      await toggleMyProjectVisibilityApi(row.id, row.myVisibility);
       message(
-        `成果《${row.title}》的显示状态已${row.myVisibility ? "开启" : "关闭"}`,
+        `项目《${row.title}》的显示状态已${row.myVisibility ? "开启" : "关闭"}`,
         {
           type: "success"
         }
@@ -244,7 +262,7 @@ export function useHook() {
     } catch (error) {
       // 如果API调用失败，恢复原来的状态
       row.myVisibility = !row.myVisibility;
-      message(`更新成果《${row.title}》的显示状态失败`, {
+      message(`更新项目《${row.title}》的显示状态失败`, {
         type: "error"
       });
     }
@@ -255,7 +273,8 @@ export function useHook() {
     getList();
   }
 
-  async function openDialog(title = "新增", row?: LabAchievementDTO) {
+  async function openDialog(title = "新增", row?: LabProjectDTO) {
+    const isEdit = !!row;
     // 处理作者数据回显
     const authors =
       row?.authors?.length > 0
@@ -265,6 +284,8 @@ export function useHook() {
           email: author.email || null,
           authorOrder: index + 1,
           isCorresponding: author.isCorresponding || false,
+          // 当 role 为 '负责人' 时标记 isLeader
+          isLeader: author.role === '负责人',
           visible: author.visible !== false
         }))
         : [
@@ -274,12 +295,13 @@ export function useHook() {
             email: null,
             authorOrder: 1,
             isCorresponding: true,
+            isLeader: false,
             visible: true
           }
         ];
 
     addDialog({
-      title: `${title}成果`,
+      title: `${title}项目`,
       props: {
         formInline: {
           id: row?.id ?? 0,
@@ -324,16 +346,14 @@ export function useHook() {
             ? new Date(row.projectEndDate).toISOString().slice(0, 7)
             : "",
           doi: row?.doi ?? "",
-          achievementType: "paper", // 默认值，将通过categoryId的watch自动设置
+          achievementType: isEdit ? "paper" : "project", // 新增默认按“项目”，编辑将由categoryId/watcher矫正
           paperType: row?.paperType ?? undefined,
           projectType: row?.projectType ?? undefined,
-          categoryId: row?.categoryId ?? undefined, // 成果类型ID（v2接口使用叶子节点categoryId）
+          // 新增模式默认选择“项目”一级类型
+          categoryId: (isEdit ? row?.categoryId : defaultProjectTopId.value) ?? undefined,
 
           githubUrl: row?.type === 1 ? row?.gitUrl ?? "" : "",
           published: row?.published ?? true,
-          gitUrl: row?.gitUrl ?? "",
-          linkUrl: row?.linkUrl ?? "",
-          pdfUrl: row?.pdfUrl ?? "",
           reference: row?.reference ?? "",
           fundingAmount: row?.fundingAmount ?? undefined
         }
@@ -372,20 +392,16 @@ export function useHook() {
             } else {
               return {
                 ...baseAuthor,
-                isCorresponding: false
+                isCorresponding: false,
+                // 将负责人勾选映射到 role 字段
+                role: author.isLeader ? '负责人' : null
               };
             }
           });
 
-        const curData: CreateAchievementRequest | UpdateAchievementRequest = {
+        const curData: CreateProjectRequest | UpdateProjectRequest = {
           title: formData.title,
-          // 删除type字段，v2接口不再需要
-          paperType:
-            formData.achievementType === "paper" ? formData.paperType : null,
-          projectType:
-            formData.achievementType === "project"
-              ? formData.projectType
-              : null,
+          // v2 严格拒收 legacy 字段（type/paperType/projectType），仅提交 categoryId
           categoryId: formData.specificCategoryId || null, // 具体类型ID放在categoryId字段
           venue: formData.journal || null,
           publishDate:
@@ -399,9 +415,6 @@ export function useHook() {
               ? formData.projectEndDate || null
               : null,
           doi: formData.doi || null,
-          linkUrl: formData.linkUrl || null,
-          gitUrl: formData.gitUrl || null,
-          pdfUrl: formData.pdfUrl || null,
           reference: formData.reference || null,
           fundingAmount: formData.fundingAmount || null,
           published: formData.published,
@@ -422,7 +435,7 @@ export function useHook() {
             } else {
               const userId = formData.id;
               if (!userId || userId === 0) {
-                message("成果ID不能为空", { type: "error" });
+                message("项目ID不能为空", { type: "error" });
                 return;
               }
               handleUpdate({ id: userId, data: curData }, done);
@@ -438,19 +451,11 @@ export function useHook() {
     searchFormParams.pageNum = pagination.currentPage;
     searchFormParams.pageSize = pagination.pageSize;
 
-    // 统一使用lab/achievements接口
-    // 与 type 互斥：当 excludeProject=true 时，不传 type 参数
-    const params: AchievementListQuery = { ...searchFormParams };
-    if (params.excludeProject) {
-      params.type = undefined;
-    } else if (params.type !== undefined && params.type !== null) {
-      // 当用户选择了type时，取消excludeProject以保持互斥
-      params.excludeProject = undefined;
-    }
-    const result = await getAchievementListApi(params);
+    // 统一使用lab/projects接口
+    const result = await getProjectListApi({ ...searchFormParams });
     const data = result.data;
 
-    // 为每个成果初始化myVisibility字段，默认为true（显示）
+    // 为每个项目初始化myVisibility字段，默认为true（显示）
     dataList.value = data.rows.map(item => ({
       ...item,
       myVisibility: item.myVisibility !== undefined ? item.myVisibility : true
@@ -465,9 +470,13 @@ export function useHook() {
   const resetForm = formEl => {
     if (!formEl) return;
     formEl.resetFields();
-    // 重置后继续排除项目成果，保持与type互斥
-    searchFormParams.excludeProject = true;
-    searchFormParams.type = undefined;
+    // 重置后仍默认筛选为“项目”
+    if (defaultProjectTopId.value) {
+      searchFormParams.parentCategoryId = defaultProjectTopId.value;
+      searchFormParams.type = undefined;
+    } else if (searchFormParams.type === undefined) {
+      searchFormParams.type = 2;
+    }
     onSearch();
   };
 
