@@ -11,6 +11,7 @@ export interface AchievementListQuery {
   paperType?: number; // 仅type=1生效，1..7
   projectType?: number; // 仅type=2生效，1..8
   parentCategoryId?: number; // 成果类型ID（新类型系统，推荐传二级分类ID）
+  categoryId?: number; // 成果类型ID（具体分类ID）
   published?: boolean; // 是否发布
   isVerified?: boolean; // 是否审核
   ownerUserId?: number; // 拥有者用户ID
@@ -28,12 +29,13 @@ export interface CreateAchievementRequest {
   titleEn?: string | null; // 可选
   description?: string | null; // 可选
   keywords?: string | null; // 可选，<=1000
+  type?: 1 | 2; // legacy 必填，1=论文 2=项目
   // v2接口删除type字段，仅使用categoryId
   paperType?: number | null; // 论文类型：1=期刊,2=会议,3=预印本,4=专利,5=软著,6=标准,7=专著
   projectType?: number | null; // 项目类型：1=横向,2=国自然面上,3=国自然青年,4=北京市教委科技一般,5=国家级教改,6=省部级教改,7=其他教改,8=其他纵向
   categoryId?: number | null; // 成果类型ID（新类型系统，推荐传二级分类ID）
   venue?: string | null; // 可选，<=300
-  publishDate?: string | null; // 论文发表年份；格式：YYYY
+  publishDate?: string | null; // 发布时间；格式：YYYY-MM-DD
   projectStartDate?: string | null; // 项目开始日期；格式：YYYY-MM
   projectEndDate?: string | null; // 项目结束日期；可空或>=开始；格式：YYYY-MM
   reference?: string | null;
@@ -45,6 +47,7 @@ export interface CreateAchievementRequest {
   fundingAmount?: number | null; // >=0，单位：万元
   published?: boolean | null; // 默认false
   extra?: string | object | null;
+  projectIds?: number[] | null;
   authors?: CreateAuthorRequest[]; // 可选：创建时批量附带作者
 }
 
@@ -56,12 +59,13 @@ export interface UpdateAchievementRequest {
   titleEn?: string | null;
   description?: string | null;
   keywords?: string | null; // <=1000
+  type?: 1 | 2; // legacy 必填，1=论文 2=项目
   // v2接口删除type字段，仅使用categoryId
   paperType?: number | null; // 论文类型：1=期刊,2=会议,3=预印本,4=专利,5=软著,6=标准,7=专著
   projectType?: number | null; // 项目类型：1=横向,2=国自然面上,3=国自然青年,4=北京市教委科技一般,5=国家级教改,6=省部级教改,7=其他教改,8=其他纵向
   categoryId?: number | null; // 成果类型ID（新类型系统，推荐传二级分类ID）
   venue?: string | null; // <=300
-  publishDate?: string | null; // 论文发表年份；格式：YYYY
+  publishDate?: string | null; // 发布时间；格式：YYYY-MM-DD
   projectStartDate?: string | null; // 项目开始日期；格式：YYYY-MM
   projectEndDate?: string | null; // 项目结束日期；可空或>=开始；格式：YYYY-MM
   reference?: string | null;
@@ -73,6 +77,7 @@ export interface UpdateAchievementRequest {
   fundingAmount?: number | null; // >=0，单位：万元
   published?: boolean | null;
   extra?: string | object | null;
+  projectIds?: number[] | null;
 }
 
 /**
@@ -107,6 +112,9 @@ export interface LabAchievementDTO {
   isVerified: boolean;
   myVisibility?: boolean; // 我的成果可见性（仅在my-achievements接口中返回）
   authors?: AchievementAuthorDTO[]; // 可选：作者DTO
+  categoryId: number | null; // 成果类型ID
+  projectIds: number[] | null;
+  relatedProjects: { id: number; title: string }[] | null;
   extra: string | object | null;
   createTime: string;
   updateTime: string;
@@ -256,21 +264,21 @@ export interface PublicAchievementDTO {
 export const getAchievementListApi = (params?: AchievementListQuery) => {
   return http.request<
     ResponseData<{ total: number; rows: LabAchievementDTO[] }>
-  >("get", "/lab/achievements", { params });
+  >("get", "/lab/papers", { params });
 };
 
 /**
  * 获取成果详情
  */
 export const getAchievementDetailApi = (id: number) => {
-  return http.request<LabAchievementDTO>("get", `/lab/achievements/${id}`);
+  return http.request<LabAchievementDTO>("get", `/lab/papers/${id}`);
 };
 
 /**
  * 创建成果
  */
 export const createAchievementApi = (data: CreateAchievementRequest) => {
-  return http.request<LabAchievementDTO>("post", "/v2/lab/achievements", {
+  return http.request<LabAchievementDTO>("post", "/lab/papers", {
     data
   });
 };
@@ -282,7 +290,7 @@ export const updateAchievementApi = (
   id: number,
   data: UpdateAchievementRequest
 ) => {
-  return http.request<LabAchievementDTO>("put", `/v2/lab/achievements/${id}`, {
+  return http.request<LabAchievementDTO>("put", `/lab/papers/${id}`, {
     data
   });
 };
@@ -291,7 +299,7 @@ export const updateAchievementApi = (
  * 删除成果（软删除）
  */
 export const deleteAchievementApi = (id: number) => {
-  return http.request<void>("delete", `/lab/achievements/${id}`);
+  return http.request<void>("delete", `/lab/papers/${id}`);
 };
 
 /**
@@ -429,7 +437,7 @@ export const toggleMyAchievementVisibilityApi = (
 export const getPublicAchievementsApi = (params?: PublicAchievementQuery) => {
   return http.request<
     ResponseData<{ total: number; rows: PublicAchievementDTO[] }>
-  >("get", "/open/achievements", { params });
+  >("get", "/open/papers", { params });
 };
 
 /**
@@ -438,6 +446,6 @@ export const getPublicAchievementsApi = (params?: PublicAchievementQuery) => {
 export const getPublicAchievementDetailApi = (id: number) => {
   return http.request<ResponseData<PublicAchievementDTO>>(
     "get",
-    `/open/achievements/${id}`
+    `/open/papers/${id}`
   );
 };

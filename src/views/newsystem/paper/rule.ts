@@ -16,15 +16,6 @@ const formRules = reactive(<FormRules>{
       trigger: "blur"
     }
   ],
-  // 作者数组验证将在表单组件中单独处理
-  // 每个作者的name字段在form.vue中为非必填
-  "authors.*.email": [
-    {
-      pattern: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
-      message: "邮箱格式不正确",
-      trigger: "blur"
-    }
-  ],
   achievementType: [
     {
       required: true,
