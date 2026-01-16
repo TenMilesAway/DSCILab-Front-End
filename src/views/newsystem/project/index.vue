@@ -26,7 +26,9 @@ const {
   resetForm,
   handleDelete,
   openDialog,
-  getList
+  getList,
+  isAchievementDialogOpen,
+  relatedAchievements
 } = useHook();
 
 // 项目类型相关数据
@@ -122,34 +124,33 @@ onMounted(() => {
           @page-size-change="getList"
           @page-current-change="getList"
         >
-          <template #operation="{ row }">
-            <el-button
-              class="reset-margin"
-              link
-              type="primary"
-              size="default"
-              @click="openDialog('编辑', row)"
-              :icon="useRenderIcon(EditPen)"
-            >
-              修改
-            </el-button>
-            <el-popconfirm title="是否确认删除?" @confirm="handleDelete(row)">
-              <template #reference>
-                <el-button
-                  class="reset-margin"
-                  link
-                  type="danger"
-                  size="default"
-                  :icon="useRenderIcon(Delete)"
-                >
-                  删除
-                </el-button>
-              </template>
-            </el-popconfirm>
-          </template>
         </pure-table>
       </template>
     </PureTableBar>
+
+    <el-dialog
+      v-model="isAchievementDialogOpen"
+      title="项目关联成果"
+      width="800px"
+      align-center
+    >
+      <el-table :data="relatedAchievements" border stripe>
+        <el-table-column prop="id" label="ID" width="80" align="center" />
+        <el-table-column prop="title" label="成果名称" show-overflow-tooltip />
+        <el-table-column label="作者" show-overflow-tooltip>
+          <template #default="scope">
+            {{ scope.row.authors?.map((a: any) => a.name).join(', ') || '-' }}
+          </template>
+        </el-table-column>
+        <el-table-column prop="categoryName" label="类型" width="120" align="center" />
+        <el-table-column prop="publishDate" label="时间" width="120" align="center" />
+      </el-table>
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="isAchievementDialogOpen = false">关闭</el-button>
+        </div>
+      </template>
+    </el-dialog>
   </div>
 </template>
 

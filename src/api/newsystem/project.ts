@@ -1,4 +1,5 @@
 import { http } from "@/utils/http";
+import { AchievementAuthorDTO } from "./paper";
 
 /**
  * 项目列表查询参数
@@ -6,17 +7,14 @@ import { http } from "@/utils/http";
 export interface ProjectListQuery {
   pageNum?: number; // 页码，默认1
   pageSize?: number; // 每页大小，默认100
-  keyword?: string; // 关键词，匹配 title/keywords
-  type?: 1 | 2; // 1=论文, 2=项目
-  paperType?: number; // 仅type=1生效，1..7
-  projectType?: number; // 仅type=2生效，1..8
-  categoryId?: number; // 二级分类ID（叶子分类）；当传入时服务端忽略type
-  parentCategoryId?: number; // 项目类型ID（新类型系统，推荐传二级分类ID）
-  published?: boolean; // 是否发布
-  isVerified?: boolean; // 是否审核
+  keyword?: string; // 关键词
+  projectTypeId?: number; // 项目类型字典值
+  supporter?: string; // 支持单位/机构
   ownerUserId?: number; // 拥有者用户ID
-  dateStart?: string; // 开始日期 yyyy-MM-dd
-  dateEnd?: string; // 结束日期 yyyy-MM-dd
+  published?: boolean; // 是否发布
+  verified?: boolean; // 是否审核
+  startDateBegin?: string; // 开始日期区间起，YYYY-MM-DD
+  startDateEnd?: string; // 开始日期区间止，YYYY-MM-DD
 }
 
 /**
@@ -27,24 +25,20 @@ export interface CreateProjectRequest {
   titleEn?: string | null; // 可选
   description?: string | null; // 可选
   keywords?: string | null; // 可选，<=1000
-  // v2接口删除type字段，仅使用categoryId
-  paperType?: number | null; // 论文类型：1=期刊,2=会议,3=预印本,4=专利,5=软著,6=标准,7=专著
-  projectType?: number | null; // 项目类型：1=横向,2=国自然面上,3=国自然青年,4=北京市教委科技一般,5=国家级教改,6=省部级教改,7=其他教改,8=其他纵向
-  categoryId?: number | null; // 项目类型ID（新类型系统，推荐传二级分类ID）
-  venue?: string | null; // 可选，<=300
-  publishDate?: string | null; // 论文发表年份；格式：YYYY
+  type?: 1 | 2;
+  projectTypeId?: number | null; // 项目类型字典值 1..8
+  projectNumber?: string | null; // 项目编号
   projectStartDate?: string | null; // 项目开始日期；格式：YYYY-MM
   projectEndDate?: string | null; // 项目结束日期；可空或>=开始；格式：YYYY-MM
   reference?: string | null;
-  linkUrl?: string | null;
-  gitUrl?: string | null;
+  linkUrl?: string | null; // 项目主页/资料链接
+  gitUrl?: string | null; // 代码仓库链接
   homepageUrl?: string | null;
   pdfUrl?: string | null;
-  doi?: string | null;
   fundingAmount?: number | null; // >=0，单位：万元
   published?: boolean | null; // 默认false
   extra?: string | object | null;
-  authors?: CreateAuthorRequest[]; // 可选：创建时批量附带作者
+  authors?: CreateAuthorRequest[] | null; // 作者列表（至少包含name与authorOrder；可选userId）
 }
 
 /**
@@ -55,12 +49,9 @@ export interface UpdateProjectRequest {
   titleEn?: string | null;
   description?: string | null;
   keywords?: string | null; // <=1000
-  // v2接口删除type字段，仅使用categoryId
-  paperType?: number | null; // 论文类型：1=期刊,2=会议,3=预印本,4=专利,5=软著,6=标准,7=专著
-  projectType?: number | null; // 项目类型：1=横向,2=国自然面上,3=国自然青年,4=北京市教委科技一般,5=国家级教改,6=省部级教改,7=其他教改,8=其他纵向
-  categoryId?: number | null; // 项目类型ID（新类型系统，推荐传二级分类ID）
-  venue?: string | null; // <=300
-  publishDate?: string | null; // 论文发表年份；格式：YYYY
+  type?: 1 | 2;
+  projectTypeId?: number | null;
+  projectNumber?: string | null;
   projectStartDate?: string | null; // 项目开始日期；格式：YYYY-MM
   projectEndDate?: string | null; // 项目结束日期；可空或>=开始；格式：YYYY-MM
   reference?: string | null;
@@ -68,10 +59,21 @@ export interface UpdateProjectRequest {
   gitUrl?: string | null;
   homepageUrl?: string | null;
   pdfUrl?: string | null;
-  doi?: string | null;
   fundingAmount?: number | null; // >=0，单位：万元
   published?: boolean | null;
   extra?: string | object | null;
+  authors?: CreateAuthorRequest[] | null;
+}
+
+export interface RelatedPaperDTO {
+  id: number;
+  title: string;
+  paperTypeId: number;
+  paperTypeDesc: string;
+  publishDate: string;
+  categoryId: number;
+  categoryName: string;
+  authors?: AchievementAuthorDTO[];
 }
 
 /**
@@ -106,6 +108,7 @@ export interface LabProjectDTO {
   isVerified: boolean;
   myVisibility?: boolean; // 我的项目可见性（仅在my-projects接口中返回）
   authors?: ProjectAuthorDTO[]; // 可选：作者DTO
+  relatedPapers?: RelatedPaperDTO[]; // 关联的成果/论文
   extra: string | object | null;
   createTime: string;
   updateTime: string;
@@ -256,21 +259,21 @@ export interface PublicProjectDTO {
 export const getProjectListApi = (params?: ProjectListQuery) => {
   return http.request<
     ResponseData<{ total: number; rows: LabProjectDTO[] }>
-  >("get", "/lab/achievements", { params });
+  >("get", "/lab/projects", { params });
 };
 
 /**
  * 获取项目详情
  */
 export const getProjectDetailApi = (id: number) => {
-  return http.request<LabProjectDTO>("get", `/lab/achievements/${id}`);
+  return http.request<ResponseData<LabProjectDTO>>("get", `/lab/projects/${id}`);
 };
 
 /**
  * 创建项目
  */
 export const createProjectApi = (data: CreateProjectRequest) => {
-  return http.request<LabProjectDTO>("post", "/v2/lab/achievements", {
+  return http.request<ResponseData<number>>("post", "/lab/projects", {
     data
   });
 };
@@ -282,7 +285,7 @@ export const updateProjectApi = (
   id: number,
   data: UpdateProjectRequest
 ) => {
-  return http.request<LabProjectDTO>("put", `/v2/lab/achievements/${id}`, {
+  return http.request<ResponseData<void>>("put", `/lab/projects/${id}`, {
     data
   });
 };
@@ -291,14 +294,14 @@ export const updateProjectApi = (
  * 删除项目（软删除）
  */
 export const deleteProjectApi = (id: number) => {
-  return http.request<void>("delete", `/lab/achievements/${id}`);
+  return http.request<void>("delete", `/lab/projects/${id}`);
 };
 
 /**
  * 发布/取消发布项目
  */
 export const publishProjectApi = (id: number, published: boolean) => {
-  return http.request<void>("put", `/lab/achievements/${id}/publish`, {
+  return http.request<void>("put", `/lab/projects/${id}/publish`, {
     params: { published }
   });
 };
@@ -307,7 +310,7 @@ export const publishProjectApi = (id: number, published: boolean) => {
  * 审核/取消审核项目
  */
 export const verifyProjectApi = (id: number, verified: boolean) => {
-  return http.request<void>("put", `/lab/achievements/${id}/verify`, {
+  return http.request<void>("put", `/lab/projects/${id}/verify`, {
     params: { verified }
   });
 };

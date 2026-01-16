@@ -5,11 +5,12 @@ import { formRules } from "./rule";
 import { ElButton, ElIcon } from "element-plus";
 import { Plus, Delete } from "@element-plus/icons-vue";
 import { getDictCategoryTreeApi, type LabAchievementCategoryDTO } from "@/api/newsystem/achievement-category";
+import { getProjectListApi, type LabProjectDTO } from "@/api/newsystem/project";
+import { searchLabUsersByKeywordApi, type LabUserProfileDTO } from "@/api/newsystem/user";
 
 interface FormAuthor {
   userId?: number | null; // 内部作者userId；外部作者为null
   name: string; // 作者姓名
-  email?: string | null; // 邮箱
   authorOrder: number; // 作者顺序
   isCorresponding: boolean; // 是否通讯作者
   visible?: boolean; // 是否可见（仅内部作者）
@@ -17,26 +18,24 @@ interface FormAuthor {
 
 interface FormInlineData {
   id?: number;
-  title: string; // 成果标题
-  authors: FormAuthor[]; // 作者列表
-  achievementType: string; // 成果类型：paper/project/other
-  paperType?: number; // 论文类型：1=期刊,2=会议,3=预印本,4=专利,5=软著,6=标准,7=专著
-  projectType?: number; // 项目类型：1=横向,2=国自然面上,3=国自然青年,4=北京市教委科技一般,5=国家级教改,6=省部级教改,7=其他教改,8=其他纵向
-  categoryId?: number; // 成果类型ID（新类型系统）
-  specificCategoryId?: number; // 具体类型ID（二级分类）
-  journal?: string; // 期刊名称（论文）
-  publishDate?: string; // 发表日期
-  projectStartDate?: string; // 项目开始日期（项目）
-  projectEndDate?: string; // 项目结束日期（项目）
-  doi?: string; // 编号（DOI、专利号、软著登记号等）
-
-  githubUrl?: string; // GitHub链接（项目）
-  published?: boolean; // 发表状态：论文是否发表/项目是否结项
-  gitUrl?: string; // Git链接
-  linkUrl?: string; // 相关链接
-  pdfUrl?: string; // PDF链接
-  reference?: string; // 前端展示引用
-  fundingAmount?: number; // 项目经费（万元）
+  title: string;
+  authors: FormAuthor[];
+  achievementType: string;
+  paperType?: number;
+  projectType?: number;
+  categoryId?: number;
+  journal?: string;
+  publishDate?: string;
+  projectStartDate?: string;
+  projectEndDate?: string;
+  doi?: string;
+  githubUrl?: string;
+  published?: boolean;
+  gitUrl?: string;
+  linkUrl?: string;
+  pdfUrl?: string;
+  fundingAmount?: number;
+  projectIds?: number[];
 }
 
 interface FormProps {
@@ -50,9 +49,8 @@ const props = withDefaults(defineProps<FormProps>(), {
     authors: [
       {
         name: "",
-        email: null,
         authorOrder: 1,
-        isCorresponding: true,
+        isCorresponding: false,
         visible: true,
         userId: null
       }
@@ -61,7 +59,6 @@ const props = withDefaults(defineProps<FormProps>(), {
     paperType: undefined,
     projectType: undefined,
     categoryId: undefined,
-    specificCategoryId: undefined,
     journal: "",
     publishDate: "",
     projectEndDate: "",
@@ -71,7 +68,6 @@ const props = withDefaults(defineProps<FormProps>(), {
     gitUrl: "",
     linkUrl: "",
     pdfUrl: "",
-    reference: "",
     fundingAmount: undefined
   })
 });
@@ -82,7 +78,58 @@ const formRuleRef = ref();
 // 成果类型相关数据
 const categoryTree = ref<LabAchievementCategoryDTO[]>([]);
 const topLevelCategories = ref<LabAchievementCategoryDTO[]>([]);
-const currentSubCategories = ref<LabAchievementCategoryDTO[]>([]);
+const secondLevelCategories = ref<LabAchievementCategoryDTO[]>([]);
+const defaultParentId = 1;
+
+const projectOptions = ref<{ label: string; value: number }[]>([]);
+const projectLoading = ref(false);
+
+const searchProjects = async (query: string) => {
+  const q = (query || "").trim();
+  if (!q) {
+    return;
+  }
+  projectLoading.value = true;
+  try {
+    const res = await getProjectListApi({
+      pageNum: 1,
+      pageSize: 1000,
+      keyword: q
+    } as any);
+    const rows = res.data.rows || [];
+    const options = rows.map(p => ({
+      label: p.title,
+      value: p.id
+    }));
+    projectOptions.value = options;
+  } catch (error) {
+    console.error("搜索项目失败:", error);
+  } finally {
+    projectLoading.value = false;
+  }
+};
+
+const loadInitialProjectOptions = async () => {
+  const ids = newFormInline.value.projectIds;
+  if (!Array.isArray(ids) || ids.length === 0) {
+    return;
+  }
+  try {
+    const res = await getProjectListApi({
+      pageNum: 1,
+      pageSize: 1000
+    } as any);
+    const rows = res.data.rows || [];
+    const idSet = new Set(ids);
+    const selectedRows = rows.filter(p => idSet.has(p.id));
+    projectOptions.value = selectedRows.map(p => ({
+      label: p.title,
+      value: p.id
+    }));
+  } catch (error) {
+    console.error("初始化关联项目选项失败:", error);
+  }
+};
 
 // 获取成果类型树
 const loadCategoryTree = async () => {
@@ -94,15 +141,12 @@ const loadCategoryTree = async () => {
       topLevelCategories.value = response.data.filter(
         cat => cat.categoryName !== '项目' && (cat.categoryCode ? cat.categoryCode.toLowerCase() !== 'project' : true)
       );
+      const parent = categoryTree.value.find(c => c.id === defaultParentId);
+      secondLevelCategories.value = parent?.children || [];
       
-      // 数据加载完成后，如果是编辑模式且有categoryId，需要初始化二级类型选项
+      // 数据加载完成后，如果是编辑模式且有categoryId，需要初始化相关字段
       if (newFormInline.value.categoryId) {
-        isInitializing.value = true; // 标记为初始化状态
-        initSubCategories(newFormInline.value.categoryId);
-        // 延迟重置初始化状态，确保watch不会在初始化时清空数据
-        nextTick(() => {
-          isInitializing.value = false;
-        });
+        handleCategoryChange(newFormInline.value.categoryId);
       }
     }
   } catch (error) {
@@ -110,18 +154,23 @@ const loadCategoryTree = async () => {
   }
 };
 
-// 初始化二级类型选项的函数
-const initSubCategories = (categoryId: number) => {
-  // 首先在所有类型中查找（包括一级和二级）
+// 处理成果类型变化
+const handleCategoryChange = (categoryId: number) => {
+  if (!categoryId) {
+    newFormInline.value.achievementType = 'paper';
+    return;
+  }
+
+  // 查找选中的类型及其父类型
   let selectedCategory: LabAchievementCategoryDTO | undefined;
   let parentCategory: LabAchievementCategoryDTO | undefined;
   
   // 先查找是否为一级类型
-  selectedCategory = topLevelCategories.value.find(cat => cat.id === categoryId);
+  selectedCategory = categoryTree.value.find(cat => cat.id === categoryId);
   
   if (!selectedCategory) {
     // 如果不是一级类型，查找是否为二级类型
-    for (const topCategory of topLevelCategories.value) {
+    for (const topCategory of categoryTree.value) {
       if (topCategory.children) {
         const foundChild = topCategory.children.find(child => child.id === categoryId);
         if (foundChild) {
@@ -134,69 +183,28 @@ const initSubCategories = (categoryId: number) => {
   }
   
   if (selectedCategory) {
-    if (parentCategory) {
-      // 如果是二级类型，设置父类型的子类型列表，并设置正确的一级类型ID
-      currentSubCategories.value = parentCategory.children || [];
-      newFormInline.value.categoryId = parentCategory.id; // 设置一级类型ID
-      newFormInline.value.specificCategoryId = selectedCategory.id; // 设置二级类型ID
-      
-      // 根据父类型设置achievementType
-      const categoryName = parentCategory.categoryName;
-      if (categoryName === '论文') {
-        newFormInline.value.achievementType = 'paper';
-      } else if (categoryName === '项目') {
-        newFormInline.value.achievementType = 'project';
-      } else {
-        newFormInline.value.achievementType = 'other';
-      }
-    } else if (selectedCategory.children) {
-      // 如果是一级类型且有子类型
-      currentSubCategories.value = selectedCategory.children;
-      
-      // 根据一级类型设置achievementType
-      const categoryName = selectedCategory.categoryName;
-      if (categoryName === '论文') {
-        newFormInline.value.achievementType = 'paper';
-      } else if (categoryName === '项目') {
-        newFormInline.value.achievementType = 'project';
-      } else {
-        newFormInline.value.achievementType = 'other';
-      }
+    // 确定根类型以设置achievementType
+    const rootCategory = parentCategory || selectedCategory;
+    const categoryName = rootCategory.categoryName;
+    
+    if (categoryName === '论文') {
+      newFormInline.value.achievementType = 'paper';
+    } else if (categoryName === '项目') {
+      newFormInline.value.achievementType = 'project';
     } else {
-      // 如果是一级类型但没有子类型
-      currentSubCategories.value = [];
+      newFormInline.value.achievementType = 'other';
     }
-  } else {
-    currentSubCategories.value = [];
   }
 };
 
-// 标记是否为初始化状态
-const isInitializing = ref(false);
-
-// 监听一级类型变化，更新二级类型选项
-watch(() => newFormInline.value.categoryId, (newCategoryId, oldCategoryId) => {
-  // 如果正在初始化，跳过watch处理
-  if (isInitializing.value) {
-    return;
-  }
-  
-  if (newCategoryId) {
-    initSubCategories(newCategoryId);
-    // 当一级类型发生变化时，总是清空二级类型选择
-    // 无论是新增模式还是编辑模式，只要用户主动切换一级类型就清空二级类型
-    if (oldCategoryId !== undefined && oldCategoryId !== newCategoryId) {
-      newFormInline.value.specificCategoryId = undefined;
-    }
-  } else {
-    currentSubCategories.value = [];
-    newFormInline.value.specificCategoryId = undefined;
-    newFormInline.value.achievementType = 'paper'; // 默认值
-  }
+// 监听类型变化
+watch(() => newFormInline.value.categoryId, (newCategoryId) => {
+  handleCategoryChange(newCategoryId);
 });
 
 onMounted(() => {
   loadCategoryTree();
+  loadInitialProjectOptions();
 });
 
 function getFormRuleRef() {
@@ -208,7 +216,6 @@ const addAuthor = () => {
   const newOrder = newFormInline.value.authors.length + 1;
   newFormInline.value.authors.push({
     name: "",
-    email: null,
     authorOrder: newOrder,
     isCorresponding: false,
     visible: true,
@@ -248,6 +255,39 @@ const moveAuthorDown = (index: number) => {
   }
 };
 
+async function fetchUserSuggest(query: string, cb: (results: Array<{ value: string; id: number; username?: string; englishName?: string | null }>) => void) {
+  const q = (query || "").trim();
+  if (!q) {
+    cb([]);
+    return;
+  }
+  try {
+    const res = await searchLabUsersByKeywordApi(q);
+    const list: LabUserProfileDTO[] = res.code === 0 ? (res.data || []) : [];
+    cb(
+      list.map(u => ({
+        value: u.realName,
+        id: u.id,
+        username: u.username,
+        englishName: u.englishName
+      }))
+    );
+  } catch {
+    cb([]);
+  }
+}
+
+function onUserSelect(index: number, item: { value: string; id: number }) {
+  const a = newFormInline.value.authors[index];
+  a.userId = item.id;
+  a.name = item.value;
+}
+
+function onUserClear(index: number) {
+  const a = newFormInline.value.authors[index];
+  a.userId = null;
+}
+
 defineExpose({ getFormRuleRef });
 </script>
 
@@ -278,29 +318,13 @@ defineExpose({ getFormRuleRef });
             class="w-full"
             v-model="newFormInline.categoryId"
             placeholder="请选择成果类型"
+            clearable
           >
-            <el-option 
-              v-for="category in topLevelCategories" 
+            <el-option
+              v-for="category in secondLevelCategories"
               :key="category.id"
-              :label="category.categoryName" 
-              :value="category.id" 
-            />
-          </el-select>
-        </el-form-item>
-      </re-col>
-
-      <re-col :value="12" v-if="currentSubCategories.length > 0">
-        <el-form-item label="具体类型" prop="specificCategoryId">
-          <el-select
-            class="w-full"
-            v-model="newFormInline.specificCategoryId"
-            placeholder="请选择具体类型"
-          >
-            <el-option 
-              v-for="category in currentSubCategories" 
-              :key="category.id"
-              :label="category.categoryName" 
-              :value="category.id" 
+              :label="category.categoryName"
+              :value="category.id"
             />
           </el-select>
         </el-form-item>
@@ -364,21 +388,14 @@ defineExpose({ getFormRuleRef });
                     <el-form-item
                       :prop="`authors.${index}.name`"
                     >
-                      <el-input
+                      <el-autocomplete
                         v-model="author.name"
+                        :fetch-suggestions="fetchUserSuggest"
                         placeholder="作者姓名"
+                        class="w-full"
                         clearable
-                      />
-                    </el-form-item>
-                  </el-col>
-                  <el-col :span="8">
-                    <el-form-item
-                      :prop="`authors.${index}.email`"
-                    >
-                      <el-input
-                        v-model="author.email"
-                        placeholder="邮箱（可选）"
-                        clearable
+                        @select="item => onUserSelect(index, item)"
+                        @clear="onUserClear(index)"
                       />
                     </el-form-item>
                   </el-col>
@@ -396,13 +413,13 @@ defineExpose({ getFormRuleRef });
                       </el-checkbox>
                     </el-form-item>
                   </el-col>
-                  <el-col :span="8">
+                  <!-- <el-col :span="8">
                     <el-form-item>
                       <el-checkbox v-model="author.visible">
                         公开显示
                       </el-checkbox>
                     </el-form-item>
-                  </el-col>
+                  </el-col> -->
                 </el-row>
               </div>
             </div>
@@ -442,17 +459,17 @@ defineExpose({ getFormRuleRef });
       <re-col :value="12">
         <el-form-item
           :label="
-            newFormInline.achievementType === 'project' ? '开始日期' : '发表年份'
+            newFormInline.achievementType === 'project' ? '开始日期' : '发布时间'
           "
           :prop="newFormInline.achievementType === 'project' ? 'projectStartDate' : 'publishDate'"
         >
           <el-date-picker
             v-if="newFormInline.achievementType === 'paper' || newFormInline.achievementType === 'other'"
             v-model="newFormInline.publishDate"
-            type="year"
-            placeholder="请选择年份"
-            format="YYYY"
-            value-format="YYYY"
+            type="date"
+            placeholder="请选择日期"
+            format="YYYY-MM-DD"
+            value-format="YYYY-MM-DD"
             class="w-full"
           />
           <el-date-picker
@@ -535,16 +552,28 @@ defineExpose({ getFormRuleRef });
         </el-form-item>
       </re-col>
 
-      <re-col :value="24">
-        <el-form-item label="前端展示引用" prop="reference" style="white-space: nowrap;">
-          <el-input
-            v-model="newFormInline.reference"
-            clearable
-            placeholder="请输入用于在前端页面进行展示的成果引用格式"
-          />
+      <re-col :value="24" v-if="newFormInline.achievementType === 'paper'">
+        <el-form-item label="关联项目">
+          <el-select
+            v-model="newFormInline.projectIds"
+            multiple
+            filterable
+            remote
+            reserve-keyword
+            placeholder="请输入关键词搜索关联项目"
+            :remote-method="searchProjects"
+            :loading="projectLoading"
+            class="w-full"
+          >
+            <el-option
+              v-for="opt in projectOptions"
+              :key="opt.value"
+              :label="opt.label"
+              :value="opt.value"
+            />
+          </el-select>
         </el-form-item>
       </re-col>
-
 
     </el-row>
   </el-form>

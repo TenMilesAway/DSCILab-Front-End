@@ -126,13 +126,18 @@ export function useHook() {
       prop: "timeDisplay",
       minWidth: 100,
       cellRenderer: ({ row }) => {
-        // 统一逻辑：优先显示publishDate提取的年份，如果没有，使用projectStartDate提取的年份
+        // 优先显示完整发布时间（YYYY-MM-DD）；项目显示开始年月（YYYY-MM）
         if (row.publishDate) {
-          const date = new Date(row.publishDate);
-          return date.getFullYear().toString();
+          const d = new Date(row.publishDate);
+          const y = d.getFullYear();
+          const m = String(d.getMonth() + 1).padStart(2, "0");
+          const day = String(d.getDate()).padStart(2, "0");
+          return `${y}-${m}-${day}`;
         } else if (row.projectStartDate) {
           const date = new Date(row.projectStartDate);
-          return date.getFullYear().toString();
+          const y = date.getFullYear();
+          const m = String(date.getMonth() + 1).padStart(2, "0");
+          return `${y}-${m}`;
         }
         return "-";
       }
@@ -262,7 +267,6 @@ export function useHook() {
         ? row.authors.map((author, index) => ({
           userId: author.userId || null,
           name: author.name,
-          email: author.email || null,
           authorOrder: index + 1,
           isCorresponding: author.isCorresponding || false,
           visible: author.visible !== false
@@ -271,9 +275,8 @@ export function useHook() {
           {
             userId: null,
             name: "",
-            email: null,
             authorOrder: 1,
-            isCorresponding: true,
+            isCorresponding: false,
             visible: true
           }
         ];
@@ -292,31 +295,24 @@ export function useHook() {
             : "",
           // 发表年份/日期：仅用于论文类型
           publishDate: (() => {
-            // 优先使用新类型系统判断
-            if (row?.categoryId && categoryMap.value.has(row.categoryId)) {
-              const categoryName = categoryMap.value.get(row.categoryId);
-              const isProject = categoryName?.includes('项目');
-
-              if (!isProject) {
-                // 论文类型：优先使用publishYear，其次使用publishDate提取年份
-                if (row?.publishYear) {
-                  return row.publishYear.toString();
-                } else if (row?.publishDate) {
-                  return new Date(row.publishDate).getFullYear().toString();
-                }
+            // 对非项目类型，直接使用完整的发布时间字符串（YYYY-MM-DD）
+            const isProject = (() => {
+              if (row?.categoryId && categoryMap.value.has(row.categoryId)) {
+                const categoryName = categoryMap.value.get(row.categoryId) || "";
+                return categoryName.includes("项目");
+              }
+              return row?.type === 2;
+            })();
+            if (!isProject) {
+              if (row?.publishDate) {
+                const d = new Date(row.publishDate);
+                // 规范化为 YYYY-MM-DD
+                const y = d.getFullYear();
+                const m = String(d.getMonth() + 1).padStart(2, "0");
+                const day = String(d.getDate()).padStart(2, "0");
+                return `${y}-${m}-${day}`;
               }
             }
-
-            // 兜底逻辑：使用旧的type字段判断
-            if (row?.type === 1) {
-              // 论文类型：优先使用publishYear，其次使用publishDate提取年份
-              if (row?.publishYear) {
-                return row.publishYear.toString();
-              } else if (row?.publishDate) {
-                return new Date(row.publishDate).getFullYear().toString();
-              }
-            }
-
             return "";
           })(),
           // 项目结束日期：统一使用projectEndDate字段
@@ -328,13 +324,16 @@ export function useHook() {
           paperType: row?.paperType ?? undefined,
           projectType: row?.projectType ?? undefined,
           categoryId: row?.categoryId ?? undefined, // 成果类型ID（v2接口使用叶子节点categoryId）
+          projectIds:
+            row?.projectIds && row.projectIds.length > 0
+              ? row.projectIds
+              : row?.relatedProjects?.map(p => p.id) ?? [],
 
           githubUrl: row?.type === 1 ? row?.gitUrl ?? "" : "",
           published: row?.published ?? true,
           gitUrl: row?.gitUrl ?? "",
           linkUrl: row?.linkUrl ?? "",
           pdfUrl: row?.pdfUrl ?? "",
-          reference: row?.reference ?? "",
           fundingAmount: row?.fundingAmount ?? undefined
         }
       },
@@ -359,8 +358,7 @@ export function useHook() {
               userId: author.userId,
               name: author.name.trim(),
               authorOrder: index + 1,
-              visible: author.visible,
-              email: author.email?.trim() || null
+              visible: author.visible
             };
 
             // 论文和其他类型包含通讯作者字段，项目类型不包含
@@ -379,14 +377,14 @@ export function useHook() {
 
         const curData: CreateAchievementRequest | UpdateAchievementRequest = {
           title: formData.title,
-          // 删除type字段，v2接口不再需要
+          type: formData.achievementType === "project" ? 2 : 1,
           paperType:
             formData.achievementType === "paper" ? formData.paperType : null,
           projectType:
             formData.achievementType === "project"
               ? formData.projectType
               : null,
-          categoryId: formData.specificCategoryId || null, // 具体类型ID放在categoryId字段
+          categoryId: formData.categoryId || null,
           venue: formData.journal || null,
           publishDate:
             formData.achievementType !== "project" ? formData.publishDate || null : null,
@@ -402,10 +400,13 @@ export function useHook() {
           linkUrl: formData.linkUrl || null,
           gitUrl: formData.gitUrl || null,
           pdfUrl: formData.pdfUrl || null,
-          reference: formData.reference || null,
           fundingAmount: formData.fundingAmount || null,
           published: formData.published,
-          authors: authorsData
+          authors: authorsData,
+          projectIds:
+            formData.achievementType === "paper" && Array.isArray(formData.projectIds)
+              ? formData.projectIds
+              : null
         };
 
         // 处理空值，将空字符串转换为null

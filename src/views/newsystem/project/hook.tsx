@@ -15,11 +15,14 @@ import {
   updateProjectApi,
   deleteProjectApi,
   toggleMyProjectVisibilityApi,
+  getProjectDetailApi,
   type ProjectListQuery,
   type LabProjectDTO,
   type CreateProjectRequest,
-  type UpdateProjectRequest
+  type UpdateProjectRequest,
+  type RelatedPaperDTO
 } from "@/api/newsystem/project";
+import Search from "@iconify-icons/ep/search";
 
 // 使用从project.ts导入的接口类型
 // ProjectListQuery, LabProjectDTO, CreateProjectRequest, UpdateProjectRequest
@@ -29,15 +32,13 @@ export function useHook() {
     pageNum: 1,
     pageSize: 10,
     keyword: undefined,
-    type: undefined,
-    paperType: undefined,
-    projectType: undefined,
+    projectTypeId: undefined,
+    supporter: undefined,
+    ownerUserId: undefined,
     published: undefined,
-    isVerified: undefined,
-    dateStart: undefined,
-    dateEnd: undefined,
-    parentCategoryId: undefined,
-    ownerUserId: undefined
+    verified: undefined,
+    startDateBegin: undefined,
+    startDateEnd: undefined
   });
 
   const formRef = ref();
@@ -72,27 +73,28 @@ export function useHook() {
         });
         categoryMap.value = map;
 
-        // 设置默认筛选为“项目”一级类型（仅首次加载时）
-        const projectTop = response.data.find(category => {
-          // 部分环境后端返回`type`字段：1=论文，2=项目；若无则回退按名称匹配
-          const isProjectByType = (category as any)?.type === 2;
-          const isProjectByName = category.categoryName?.includes("项目");
-          return isProjectByType || isProjectByName;
-        });
-        defaultProjectTopId.value = projectTop?.id;
-        if (!searchFormParams.parentCategoryId) {
-          if (projectTop) {
-            // 选择“项目”一级类型，避免与旧type字段冲突
-            searchFormParams.parentCategoryId = projectTop.id;
-            searchFormParams.type = undefined;
-          } else if (searchFormParams.type === undefined) {
-            // 兜底：若无法识别“项目”一级类型，默认按旧type筛选为项目
-            searchFormParams.type = 2;
-          }
-        }
+        // 仅建立类型名称映射用于展示；不再设置旧筛选字段
       }
     } catch (error) {
       console.error('获取项目类型映射失败:', error);
+    }
+  };
+
+  // 关联成果弹窗相关
+  const isAchievementDialogOpen = ref(false);
+  const relatedAchievements = ref<RelatedPaperDTO[]>([]);
+  const achievementLoading = ref(false);
+
+  const handleViewAchievements = async (row: any) => {
+    achievementLoading.value = true;
+    try {
+      const res = await getProjectDetailApi(row.id);
+      relatedAchievements.value = res.data.relatedPapers || [];
+      isAchievementDialogOpen.value = true;
+    } catch (error) {
+      console.error('获取项目关联成果失败:', error);
+    } finally {
+      achievementLoading.value = false;
     }
   };
 
@@ -179,6 +181,16 @@ export function useHook() {
               style="margin-right: 3px;"
             >
               修改
+            </el-button>
+            <el-button
+              link
+              type="primary"
+              size="default"
+              icon={useRenderIcon(Search)}
+              onClick={() => handleViewAchievements(scope.row)}
+              style="margin-right: 3px;"
+            >
+              查看成果
             </el-button>
             <el-popconfirm
               title="是否确认删除?"
@@ -281,7 +293,6 @@ export function useHook() {
         ? row.authors.map((author, index) => ({
           userId: author.userId || null,
           name: author.name,
-          email: author.email || null,
           authorOrder: index + 1,
           isCorresponding: author.isCorresponding || false,
           // 当 role 为 '负责人' 时标记 isLeader
@@ -292,7 +303,6 @@ export function useHook() {
           {
             userId: null,
             name: "",
-            email: null,
             authorOrder: 1,
             isCorresponding: true,
             isLeader: false,
@@ -307,52 +317,16 @@ export function useHook() {
           id: row?.id ?? 0,
           title: row?.title ?? "",
           authors: authors,
-          journal: row?.venue ?? "",
+          // 项目无期刊字段
           // 项目开始日期：统一使用projectStartDate字段
-          projectStartDate: row?.projectStartDate
-            ? new Date(row.projectStartDate).toISOString().slice(0, 7)
-            : "",
-          // 发表年份/日期：仅用于论文类型
-          publishDate: (() => {
-            // 优先使用新类型系统判断
-            if (row?.categoryId && categoryMap.value.has(row.categoryId)) {
-              const categoryName = categoryMap.value.get(row.categoryId);
-              const isProject = categoryName?.includes('项目');
+          projectStartDate: row?.projectStartDate ?? "",
 
-              if (!isProject) {
-                // 论文类型：优先使用publishYear，其次使用publishDate提取年份
-                if (row?.publishYear) {
-                  return row.publishYear.toString();
-                } else if (row?.publishDate) {
-                  return new Date(row.publishDate).getFullYear().toString();
-                }
-              }
-            }
-
-            // 兜底逻辑：使用旧的type字段判断
-            if (row?.type === 1) {
-              // 论文类型：优先使用publishYear，其次使用publishDate提取年份
-              if (row?.publishYear) {
-                return row.publishYear.toString();
-              } else if (row?.publishDate) {
-                return new Date(row.publishDate).getFullYear().toString();
-              }
-            }
-
-            return "";
-          })(),
           // 项目结束日期：统一使用projectEndDate字段
-          projectEndDate: row?.projectEndDate
-            ? new Date(row.projectEndDate).toISOString().slice(0, 7)
-            : "",
-          doi: row?.doi ?? "",
-          achievementType: isEdit ? "paper" : "project", // 新增默认按“项目”，编辑将由categoryId/watcher矫正
-          paperType: row?.paperType ?? undefined,
-          projectType: row?.projectType ?? undefined,
-          // 新增模式默认选择“项目”一级类型
-          categoryId: (isEdit ? row?.categoryId : defaultProjectTopId.value) ?? undefined,
-
-          githubUrl: row?.type === 1 ? row?.gitUrl ?? "" : "",
+          projectEndDate: row?.projectEndDate ?? "",
+          projectNumber: (row as any)?.projectNumber ?? row?.doi ?? "",
+          achievementType: "project",
+          categoryId: (row as any)?.categoryId ?? undefined,
+          githubUrl: row?.gitUrl ?? "",
           published: row?.published ?? true,
           reference: row?.reference ?? "",
           fundingAmount: row?.fundingAmount ?? undefined
@@ -371,54 +345,32 @@ export function useHook() {
         const formRuleRef = formRef.value.getFormRuleRef();
         const formData = options.props.formInline;
 
-        // 处理作者数据提交
         const authorsData = formData.authors
-          .filter(author => author.name.trim() !== "")
-          .map((author, index) => {
-            const baseAuthor = {
-              userId: author.userId,
-              name: author.name.trim(),
-              authorOrder: index + 1,
-              visible: author.visible,
-              email: author.email?.trim() || null
-            };
+          .filter(a => a.name && a.name.trim() !== "")
+          .map((a, index) => ({
+            name: a.name.trim(),
+            authorOrder: index + 1,
+            userId: a.userId ?? null
+          }));
 
-            // 论文和其他类型包含通讯作者字段，项目类型不包含
-            if (formData.achievementType !== "project") {
-              return {
-                ...baseAuthor,
-                isCorresponding: author.isCorresponding
-              };
-            } else {
-              return {
-                ...baseAuthor,
-                isCorresponding: false,
-                // 将负责人勾选映射到 role 字段
-                role: author.isLeader ? '负责人' : null
-              };
-            }
-          });
+        const funding =
+          typeof formData.fundingAmount === "string"
+            ? (formData.fundingAmount.trim() === ""
+              ? null
+              : Number(formData.fundingAmount))
+            : (formData.fundingAmount ?? null);
 
         const curData: CreateProjectRequest | UpdateProjectRequest = {
           title: formData.title,
-          // v2 严格拒收 legacy 字段（type/paperType/projectType），仅提交 categoryId
-          categoryId: formData.specificCategoryId || null, // 具体类型ID放在categoryId字段
-          venue: formData.journal || null,
-          publishDate:
-            formData.achievementType !== "project" ? formData.publishDate || null : null,
-          projectStartDate:
-            formData.achievementType === "project"
-              ? formData.projectStartDate || null
-              : null,
-          projectEndDate:
-            formData.achievementType === "project"
-              ? formData.projectEndDate || null
-              : null,
-          doi: formData.doi || null,
+          categoryId: formData.categoryId || null,
+          projectNumber: formData.projectNumber || null,
+          projectStartDate: formData.projectStartDate || null,
+          projectEndDate: formData.projectEndDate || null,
           reference: formData.reference || null,
-          fundingAmount: formData.fundingAmount || null,
+          gitUrl: formData.githubUrl || null,
+          fundingAmount: funding,
           published: formData.published,
-          authors: authorsData
+          authors: authorsData.length ? authorsData : null
         };
 
         // 处理空值，将空字符串转换为null
@@ -470,13 +422,6 @@ export function useHook() {
   const resetForm = formEl => {
     if (!formEl) return;
     formEl.resetFields();
-    // 重置后仍默认筛选为“项目”
-    if (defaultProjectTopId.value) {
-      searchFormParams.parentCategoryId = defaultProjectTopId.value;
-      searchFormParams.type = undefined;
-    } else if (searchFormParams.type === undefined) {
-      searchFormParams.type = 2;
-    }
     onSearch();
   };
 
@@ -495,6 +440,8 @@ export function useHook() {
     openDialog,
     resetForm,
     getList,
-    handleDelete
+    handleDelete,
+    isAchievementDialogOpen,
+    relatedAchievements
   };
 }

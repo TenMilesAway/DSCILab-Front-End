@@ -18,14 +18,7 @@ const formRules = reactive(<FormRules>{
   ],
   // 作者数组验证将在表单组件中单独处理
   // 每个作者的name字段在form.vue中为非必填
-  "authors.*.email": [
-    {
-      pattern: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
-      message: "邮箱格式不正确",
-      trigger: "blur"
-    }
-  ],
-  achievementType: [
+  categoryId: [
     {
       required: true,
       message: "项目类型为必填项",
@@ -52,6 +45,26 @@ const formRules = reactive(<FormRules>{
       type: "string",
       message: "请选择有效的项目结束日期",
       trigger: "change"
+    }
+  ],
+
+  fundingAmount: [
+    {
+      validator: (_rule, value, callback) => {
+        // 非必填：为空直接通过
+        if (value === null || value === undefined || value === "") {
+          return callback();
+        }
+        const num = typeof value === "string" ? Number(value) : value;
+        if (Number.isNaN(num)) {
+          return callback(new Error("项目经费必须为数字"));
+        }
+        if (num <= 0) {
+          return callback(new Error("项目经费必须大于零"));
+        }
+        callback();
+      },
+      trigger: ["blur", "change"]
     }
   ],
 
