@@ -446,10 +446,10 @@ defineExpose({ getFormRuleRef });
       >
         <el-form-item
           label="机构名称"
-          prop="journal"
+          prop="publisher"
         >
           <el-input
-            v-model="newFormInline.journal"
+            v-model="newFormInline.publisher"
             clearable
             :placeholder="newFormInline.achievementType === 'paper' ? '请输入例如期刊或会议名称' : '请输入相关机构名称'"
           />
