@@ -34,7 +34,7 @@ export interface CreateAchievementRequest {
   paperType?: number | null; // 论文类型：1=期刊,2=会议,3=预印本,4=专利,5=软著,6=标准,7=专著
   projectType?: number | null; // 项目类型：1=横向,2=国自然面上,3=国自然青年,4=北京市教委科技一般,5=国家级教改,6=省部级教改,7=其他教改,8=其他纵向
   categoryId?: number | null; // 成果类型ID（新类型系统，推荐传二级分类ID）
-  venue?: string | null; // 可选，<=300
+  publisher?: string | null; // 可选，<=300
   publishDate?: string | null; // 发布时间；格式：YYYY-MM-DD
   projectStartDate?: string | null; // 项目开始日期；格式：YYYY-MM
   projectEndDate?: string | null; // 项目结束日期；可空或>=开始；格式：YYYY-MM
@@ -95,7 +95,7 @@ export interface LabAchievementDTO {
   paperTypeDesc: string | null;
   projectType: number | null;
   projectTypeDesc: string | null;
-  venue: string | null;
+  publisher: string | null;
   publishDate: string | null; // 论文：YYYY；项目：null
   projectStartDate: string | null; // 项目：YYYY-MM；论文：null
   projectEndDate: string | null; // 项目：YYYY-MM；论文：null
