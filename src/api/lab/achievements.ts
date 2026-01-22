@@ -18,6 +18,9 @@ export interface ApiAchievement {
   categoryId?: number | null;
   categoryDesc?: string | null;
   venue?: string | null;
+  publisher?: string | null; // 新增字段：机构名称/出版社
+  conferenceName?: string | null; // 新增字段：会议名称
+  issueNumber?: string | null; // 新增字段：期号
   publishDate?: string | null; // 论文：YYYY；项目：null
   projectStartDate?: string | null; // 项目：YYYY-MM；论文：null
   projectEndDate?: string | null; // 项目：YYYY-MM；论文：null
@@ -72,13 +75,9 @@ export interface GetAchievementsParams {
  * @returns Promise<AchievementApiResponse>
  */
 export const getAchievementsListApi = (params?: GetAchievementsParams) => {
-  return http.request<AchievementApiResponse>(
-    "get",
-    "/open/achievements",
-    {
-      params
-    }
-  );
+  return http.request<AchievementApiResponse>("get", "/open/papers", {
+    params
+  });
 };
 
 /**
@@ -89,6 +88,6 @@ export const getAchievementsListApi = (params?: GetAchievementsParams) => {
 export const getAchievementDetailApi = (id: number) => {
   return http.request<ResponseData<ApiAchievement>>(
     "get",
-    `/open/achievements/${id}`
+    `/open/papers/${id}`
   );
 };

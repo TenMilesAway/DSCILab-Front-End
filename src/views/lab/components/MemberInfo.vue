@@ -1,14 +1,20 @@
 <template>
   <div class="member-info-container">
     <!-- 顶部固定折叠窗 - 信息定位导航 -->
-    <div v-if="member" class="top-navigation-panel" :class="{ 'panel-expanded': isNavigationExpanded }">
+    <div
+      v-if="member"
+      class="top-navigation-panel"
+      :class="{ 'panel-expanded': isNavigationExpanded }"
+    >
       <div class="panel-header" @click="toggleNavigation">
         <div class="panel-title">
           <button @click.stop="$emit('back')" class="back-button">返回</button>
           <h3>信息定位</h3>
         </div>
         <div class="panel-toggle">
-          <i class="toggle-icon" :class="{ 'rotated': isNavigationExpanded }">▼</i>
+          <i class="toggle-icon" :class="{ rotated: isNavigationExpanded }"
+            >▼</i
+          >
         </div>
       </div>
       <div class="panel-content" v-show="isNavigationExpanded">
@@ -28,13 +34,23 @@
     </div>
 
     <!-- 主要内容区域 -->
-    <div v-if="member" class="main-content" :class="{ 'content-visible': isContentVisible }">
+    <div
+      v-if="member"
+      class="main-content"
+      :class="{ 'content-visible': isContentVisible }"
+    >
       <!-- 内容区域 -->
       <div class="content-area animate-slide-right">
         <div class="member-detail-card">
           <!-- 头像和基本信息 -->
-          <div class="member-header animate-fade-up" style="animation-delay: 0.3s;">
-            <div class="avatar-section animate-scale-up" style="animation-delay: 0.4s;">
+          <div
+            class="member-header animate-fade-up"
+            style="animation-delay: 0.3s"
+          >
+            <div
+              class="avatar-section animate-scale-up"
+              style="animation-delay: 0.4s"
+            >
               <div class="avatar-container">
                 <img
                   :src="avatarUrl"
@@ -43,14 +59,17 @@
                   :class="{ 'avatar-loaded': isAvatarLoaded }"
                   @load="handleImageLoad"
                   @error="handleImageError"
-                  style="opacity: 0;"
+                  style="opacity: 0"
                 />
                 <div v-if="!isAvatarLoaded" class="avatar-placeholder">
-                  <div class="loading-spinner"></div>
+                  <div class="loading-spinner" />
                 </div>
               </div>
             </div>
-            <div class="basic-info animate-fade-up" style="animation-delay: 0.5s;">
+            <div
+              class="basic-info animate-fade-up"
+              style="animation-delay: 0.5s"
+            >
               <h1 class="member-name">{{ member.name }}</h1>
 
               <p class="member-title">
@@ -60,28 +79,70 @@
           </div>
 
           <!-- 详细信息 -->
-          <div class="detail-sections animate-fade-up" style="animation-delay: 0.6s;">
+          <div
+            class="detail-sections animate-fade-up"
+            style="animation-delay: 0.6s"
+          >
             <!-- 个人信息 -->
-            <div id="personal-info-section" class="info-section animate-fade-up" style="animation-delay: 0.7s;">
+            <div
+              id="personal-info-section"
+              class="info-section animate-fade-up"
+              style="animation-delay: 0.7s"
+            >
               <h3 class="section-title">联系方式</h3>
               <div class="info-grid">
-                <div class="info-item animate-fade-up" style="animation-delay: 1.2s;">
+                <div
+                  class="info-item animate-fade-up"
+                  style="animation-delay: 1.2s"
+                >
                   <span class="label">邮箱:</span>
-                  <el-tooltip :content="member.email" placement="top" :disabled="!shouldShowTooltip(member.email)">
-                    <span class="value">{{ member.email ? member.email : '暂未统计' }}</span>
+                  <el-tooltip
+                    :content="member.email"
+                    placement="top"
+                    :disabled="!shouldShowTooltip(member.email)"
+                  >
+                    <span class="value">{{
+                      member.email ? member.email : "暂未统计"
+                    }}</span>
                   </el-tooltip>
                 </div>
-                <div class="info-item animate-fade-up" v-if="member.graduation && member.graduation.trim()" style="animation-delay: 1.6s;">
+                <div
+                  class="info-item animate-fade-up"
+                  v-if="member.graduation && member.graduation.trim()"
+                  style="animation-delay: 1.6s"
+                >
                   <span class="label">毕业去向:</span>
-                  <el-tooltip :content="member.graduation && member.graduation.trim() ? member.graduation : '暂未统计'" placement="top" :disabled="!shouldShowTooltip(member.graduation && member.graduation.trim() ? member.graduation : '暂未统计')">
-                    <span class="value truncated">{{ member.graduation && member.graduation.trim() ? member.graduation : '暂未统计' }}</span>
+                  <el-tooltip
+                    :content="
+                      member.graduation && member.graduation.trim()
+                        ? member.graduation
+                        : '暂未统计'
+                    "
+                    placement="top"
+                    :disabled="
+                      !shouldShowTooltip(
+                        member.graduation && member.graduation.trim()
+                          ? member.graduation
+                          : '暂未统计'
+                      )
+                    "
+                  >
+                    <span class="value truncated">{{
+                      member.graduation && member.graduation.trim()
+                        ? member.graduation
+                        : "暂未统计"
+                    }}</span>
                   </el-tooltip>
                 </div>
               </div>
             </div>
 
             <!-- 研究方向 -->
-            <div id="research-areas-section" class="info-section animate-fade-up" style="animation-delay: 0.8s;">
+            <div
+              id="research-areas-section"
+              class="info-section animate-fade-up"
+              style="animation-delay: 0.8s"
+            >
               <h3 class="section-title">研究方向</h3>
               <div class="research-areas">
                 <div v-if="member.researchArea" class="research-tags">
@@ -97,24 +158,40 @@
                     {{ area }}
                   </span>
                 </div>
-                <div v-else class="research-item animate-fade-up" style="animation-delay: 1.8s;">
+                <div
+                  v-else
+                  class="research-item animate-fade-up"
+                  style="animation-delay: 1.8s"
+                >
                   <p>暂无研究方向信息</p>
                 </div>
               </div>
             </div>
 
             <!-- 个人简述 -->
-            <div v-if="member.resume" id="resume-section" class="info-section animate-fade-up" style="animation-delay: 0.9s;">
+            <div
+              v-if="member.resume"
+              id="resume-section"
+              class="info-section animate-fade-up"
+              style="animation-delay: 0.9s"
+            >
               <h3 class="section-title">个人简述</h3>
               <div class="resume-content">
-                <p class="resume-text animate-fade-up" style="animation-delay: 1.7s;">
+                <p
+                  class="resume-text animate-fade-up"
+                  style="animation-delay: 1.7s"
+                >
                   {{ member.resume.replace(/\\n/g, "\n") }}
                 </p>
               </div>
             </div>
 
             <!-- 项目经历 -->
-            <div id="projects-section" class="info-section animate-fade-up" style="animation-delay: 1.0s;">
+            <div
+              id="projects-section"
+              class="info-section animate-fade-up"
+              style="animation-delay: 1s"
+            >
               <h3 class="section-title">参与项目</h3>
               <div class="projects-list">
                 <div
@@ -136,20 +213,34 @@
                         {{ getProjectTypeLabel(project) }}
                       </el-tag>
                       <div class="project-content-member">
-                        <span v-if="project.reference" class="project-reference-member">{{ project.reference }}</span>
-                        <span v-else class="project-no-reference-member">暂无引用信息</span>
+                        <span
+                          v-if="project.reference"
+                          class="project-reference-member"
+                          >{{ project.reference }}</span
+                        >
+                        <span v-else class="project-no-reference-member"
+                          >暂无引用信息</span
+                        >
                       </div>
                     </div>
                   </div>
                 </div>
-                <div v-else class="no-data animate-fade-up" style="animation-delay: 2.2s;">
+                <div
+                  v-else
+                  class="no-data animate-fade-up"
+                  style="animation-delay: 2.2s"
+                >
                   <p>暂无参与项目信息</p>
                 </div>
               </div>
             </div>
 
             <!-- 发表论文 -->
-            <div id="publications-section" class="info-section animate-fade-up" style="animation-delay: 1.1s;">
+            <div
+              id="publications-section"
+              class="info-section animate-fade-up"
+              style="animation-delay: 1.1s"
+            >
               <h3 class="section-title">学术成果</h3>
               <div class="publications-list">
                 <div
@@ -177,10 +268,7 @@
                         >
                           {{ achievement.reference }}
                         </span>
-                        <span
-                          v-else
-                          class="achievement-reference-member"
-                        >
+                        <span v-else class="achievement-reference-member">
                           暂无引用信息
                         </span>
                       </div>
@@ -251,7 +339,11 @@
                     </div>
                   </div>
                 </div>
-                <div v-else class="no-data animate-fade-up" style="animation-delay: 2.5s;">
+                <div
+                  v-else
+                  class="no-data animate-fade-up"
+                  style="animation-delay: 2.5s"
+                >
                   <p>暂无学术成果信息</p>
                 </div>
               </div>
@@ -277,10 +369,19 @@ import {
 } from "vue";
 import { Link, Download } from "@element-plus/icons-vue";
 import { ElMessage } from "element-plus";
-import { type ApiAchievement, getAchievementsListApi } from "@/api/lab/achievements";
+import {
+  type ApiAchievement,
+  getAchievementsListApi
+} from "@/api/lab/achievements";
 import { type ApiProject, getProjectsListApi } from "@/api/lab/projects";
-import { getAchievementCategoriesApi, type AchievementCategoryDTO } from '@/api/lab/achievementCategory';
-import { getProjectCategoriesApi, type ProjectCategoryDTO } from '@/api/lab/projectCategory';
+import {
+  getAchievementCategoriesApi,
+  type AchievementCategoryDTO
+} from "@/api/lab/achievementCategory";
+import {
+  getProjectCategoriesApi,
+  type ProjectCategoryDTO
+} from "@/api/lab/projectCategory";
 
 // 定义 Github 图标组件
 const _Github = {
@@ -354,20 +455,19 @@ const projectCategories = ref<ProjectCategoryDTO[]>([]);
 const loadAchievementCategories = async () => {
   try {
     const result = await getAchievementCategoriesApi(1);
-    
-    if (result && result.code === 0 && result.data && Array.isArray(result.data)) {
-      achievementCategories.value = result.data.map(category => ({
-        id: category.id,
-        categoryName: category.categoryName,
-        categoryCode: category.categoryCode || '',
-        sortOrder: category.sortOrder || 0,
-        color: category.color || 'primary'
-      }));
+
+    if (
+      result &&
+      result.code === 0 &&
+      result.data &&
+      Array.isArray(result.data)
+    ) {
+      achievementCategories.value = result.data;
     } else {
-      console.error('获取成果分类数据格式错误:', result);
+      console.error("获取成果分类数据格式错误:", result);
     }
   } catch (error) {
-    console.error('加载成果分类失败:', error);
+    console.error("加载成果分类失败:", error);
   }
 };
 
@@ -375,57 +475,134 @@ const loadAchievementCategories = async () => {
 const loadProjectCategories = async () => {
   try {
     const result = await getProjectCategoriesApi(2);
-    
-    if (result && result.code === 0 && result.data && Array.isArray(result.data)) {
-      projectCategories.value = result.data
-        .map(category => ({
-          id: category.id,
-          categoryName: category.categoryName,
-          categoryCode: category.categoryCode || '',
-          sortOrder: category.sortOrder || 0,
-          color: category.color || 'primary'
-        }))
-        .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
+
+    if (
+      result &&
+      result.code === 0 &&
+      result.data &&
+      Array.isArray(result.data)
+    ) {
+      projectCategories.value = result.data.sort(
+        (a, b) => (a.sortOrder || 0) - (b.sortOrder || 0)
+      );
     } else {
-      console.error('获取项目分类数据格式错误:', result);
+      console.error("获取项目分类数据格式错误:", result);
     }
   } catch (error) {
-    console.error('加载项目分类失败:', error);
-    ElMessage.error('加载项目分类失败，请稍后重试');
+    console.error("加载项目分类失败:", error);
+    ElMessage.error("加载项目分类失败，请稍后重试");
   }
 };
 
 // 获取成果数据的函数
 const fetchAchievements = async () => {
   if (!props.member) return;
-  
+
   try {
-    const response = await getAchievementsListApi();
+    const response = await getAchievementsListApi({ pageSize: 1000 });
     if (response.code === 0 && response.data && response.data.rows) {
       // 获取有效的分类ID列表
-      const validCategoryIds = achievementCategories.value.map(category => category.id);
-      
+      const validCategoryIds = achievementCategories.value.map(
+        category => category.id
+      );
+
       // 先按有效分类ID筛选，再按当前用户筛选
       const filteredAchievements = response.data.rows.filter(achievement => {
         // 检查是否属于有效分类
-        const isValidCategory = validCategoryIds.includes(Number(achievement.categoryId));
+        const isValidCategory = validCategoryIds.includes(
+          Number(achievement.categoryId)
+        );
         if (!isValidCategory) return false;
-        
+
         // 检查作者信息
         if (!achievement.authors || !Array.isArray(achievement.authors)) {
           return false;
         }
-        
+
         // 检查当前用户是否存在于 authors 字段中
-        return achievement.authors.some(author => 
-          author.name === props.member?.name
+        // 使用 loose check 以避免类型错误，或者忽略 linter 错误
+        return achievement.authors.some(
+          (author: any) => author.name === props.member?.name
         );
       });
-      
-      internalAchievements.value = filteredAchievements;
+
+      // 为每个成果生成引用字符串
+      const processedAchievements = filteredAchievements.map(achievement => {
+        // 构建引用字符串
+        // 格式：作者1,作者2,...,作者x.标题.机构名称.年份.(编号)
+        // 强制使用字段拼接，除非关键字段都缺失才考虑使用后端reference作为最后兜底
+        let reference = "";
+
+        const authorsList = achievement.authors
+          ? [...achievement.authors]
+              .sort((a, b) => a.authorOrder - b.authorOrder)
+              .map(a => a.name)
+              .filter(n => n && n.trim() !== "") // 过滤空名字
+              .join(", ")
+          : "";
+
+        const title = achievement.title || "";
+        // 优先使用 publication (期刊名/会议名)，其次是 venue，最后是 publisher
+        const apiAchievement = achievement as any;
+        const publisher =
+          apiAchievement.publication ||
+          achievement.venue ||
+          achievement.publisher ||
+          "";
+
+        // 获取年份
+        const year = achievement.publishDate
+          ? new Date(achievement.publishDate).getFullYear()
+          : "";
+        const doi = achievement.doi || "";
+
+        // 检查 title 是否已经以点号结尾，避免双重点号
+        const cleanTitle = title.endsWith(".") ? title.slice(0, -1) : title;
+
+        // 检查 publisher 是否已经以点号结尾
+        const cleanPublisher = publisher.endsWith(".")
+          ? publisher.slice(0, -1)
+          : publisher;
+
+        const referenceParts = [
+          authorsList,
+          cleanTitle,
+          cleanPublisher,
+          year,
+          doi
+        ].filter(part => part && String(part).trim() !== "");
+
+        if (referenceParts.length > 0) {
+          reference = referenceParts.join(". ");
+        } else if (
+          achievement.reference &&
+          achievement.reference.trim() !== ""
+        ) {
+          // 只有当所有字段都无法构建时，才使用后端的 reference
+          reference = achievement.reference;
+
+          // 检查reference是否已经包含年份
+          const hasYearInReference = year && reference.includes(String(year));
+
+          // 如果后端返回的reference没有包含年份，且年份有效，则追加年份
+          if (!hasYearInReference && year) {
+            if (reference.endsWith(".")) {
+              reference = reference.slice(0, -1);
+            }
+            reference = `${reference}.${year}`;
+          }
+        }
+
+        return {
+          ...achievement,
+          reference
+        };
+      });
+
+      internalAchievements.value = processedAchievements;
     }
   } catch (error) {
-    console.error('获取成果数据失败:', error);
+    console.error("获取成果数据失败:", error);
     internalAchievements.value = [];
   }
 };
@@ -433,57 +610,65 @@ const fetchAchievements = async () => {
 // 获取项目数据的函数
 const fetchProjects = async () => {
   if (!props.member) return;
-  
+
   try {
     const response = await getProjectsListApi();
     if (response.code === 0 && response.data && response.data.rows) {
       // 获取有效的分类ID列表
-      const validCategoryIds = projectCategories.value.map(category => category.id);
-      
+      const validCategoryIds = projectCategories.value.map(
+        category => category.id
+      );
+
       // 先按有效分类ID筛选，再按当前用户筛选
       const filteredProjects = response.data.rows.filter(project => {
         // 检查是否属于有效分类
-        const isValidCategory = validCategoryIds.includes(Number(project.categoryId));
+        const isValidCategory = validCategoryIds.includes(
+          Number(project.categoryId)
+        );
         if (!isValidCategory) return false;
-        
+
         // 检查作者信息
         if (!project.authors || !Array.isArray(project.authors)) {
           return false;
         }
         // 检查当前用户是否存在于 authors 字段中
-        return project.authors.some(author => 
-          author.name === props.member?.name
+        return project.authors.some(
+          author => author.name === props.member?.name
         );
       });
-      
+
       internalProjects.value = filteredProjects;
     }
   } catch (error) {
-    console.error('获取项目数据失败:', error);
+    console.error("获取项目数据失败:", error);
     internalProjects.value = [];
   }
 };
 
 // 监听member变化，重置头像加载状态和动画状态，并获取成果和项目数据
-watch(() => props.member, async (newMember) => {
-  isAvatarLoaded.value = false;
-  isContentVisible.value = false;
-  
-  // 如果有新的成员，先加载分类数据，再获取成果和项目数据
-  if (newMember) {
-    await loadAchievementCategories();
-    await loadProjectCategories(); // 确保项目分类数据先加载
-    fetchAchievements();
-    fetchProjects();
-  }
-  
-  // 延迟触发动画，确保组件已渲染
-  nextTick(() => {
-    setTimeout(() => {
-      isContentVisible.value = true;
-    }, 100);
-  });
-}, { immediate: true });
+watch(
+  () => props.member,
+  async newMember => {
+    isAvatarLoaded.value = false;
+    isContentVisible.value = false;
+
+    // 如果有新的成员，先加载分类数据，再获取成果和项目数据
+    if (newMember) {
+      await loadAchievementCategories();
+      await loadProjectCategories(); // 确保项目分类数据先加载
+      fetchAchievements();
+      fetchProjects();
+    }
+
+    // 延迟触发动画，确保组件已渲染
+    nextTick(() => {
+      setTimeout(() => {
+        isContentVisible.value = true;
+      }, 100);
+    });
+  },
+  { immediate: true }
+);
 
 // 计算头像URL
 const avatarUrl = computed(() => {
@@ -497,7 +682,10 @@ const avatarUrl = computed(() => {
     return import.meta.env.VITE_APP_BASE_API + userPhoto;
   }
   // 默认头像
-  return import.meta.env.VITE_APP_BASE_API + "/src/assets/lab/default_user_avatar.png";
+  return (
+    import.meta.env.VITE_APP_BASE_API +
+    "/src/assets/lab/default_user_avatar.png"
+  );
 });
 
 // 按时间排序的项目列表（从新到旧）
@@ -509,12 +697,12 @@ const sortedProjects = computed(() => {
   // 过滤出当前成员可见的项目
   const visibleProjects = internalProjects.value.filter(project => {
     if (!project.authors || !props.member) return false;
-    
+
     // 查找当前成员在作者列表中的记录，使用id匹配而不是name
-    const currentMemberAuthor = project.authors.find(author => 
-      author.userId === props.member.id
+    const currentMemberAuthor = project.authors.find(
+      author => author.userId === props.member.id
     );
-    
+
     // 如果找到当前成员且visible为true，则显示该项目
     return currentMemberAuthor && currentMemberAuthor.visible;
   });
@@ -540,12 +728,12 @@ const sortedAchievements = computed(() => {
   // 过滤出当前成员可见的成果
   const visibleAchievements = internalAchievements.value.filter(achievement => {
     if (!achievement.authors || !props.member) return false;
-    
+
     // 查找当前成员在作者列表中的记录，使用id匹配而不是name
-    const currentMemberAuthor = achievement.authors.find(author => 
-      author.userId === props.member.id
+    const currentMemberAuthor = achievement.authors.find(
+      author => author.userId === props.member.id
     );
-    
+
     // 如果找到当前成员且visible为true，则显示该成果
     return currentMemberAuthor && currentMemberAuthor.visible;
   });
@@ -754,22 +942,45 @@ const getPaperTypeTagType = (achievement: any) => {
   if (achievement && achievement.categoryId) {
     const foundCategory = achievementCategories.value.find(
       category => category.id === achievement.categoryId
-    )
-    return foundCategory ? foundCategory.color || "info" : "info"
+    );
+    return foundCategory ? foundCategory.color || "info" : "info";
   }
-  return "info"
+  return "info";
 };
 
 // 获取论文类型标签文本
 const getPaperTypeLabel = (achievement: any) => {
-  // 通过 categoryId 查找对应的分类名称
+  const paperTypeMap: Record<number, string> = {
+    1: "期刊论文",
+    2: "会议论文",
+    3: "预印本",
+    4: "专利",
+    5: "软著",
+    6: "标准",
+    7: "专著"
+  };
+
+  // 优先使用 paperType
+  if (
+    achievement &&
+    achievement.paperType &&
+    paperTypeMap[achievement.paperType]
+  ) {
+    return paperTypeMap[achievement.paperType];
+  }
+
+  // 如果没有 paperType，通过 categoryId 查找对应的分类名称
   if (achievement && achievement.categoryId) {
     const foundCategory = achievementCategories.value.find(
       category => category.id === achievement.categoryId
-    )
-    return foundCategory ? foundCategory.categoryName : "其他"
+    );
+
+    if (foundCategory) {
+      return foundCategory.categoryName;
+    }
   }
-  return "其他"
+
+  return "其他";
 };
 
 // 获取项目类型标签类型
@@ -778,10 +989,10 @@ const getProjectTypeTagType = (project: any) => {
   if (project && project.categoryId) {
     const foundCategory = projectCategories.value.find(
       category => category.id === project.categoryId
-    )
-    return foundCategory ? foundCategory.color || "info" : "info"
+    );
+    return foundCategory ? foundCategory.color || "info" : "info";
   }
-  return "info"
+  return "info";
 };
 
 // 获取项目类型标签文本
@@ -790,10 +1001,10 @@ const getProjectTypeLabel = (project: any) => {
   if (project && project.categoryId) {
     const foundCategory = projectCategories.value.find(
       category => category.id === project.categoryId
-    )
-    return foundCategory ? foundCategory.categoryName : "其他"
+    );
+    return foundCategory ? foundCategory.categoryName : "其他";
   }
-  return "其他"
+  return "其他";
 };
 
 // 从项目日期中提取年份
@@ -2407,7 +2618,7 @@ const handlePdfDownload = (url: string) => {
 
   .basic-info {
     text-align: center;
-    
+
     h1 {
       font-size: 24px;
       margin-bottom: 8px;
@@ -2450,7 +2661,7 @@ const handlePdfDownload = (url: string) => {
     flex-direction: column;
     padding: 16px;
     text-align: center;
-    
+
     .label {
       min-width: auto;
       margin-right: 0;
@@ -2598,7 +2809,7 @@ const handlePdfDownload = (url: string) => {
     max-width: 300px;
     margin: 0 auto;
     padding: 24px;
-    
+
     p {
       font-size: 14px;
     }

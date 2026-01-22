@@ -13,10 +13,10 @@
         <el-menu-item index="all">
           <span>全部成果</span>
         </el-menu-item>
-        <el-menu-item 
-          v-for="category in achievementCategories" 
-          :key="category.id" 
-          :index="category.id"
+        <el-menu-item
+          v-for="category in achievementCategories"
+          :key="category.id"
+          :index="String(category.id)"
         >
           <span>{{ category.categoryName }}</span>
         </el-menu-item>
@@ -47,7 +47,7 @@
               :value="year"
             />
           </el-select>
-          
+
           <!-- 搜索框 -->
           <el-input
             v-model="searchKeyword"
@@ -78,62 +78,78 @@
           >
             <div class="achievement-main">
               <div class="achievement-header">
-                <span class="achievement-number">{{ (currentPage - 1) * pageSize + index + 1 }}.</span>
-                <el-tag 
-                  size="small" 
-                  class="achievement-type-tag"
+                <span class="achievement-number"
+                  >{{ (currentPage - 1) * pageSize + index + 1 }}.</span
                 >
+                <el-tag size="small" class="achievement-type-tag">
                   {{ getTypeLabel(achievement.type) }}
                 </el-tag>
               </div>
               <div class="achievement-content">
-                <span 
-                  v-if="achievement.reference" 
+                <span
+                  v-if="achievement.reference"
                   class="achievement-reference"
                 >
                   {{ achievement.reference }}
                 </span>
-                <span 
-                  v-else 
-                  class="achievement-reference"
-                >
-                  暂无引用信息
-                </span>
+                <span v-else class="achievement-reference"> 暂无引用信息 </span>
               </div>
             </div>
             <div class="achievement-actions-container">
               <div class="achievement-actions">
-                <el-tooltip :content="achievement.githubUrl ? 'Github 仓库' : '暂无 Github 仓库'" placement="top">
-                  <el-button 
-                    plain 
-                    :icon="Link" 
-                    size="small" 
-                    circle 
+                <el-tooltip
+                  :content="
+                    achievement.githubUrl ? 'Github 仓库' : '暂无 Github 仓库'
+                  "
+                  placement="top"
+                >
+                  <el-button
+                    plain
+                    :icon="Link"
+                    size="small"
+                    circle
                     class="action-btn"
                     :disabled="!achievement.githubUrl"
-                    @click="achievement.githubUrl && handleGithubClick(achievement.githubUrl)"
+                    @click="
+                      achievement.githubUrl &&
+                        handleGithubClick(achievement.githubUrl)
+                    "
                   />
                 </el-tooltip>
-                <el-tooltip :content="achievement.projectUrl ? '成果主页' : '暂无成果主页'" placement="top">
-                  <el-button 
-                    plain 
-                    :icon="House" 
-                    size="small" 
-                    circle 
+                <el-tooltip
+                  :content="
+                    achievement.projectUrl ? '成果主页' : '暂无成果主页'
+                  "
+                  placement="top"
+                >
+                  <el-button
+                    plain
+                    :icon="House"
+                    size="small"
+                    circle
                     class="action-btn"
                     :disabled="!achievement.projectUrl"
-                    @click="achievement.projectUrl && handleProjectClick(achievement.projectUrl)"
+                    @click="
+                      achievement.projectUrl &&
+                        handleProjectClick(achievement.projectUrl)
+                    "
                   />
                 </el-tooltip>
-                <el-tooltip :content="achievement.pdfUrl ? '下载 PDF' : '暂无 PDF 文件'" placement="top">
-                  <el-button 
-                    plain 
-                    :icon="Download" 
-                    size="small" 
-                    circle 
+                <el-tooltip
+                  :content="achievement.pdfUrl ? '下载 PDF' : '暂无 PDF 文件'"
+                  placement="top"
+                >
+                  <el-button
+                    plain
+                    :icon="Download"
+                    size="small"
+                    circle
                     class="action-btn"
                     :disabled="!achievement.pdfUrl"
-                    @click="achievement.pdfUrl && handlePdfDownload(achievement.pdfUrl)"
+                    @click="
+                      achievement.pdfUrl &&
+                        handlePdfDownload(achievement.pdfUrl)
+                    "
                   />
                 </el-tooltip>
               </div>
@@ -160,202 +176,289 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { Search, Link, House, Download } from '@element-plus/icons-vue'
-import { ElMessage } from 'element-plus'
-import { getAchievementsListApi, type ApiAchievement } from '@/api/lab/achievements'
-import { getAchievementCategoriesApi, type AchievementCategoryDTO } from '@/api/lab/achievementCategory'
+import { ref, computed, onMounted, onUnmounted } from "vue";
+import { Search, Link, House, Download } from "@element-plus/icons-vue";
+import { ElMessage } from "element-plus";
+import {
+  getAchievementsListApi,
+  type ApiAchievement
+} from "@/api/lab/achievements";
+import {
+  getAchievementCategoriesApi,
+  type AchievementCategoryDTO
+} from "@/api/lab/achievementCategory";
 
 // 成果类型定义
 interface Achievement {
-  id: number
-  title: string
-  authors: string[]
-  type: string
-  year: number
-  institution: string
-  githubUrl?: string
-  projectUrl?: string
-  pdfUrl?: string
-  reference?: string
-  categoryId: string | number  // 添加分类ID字段
-  categoryName: string         // 添加分类名称字段
+  id: number;
+  title: string;
+  authors: string[];
+  type: string;
+  year: number | string;
+  institution: string;
+  githubUrl?: string;
+  projectUrl?: string;
+  pdfUrl?: string;
+  reference?: string;
+  categoryId: string | number; // 添加分类ID字段
+  categoryName: string; // 添加分类名称字段
 }
 
 // 响应式数据
-const loading = ref(false)
-const activeCategory = ref('all')
-const selectedYear = ref<number | null>(null)
-const searchKeyword = ref('')
-const currentPage = ref(1)
-const pageSize = ref(20)
-const achievements = ref<Achievement[]>([])
-const achievementCategories = ref<AchievementCategoryDTO[]>([])
-const categoryMap = ref<Record<string, string>>({}) // 分类代码到类型的映射
+const loading = ref(false);
+const activeCategory = ref("all");
+const selectedYear = ref<number | null>(null);
+const searchKeyword = ref("");
+const currentPage = ref(1);
+const pageSize = ref(20);
+const achievements = ref<Achievement[]>([]);
+const achievementCategories = ref<AchievementCategoryDTO[]>([]);
+const categoryMap = ref<Record<string, string>>({}); // 分类代码到类型的映射
 
 // 响应式屏幕尺寸检测
-const screenWidth = ref(window.innerWidth)
+const screenWidth = ref(window.innerWidth);
 const updateScreenWidth = () => {
-  screenWidth.value = window.innerWidth
-}
+  screenWidth.value = window.innerWidth;
+};
 
 // 根据屏幕尺寸判断是否为小屏幕
-const isSmallScreen = computed(() => screenWidth.value <= 768)
+const isSmallScreen = computed(() => screenWidth.value <= 768);
 
 // 根据屏幕尺寸动态调整分页布局
 const paginationLayout = computed(() => {
   if (screenWidth.value <= 480) {
-    return 'prev, pager, next'
+    return "prev, pager, next";
   } else if (screenWidth.value <= 768) {
-    return 'total, prev, pager, next'
+    return "total, prev, pager, next";
   } else if (screenWidth.value <= 1024) {
-    return 'total, sizes, prev, pager, next'
+    return "total, sizes, prev, pager, next";
   } else {
-    return 'total, sizes, prev, pager, next, jumper'
+    return "total, sizes, prev, pager, next, jumper";
   }
-})
+});
 
 // 计算属性
 const availableYears = computed(() => {
-  const years = [...new Set(achievements.value.map(item => item.year))]
-  return years.sort((a, b) => b - a)
-})
+  const years = [...new Set(achievements.value.map(item => item.year))];
+  // 过滤掉非数字年份
+  const validYears = years.filter((y): y is number => typeof y === "number");
+  return validYears.sort((a, b) => b - a);
+});
 
 const filteredAchievements = computed(() => {
-  let filtered = achievements.value
+  let filtered = achievements.value;
 
   // 按分类筛选
-  if (activeCategory.value !== 'all') {
+  if (activeCategory.value !== "all") {
     // 使用categoryId作为筛选条件
     filtered = filtered.filter(item => {
-      return item.categoryId === activeCategory.value
-    })
+      return String(item.categoryId) === activeCategory.value;
+    });
   }
 
   // 按年份筛选
   if (selectedYear.value) {
-    filtered = filtered.filter(item => item.year === selectedYear.value)
+    filtered = filtered.filter(item => item.year === selectedYear.value);
   }
 
   // 按关键词搜索
   if (searchKeyword.value) {
-    const keyword = searchKeyword.value.toLowerCase()
-    filtered = filtered.filter(item => 
-      item.title.toLowerCase().includes(keyword) ||
-      item.authors.some(author => author.toLowerCase().includes(keyword))
-    )
+    const keyword = searchKeyword.value.toLowerCase();
+    filtered = filtered.filter(
+      item =>
+        item.title.toLowerCase().includes(keyword) ||
+        item.authors.some(author => author.toLowerCase().includes(keyword))
+    );
   }
 
   // 按年份从新到旧排序
-  return filtered.sort((a, b) => b.year - a.year)
-})
+  return filtered.sort((a, b) => {
+    const yearA = typeof a.year === "number" ? a.year : 0;
+    const yearB = typeof b.year === "number" ? b.year : 0;
+    return yearB - yearA;
+  });
+});
 
 const paginatedAchievements = computed(() => {
-  const start = (currentPage.value - 1) * pageSize.value
-  const end = start + pageSize.value
-  return filteredAchievements.value.slice(start, end)
-})
+  const start = (currentPage.value - 1) * pageSize.value;
+  const end = start + pageSize.value;
+  return filteredAchievements.value.slice(start, end);
+});
 
 // 方法
 const getCategoryTitle = (category: string) => {
-  if (category === 'all') {
-    return '全部成果'
+  if (category === "all") {
+    return "全部成果";
   }
-  
+
   // 查找对应的分类名称
   const foundCategory = achievementCategories.value.find(
-    item => item.id === category
-  )
-  return foundCategory ? foundCategory.categoryName : '全部成果'
-}
+    item => String(item.id) === category
+  );
+  return foundCategory ? foundCategory.categoryName : "全部成果";
+};
 
 const getTypeLabel = (type: string) => {
   // 查找对应的分类名称
   const foundCategory = achievementCategories.value.find(
     item => item.categoryCode.toLowerCase() === type
-  )
-  return foundCategory ? foundCategory.categoryName : type
-}
+  );
+  return foundCategory ? foundCategory.categoryName : type;
+};
 
 const handleCategorySelect = (index: string) => {
-  activeCategory.value = index
-  currentPage.value = 1
-}
+  activeCategory.value = index;
+  currentPage.value = 1;
+};
 
 const handleYearChange = () => {
-  currentPage.value = 1
-}
+  currentPage.value = 1;
+};
 
 const handleSizeChange = (val: number) => {
-  pageSize.value = val
-  currentPage.value = 1
-}
+  pageSize.value = val;
+  currentPage.value = 1;
+};
 
 const handleCurrentChange = (val: number) => {
-  currentPage.value = val
-}
+  currentPage.value = val;
+};
 
 // 操作按钮事件处理
 const handleGithubClick = (url: string) => {
   // 打开Github仓库链接
-  window.open(url, '_blank')
-  ElMessage.success('正在跳转到 Github 仓库')
-}
+  window.open(url, "_blank");
+  ElMessage.success("正在跳转到 Github 仓库");
+};
 
 const handleProjectClick = (url: string) => {
   // 打开项目主页链接
-  window.open(url, '_blank')
-  ElMessage.success('正在跳转到项目主页')
-}
+  window.open(url, "_blank");
+  ElMessage.success("正在跳转到项目主页");
+};
 
 const handlePdfDownload = (url: string) => {
   // 下载PDF文件
-  const link = document.createElement('a')
-  link.href = url
-  link.download = ''
-  document.body.appendChild(link)
-  link.click()
-  document.body.removeChild(link)
-  ElMessage.success('PDF 下载已开始')
-}
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "";
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  ElMessage.success("PDF 下载已开始");
+};
 
 // 数据转换函数
 const convertApiDataToAchievement = (apiData: ApiAchievement): Achievement => {
+  // 论文类型映射
+  const paperTypeMap: Record<number, string> = {
+    1: "期刊论文",
+    2: "会议论文",
+    3: "预印本",
+    4: "专利",
+    5: "软著",
+    6: "标准",
+    7: "专著"
+  };
+
   // 使用categoryId直接映射到对应的分类
-  let type = 'other'
-  
-  // 如果有categoryId，则使用映射关系获取对应的分类代码
-  if (apiData.categoryId && categoryMap.value[apiData.categoryId]) {
-    type = categoryMap.value[apiData.categoryId]
+  let type = "other";
+
+  // 优先使用 paperType 进行映射
+  if (apiData.paperType && paperTypeMap[apiData.paperType]) {
+    type = paperTypeMap[apiData.paperType];
+  } else if (apiData.categoryId && categoryMap.value[apiData.categoryId]) {
+    // 如果没有 paperType，则尝试使用 categoryId 映射
+    type = categoryMap.value[apiData.categoryId];
+  } else {
+    // 如果都没有，默认为其他
+    type = "other";
   }
-  
+
   // 从 publishDate 中提取年份
-  const year = apiData.publishDate ? new Date(apiData.publishDate).getFullYear() : new Date().getFullYear()
-  
+  const year = apiData.publishDate
+    ? new Date(apiData.publishDate).getFullYear()
+    : "";
+
   // 查找分类名称
-  let categoryName = ''
+  let categoryName = "";
   if (apiData.categoryId) {
-    const category = achievementCategories.value.find(cat => cat.id === apiData.categoryId)
+    const category = achievementCategories.value.find(
+      cat => cat.id === apiData.categoryId
+    );
     if (category) {
-      categoryName = category.categoryName
+      categoryName = category.categoryName;
     }
   }
-  
+
+  // 构造引用字符串
+  // 格式：作者1,作者2,...,作者x.标题.机构名称.年份.(编号)
+  // 强制使用字段拼接，除非关键字段都缺失才考虑使用后端reference作为最后兜底
+  let reference = "";
+
+  const authorsList = apiData.authors
+    ? [...apiData.authors]
+        .sort((a, b) => a.authorOrder - b.authorOrder)
+        .map(a => a.name)
+        .filter(n => n && n.trim() !== "") // 过滤空名字
+        .join(", ")
+    : "";
+
+  const title = apiData.title || "";
+  // 优先使用 publication (期刊名/会议名)，其次是 venue，最后是 publisher
+  const publisher =
+    (apiData as any).publication || apiData.venue || apiData.publisher || "";
+  const doi = apiData.doi || "";
+
+  // 检查 title 是否已经以点号结尾，避免双重点号
+  const cleanTitle = title.endsWith(".") ? title.slice(0, -1) : title;
+
+  // 检查 publisher 是否已经以点号结尾
+  const cleanPublisher = publisher.endsWith(".")
+    ? publisher.slice(0, -1)
+    : publisher;
+
+  const referenceParts = [
+    authorsList,
+    cleanTitle,
+    cleanPublisher,
+    year,
+    doi
+  ].filter(part => part && String(part).trim() !== "");
+
+  if (referenceParts.length > 0) {
+    reference = referenceParts.join(". ");
+  } else if (apiData.reference && apiData.reference.trim() !== "") {
+    // 只有当所有字段都无法构建时，才使用后端的 reference
+    reference = apiData.reference;
+
+    // 检查reference是否已经包含年份
+    const hasYearInReference = reference.includes(String(year));
+
+    // 如果后端返回的reference没有包含年份，且年份有效，则追加年份
+    if (!hasYearInReference && year) {
+      if (reference.endsWith(".")) {
+        reference = reference.slice(0, -1);
+      }
+      reference = `${reference}.${year}`;
+    }
+  }
+
   return {
     id: apiData.id,
     title: apiData.title,
     authors: apiData.authors ? apiData.authors.map(author => author.name) : [],
     type: type,
     year: year,
-    institution: apiData.venue || '', // venue 字段映射为 institution
+    institution: apiData.venue || "", // venue 字段映射为 institution
     githubUrl: apiData.gitUrl,
     projectUrl: apiData.linkUrl,
     pdfUrl: apiData.pdfUrl,
-    reference: apiData.reference || '', // 添加reference字段
-    categoryId: apiData.categoryId || '', // 添加categoryId字段
+    reference: reference, // 使用构建的reference
+    categoryId: apiData.categoryId || "", // 添加categoryId字段
     categoryName: categoryName // 添加categoryName字段
-  }
-}
+  };
+};
 
 // 加载成果分类
 const loadAchievementCategories = async () => {
@@ -363,75 +466,71 @@ const loadAchievementCategories = async () => {
     // 从新的接口获取成员分类数据
     // const response = await fetch('http://10.157.134.211:8080/open/achievement-categories/children?parentId=1')
     // const result = await response.json()
-    const result = await getAchievementCategoriesApi(1)
-    
+    const result = await getAchievementCategoriesApi(1);
+
     // 检查响应格式并提取数据
-    if (result && result.code === 0 && result.data && Array.isArray(result.data)) {
+    if (
+      result &&
+      result.code === 0 &&
+      result.data &&
+      Array.isArray(result.data)
+    ) {
       // 保存分类数据，包含 id 和 categoryName
-      achievementCategories.value = result.data.map(category => ({
-        id: category.id,
-        categoryName: category.categoryName,
-        categoryCode: category.categoryCode || '',
-        sortOrder: category.sortOrder || 0,
-        color: category.color || 'primary'
-      }))
-      
+      achievementCategories.value = result.data;
+
       // 创建分类代码到类型的映射（使用id作为键）
-      const newCategoryMap: Record<number, string> = {}
+      const newCategoryMap: Record<number, string> = {};
       achievementCategories.value.forEach(category => {
-        newCategoryMap[category.id] = category.categoryCode ? category.categoryCode.toLowerCase() : 'other'
-      })
-      categoryMap.value = newCategoryMap
+        newCategoryMap[category.id] = category.categoryCode
+          ? category.categoryCode.toLowerCase()
+          : "other";
+      });
+      categoryMap.value = newCategoryMap;
     } else {
-      console.error('获取成果分类数据格式错误:', result)
-      ElMessage.error('获取成果分类数据格式错误')
+      console.error("获取成果分类数据格式错误:", result);
+      ElMessage.error("获取成果分类数据格式错误");
     }
   } catch (error) {
-    console.error('加载成果分类失败:', error)
-    ElMessage.error('加载成果分类失败')
+    console.error("加载成果分类失败:", error);
+    ElMessage.error("加载成果分类失败");
   }
-}
+};
 
 // 数据加载
 const loadAchievements = async () => {
-  loading.value = true
+  loading.value = true;
   try {
-    const response = await getAchievementsListApi()
+    const response = await getAchievementsListApi({ pageSize: 1000 });
     if (response.code === 0 && response.data?.rows) {
-      // 获取有效的分类ID列表
-      const validCategoryIds = achievementCategories.value.map(category => category.id)
-      
-      // 筛选出属于有效分类的成果数据
-      const filteredAchievements = response.data.rows.filter(achievement => {
-        return validCategoryIds.includes(Number(achievement.categoryId))
-      })
-      
+      // 不再过滤无效分类的数据，确保所有数据都能显示
+      const allAchievements = response.data.rows;
+
       // 转换数据格式
-      achievements.value = filteredAchievements.map(convertApiDataToAchievement)
+      achievements.value = allAchievements.map(convertApiDataToAchievement);
     } else {
-      ElMessage.error('获取成果数据失败')
-      achievements.value = []
+      ElMessage.error("获取成果数据失败");
+      achievements.value = [];
     }
   } catch (error) {
-    console.error('加载成果数据失败:', error)
-    ElMessage.error('网络错误，请稍后重试')
-    achievements.value = []
+    console.error("加载成果数据失败:", error);
+    ElMessage.error("网络错误，请稍后重试");
+    achievements.value = [];
   } finally {
-    loading.value = false
+    loading.value = false;
   }
-}
+};
 
 // 生命周期
 onMounted(async () => {
   // 先加载成果分类，再加载成果数据
-  await loadAchievementCategories()
-  await loadAchievements()
-  window.addEventListener('resize', updateScreenWidth)
-})
+  await loadAchievementCategories();
+  await loadAchievements();
+  window.addEventListener("resize", updateScreenWidth);
+});
 
 onUnmounted(() => {
-  window.removeEventListener('resize', updateScreenWidth)
-})
+  window.removeEventListener("resize", updateScreenWidth);
+});
 </script>
 
 <style scoped>
@@ -678,15 +777,15 @@ onUnmounted(() => {
   .sidebar {
     width: 220px;
   }
-  
+
   .main-content {
     padding: 15px;
   }
-  
+
   .filter-bar {
     padding: 15px;
   }
-  
+
   .search-input {
     flex: 1;
     min-width: 200px;
@@ -698,7 +797,7 @@ onUnmounted(() => {
   .achievements-page {
     flex-direction: column;
   }
-  
+
   .sidebar {
     width: 100%;
     height: auto;
@@ -706,17 +805,17 @@ onUnmounted(() => {
     border-right: none;
     border-bottom: 1px solid #e4e7ed;
   }
-  
+
   .sidebar-header {
     padding: 15px 20px;
   }
-  
+
   .category-menu {
     display: flex;
     overflow-x: auto;
     white-space: nowrap;
   }
-  
+
   .category-menu .el-menu-item {
     flex-shrink: 0;
     height: 40px;
@@ -724,55 +823,55 @@ onUnmounted(() => {
     padding: 0 16px;
     min-width: auto;
   }
-  
+
   .main-content {
     padding: 10px;
   }
-  
+
   .filter-bar {
     flex-direction: column;
     align-items: stretch;
     padding: 15px;
     gap: 12px;
   }
-  
+
   .filter-left {
     text-align: center;
   }
-  
+
   .filter-left h2 {
     font-size: 20px;
     margin-bottom: 5px;
   }
-  
+
   .filter-right {
     justify-content: center;
     gap: 10px;
   }
-  
+
   .search-input {
     width: 100%;
     flex: 1;
   }
-  
+
   .year-select {
     width: 100px;
   }
-  
+
   .achievement-item {
     padding: 12px 15px;
     flex-direction: column;
     align-items: flex-start;
     gap: 12px;
   }
-  
+
   .achievement-main {
     flex-direction: column;
     margin-right: 0;
     width: 100%;
     align-items: flex-start;
   }
-  
+
   .achievement-header {
     display: flex;
     align-items: center;
@@ -780,29 +879,29 @@ onUnmounted(() => {
     gap: 8px;
     margin-bottom: 8px;
   }
-  
+
   .achievement-content {
     width: 100%;
   }
-  
+
   .achievement-actions-container {
     margin-left: 0;
     margin-top: 8px;
     align-self: flex-end;
     padding: 6px 10px;
   }
-  
+
   .achievement-actions {
     opacity: 1;
     justify-content: flex-end;
     align-items: center;
   }
-  
+
   .action-btn {
     width: 30px;
     height: 30px;
   }
-  
+
   .achievement-content {
     line-height: 1.6;
   }
@@ -812,54 +911,54 @@ onUnmounted(() => {
   .main-content {
     padding: 8px;
   }
-  
+
   .filter-bar {
     padding: 12px;
   }
-  
+
   .filter-left h2 {
     font-size: 18px;
   }
-  
+
   .filter-right {
     flex-direction: column;
     align-items: stretch;
   }
-  
+
   .search-input {
     width: 100%;
   }
-  
+
   .year-select {
     width: 100%;
   }
-  
+
   .achievement-item {
     padding: 10px 12px;
   }
-  
+
   .achievement-content {
     font-size: 13px;
   }
-  
+
   .achievement-reference {
     font-size: 13px;
   }
-  
+
   .pagination {
     padding: 15px 10px;
     overflow-x: auto;
   }
-  
+
   .pagination :deep(.el-pagination) {
     flex-wrap: nowrap;
     white-space: nowrap;
   }
-  
+
   .sidebar-header h3 {
     font-size: 16px;
   }
-  
+
   .category-menu .el-menu-item {
     padding: 0 12px;
     font-size: 14px;
@@ -870,58 +969,58 @@ onUnmounted(() => {
   .main-content {
     padding: 6px;
   }
-  
+
   .filter-bar {
     padding: 10px;
   }
-  
+
   .filter-left h2 {
     font-size: 16px;
   }
-  
+
   .achievement-item {
     padding: 8px 10px;
   }
-  
+
   .achievement-content {
     font-size: 12px;
   }
-  
+
   .achievement-reference {
     font-size: 12px;
   }
-  
+
   .achievement-number {
     font-size: 12px;
   }
-  
+
   .pagination {
     padding: 10px 5px;
     overflow-x: auto;
   }
-  
+
   .pagination :deep(.el-pagination) {
     justify-content: center;
     min-width: max-content;
   }
-  
+
   .pagination :deep(.el-pagination .el-pager) {
     margin: 0 2px;
   }
-  
+
   .pagination :deep(.el-pagination .btn-prev),
   .pagination :deep(.el-pagination .btn-next) {
     margin: 0 2px;
   }
-  
+
   .sidebar-header {
     padding: 12px 15px;
   }
-  
+
   .sidebar-header h3 {
     font-size: 14px;
   }
-  
+
   .category-menu .el-menu-item {
     padding: 0 10px;
     font-size: 13px;
