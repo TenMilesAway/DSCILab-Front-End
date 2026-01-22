@@ -412,11 +412,11 @@ defineExpose({ getFormRuleRef });
 
 
       <re-col :value="24">
-        <el-form-item label="资助说明格式" prop="reference" style="white-space: nowrap;">
+        <el-form-item label="资助声明" prop="reference" style="white-space: nowrap;">
           <el-input
             v-model="newFormInline.reference"
             clearable
-            placeholder="请输入资助说明格式"
+            placeholder="请输入资助声明"
           />
         </el-form-item>
       </re-col>

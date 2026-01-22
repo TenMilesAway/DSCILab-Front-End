@@ -31,27 +31,24 @@ const {
 
 // 成果类型相关数据
 const categoryTree = ref<LabAchievementCategoryDTO[]>([]);
-const topLevelCategories = ref<LabAchievementCategoryDTO[]>([]);
-const paperCategories = ref<LabAchievementCategoryDTO[]>([]);
-const projectCategories = ref<LabAchievementCategoryDTO[]>([]);
+const paperSecondaryCategories = ref<LabAchievementCategoryDTO[]>([]);
 
 // 获取成果类型树
-  const loadCategoryTree = async () => {
-    try {
-      const response = await getDictCategoryTreeApi();
-      if (response.code === 0) {
-        categoryTree.value = response.data;
-        // 隐藏"项目"这一项，其余一级成果类型保持显示
-        topLevelCategories.value = response.data.filter(
-          cat => cat.categoryName !== '项目' && (cat.categoryCode ? cat.categoryCode.toLowerCase() !== 'project' : true)
-        );
-        paperCategories.value = topLevelCategories.value;
-        projectCategories.value = []; // 在成果管理页不展示项目类型
+const loadCategoryTree = async () => {
+  try {
+    const response = await getDictCategoryTreeApi();
+    if (response.code === 0) {
+      categoryTree.value = response.data;
+      // 获取一级成果类型为论文（id=1）的二级分类
+      const paperCategory = response.data.find(cat => cat.id === 1);
+      if (paperCategory && paperCategory.children) {
+        paperSecondaryCategories.value = paperCategory.children;
       }
-    } catch (error) {
-      console.error('获取成果类型失败:', error);
     }
-  };
+  } catch (error) {
+    console.error('获取成果类型失败:', error);
+  }
+};
 
 onMounted(() => {
   loadCategoryTree();
@@ -74,15 +71,15 @@ onMounted(() => {
           class="!w-[200px]"
         />
       </el-form-item>
-      <el-form-item label="成果类型：" prop="parentCategoryId">
+      <el-form-item label="成果类型：" prop="categoryId">
         <el-select
-          v-model="searchFormParams.parentCategoryId"
-          placeholder="请选择一级成果类型"
+          v-model="searchFormParams.categoryId"
+          placeholder="请选择成果类型"
           clearable
           class="!w-[200px]"
         >
           <el-option
-            v-for="category in topLevelCategories"
+            v-for="category in paperSecondaryCategories"
             :key="category.id"
             :label="category.categoryName"
             :value="category.id"

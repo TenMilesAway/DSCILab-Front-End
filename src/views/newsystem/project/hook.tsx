@@ -295,8 +295,8 @@ export function useHook() {
           name: author.name,
           authorOrder: index + 1,
           isCorresponding: author.isCorresponding || false,
-          // 当 role 为 '负责人' 时标记 isLeader
-          isLeader: author.role === '负责人',
+          // 修复：项目负责人回显时应使用 isCorresponding 字段（在项目中代表负责人）
+          isLeader: author.isCorresponding === true,
           visible: author.visible !== false
         }))
         : [
@@ -350,7 +350,10 @@ export function useHook() {
           .map((a, index) => ({
             name: a.name.trim(),
             authorOrder: index + 1,
-            userId: a.userId ?? null
+            userId: a.userId ?? null,
+            // 修复：提交时将 isLeader 映射为 isCorresponding
+            isCorresponding: formData.achievementType === 'project' ? (a.isLeader || false) : (a.isCorresponding || false),
+            visible: a.visible !== false
           }));
 
         const funding =

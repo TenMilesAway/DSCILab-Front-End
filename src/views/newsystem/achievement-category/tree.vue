@@ -1,20 +1,20 @@
 <template>
   <div class="tree-view">
     <div class="tree-header">
-      <el-button
+      <!-- <el-button
         type="primary"
         :icon="useRenderIcon(AddFill)"
         @click="openDialog('新增一级类型')"
       >
         新增一级类型
-      </el-button>
+      </el-button> -->
       <el-button
         type="success"
         :icon="useRenderIcon(AddFill)"
         @click="openDialog('新增二级类型')"
         :disabled="!selectedParentId"
       >
-        新增二级类型
+        新增类型
       </el-button>
       <el-button
         :icon="useRenderIcon(Refresh)"
@@ -44,7 +44,7 @@
               <el-icon v-if="data.icon" class="node-icon">
                 <component :is="data.icon" />
               </el-icon>
-              <span class="node-label">{{ data.categoryName }}</span>
+              <span class="node-label">{{ data.id === 1 ? '成果' : data.categoryName }}</span>
               <el-tag
                 v-if="!data.isActive"
                 type="danger"
@@ -61,9 +61,9 @@
               >
                 系统
               </el-tag>
-              <span class="sort-number">{{ data.sortOrder }}</span>
+              <span class="sort-number" v-if="data.parentId !== null && data.parentId !== 0">{{ data.sortOrder }}</span>
             </div>
-            <div class="node-actions">
+            <div class="node-actions" v-if="data.parentId !== null && data.parentId !== 0">
               <el-button
                 link
                 type="info"

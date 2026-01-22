@@ -432,7 +432,7 @@ export const toggleMyProjectVisibilityApi = (
 export const getPublicProjectsApi = (params?: PublicProjectQuery) => {
   return http.request<
     ResponseData<{ total: number; rows: PublicProjectDTO[] }>
-  >("get", "/open/achievements", { params });
+  >("get", "/open/projects", { params });
 };
 
 /**
