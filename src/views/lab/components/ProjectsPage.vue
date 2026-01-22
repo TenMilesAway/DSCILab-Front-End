@@ -13,10 +13,10 @@
         <el-menu-item index="all">
           <span>全部项目</span>
         </el-menu-item>
-        <el-menu-item 
-          v-for="category in projectCategories" 
+        <el-menu-item
+          v-for="category in projectCategories"
           :key="category.id"
-          :index="category.categoryCode"
+          :index="String(category.id)"
         >
           <span>{{ category.categoryName }}</span>
         </el-menu-item>
@@ -47,7 +47,7 @@
               :value="year"
             />
           </el-select>
-          
+
           <!-- 搜索框 -->
           <el-input
             v-model="searchKeyword"
@@ -77,28 +77,82 @@
             class="project-item"
           >
             <div class="project-header">
-              <span class="project-number">{{ (currentPage - 1) * pageSize + index + 1 }}.</span>
-              <el-tag 
-                :type="getTypeTagType(project)" 
-                size="small" 
+              <span class="project-number"
+                >{{ (currentPage - 1) * pageSize + index + 1 }}.</span
+              >
+              <el-tag
+                :type="getTypeTagType(project)"
+                size="small"
                 class="project-type-tag"
               >
-                {{ getTypeLabel(project) }}
+                {{ project.categoryName || "其他" }}
               </el-tag>
             </div>
             <div class="project-content">
-              <span 
-                v-if="project.reference" 
-                class="project-reference"
-              >
-                {{ project.reference }}
+              <span class="project-info">
+                <span v-if="project.title">{{ project.title }}</span>
+                <span
+                  v-if="
+                    project.title &&
+                    (project.projectNumber ||
+                      project.projectStartDate ||
+                      project.projectEndDate ||
+                      formatFundingAmount(
+                        project.amountDisplay || project.fundingAmount
+                      ))
+                  "
+                  >.&nbsp;</span
+                >
+                <span v-if="project.projectNumber">{{
+                  project.projectNumber
+                }}</span>
+                <span
+                  v-if="
+                    project.projectNumber &&
+                    (project.projectStartDate || project.projectEndDate)
+                  "
+                  >.&nbsp;</span
+                >
+                <span v-if="project.projectStartDate || project.projectEndDate">
+                  {{ project.projectStartDate?.slice(0, 7) || ""
+                  }}<span
+                    v-if="project.projectStartDate && project.projectEndDate"
+                    >&nbsp;-&nbsp;</span
+                  >{{ project.projectEndDate?.slice(0, 7) || "" }}
+                </span>
+                <span
+                  v-if="
+                    (project.projectStartDate || project.projectEndDate) &&
+                    formatFundingAmount(
+                      project.amountDisplay || project.fundingAmount
+                    )
+                  "
+                  >.&nbsp;</span
+                >
+                <span
+                  v-if="
+                    formatFundingAmount(
+                      project.amountDisplay || project.fundingAmount
+                    )
+                  "
+                >
+                  {{
+                    formatFundingAmount(
+                      project.amountDisplay || project.fundingAmount
+                    )
+                  }}
+                </span>
               </span>
-              <span 
-                v-else 
-                class="project-reference"
+            </div>
+            <div class="project-actions" v-if="project.reference">
+              <el-button
+                type="primary"
+                link
+                :icon="View"
+                @click="showReferenceDialog(project)"
               >
-                暂无引用信息
-              </span>
+                详情
+              </el-button>
             </div>
           </div>
         </div>
@@ -117,263 +171,334 @@
           @current-change="handleCurrentChange"
         />
       </div>
+
+      <!-- reference详情对话框 -->
+      <el-dialog
+        v-model="referenceDialogVisible"
+        title="项目详情"
+        width="600px"
+        align-center
+        destroy-on-close
+      >
+        <div class="reference-content">
+          <div class="reference-header">
+            <div class="reference-title">{{ selectedProject?.title }}</div>
+            <!-- <el-tag size="small" effect="light" class="mt-2">{{
+              selectedProject?.categoryName
+            }}</el-tag> -->
+          </div>
+
+          <div class="reference-body">
+            <div class="info-label">Reference</div>
+            <div class="info-box">
+              {{ selectedProject?.reference }}
+            </div>
+          </div>
+        </div>
+        <template #footer>
+          <div class="dialog-footer">
+            <el-button
+              type="primary"
+              plain
+              @click="referenceDialogVisible = false"
+              >关闭</el-button
+            >
+          </div>
+        </template>
+      </el-dialog>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { Search } from '@element-plus/icons-vue'
-import { getProjectsListApi, type ApiProject } from '@/api/lab/projects'
-import { getProjectCategoriesApi, type ProjectCategoryDTO } from '@/api/lab/projectCategory'
-import { ElMessage } from 'element-plus'
+import { ref, computed, onMounted, onUnmounted } from "vue";
+import { Search, View } from "@element-plus/icons-vue";
+import {
+  getProjectsListApi,
+  type LabProjectDTO,
+  type LabProjectQuery
+} from "@/api/lab/projects";
+import {
+  getProjectCategoriesApi,
+  type ProjectCategoryDTO
+} from "@/api/lab/projectCategory";
+import { ElMessage } from "element-plus";
 
-// 项目类型定义
-interface Project {
-  id: number
-  title: string
-  leader: string
-  fundingAmount: string
-  startYear: number
-  endYear: number
-  published: boolean
-  reference?: string
-  categoryId?: number
-  categoryName?: string
+// 项目显示模型
+interface ProjectDisplay {
+  id: number;
+  title: string;
+  titleEn?: string;
+  leader: string;
+  fundingAmount: string;
+  amountDisplay?: string;
+  startYear: number;
+  endYear: number;
+  published: boolean;
+  reference?: string;
+  categoryId?: number;
+  categoryName?: string;
+  categoryFullPath?: string;
+  projectTypeId?: number;
+  supporter?: string;
+  authors?: Array<{
+    name: string;
+    organization?: string;
+    isCorresponding?: boolean;
+  }>;
+  projectNumber?: string;
+  projectStartDate?: string;
+  projectEndDate?: string;
 }
 
 // 数据转换函数
-const convertApiDataToProject = (apiData: ApiProject): Project => {
+const convertApiDataToDisplay = (apiData: LabProjectDTO): ProjectDisplay => {
   // 找到 authorOrder 为 1 的负责人
-  const leader = apiData.authors?.find(author => author.authorOrder === 1)?.name || '未知'
-  
+  const leader =
+    apiData.authors?.find(author => author.authorOrder === 1)?.name || "未知";
+
   // 从日期中提取年份
-  const startYear = apiData.projectStartDate ? new Date(apiData.projectStartDate).getFullYear() : new Date().getFullYear()
-  const endYear = apiData.projectEndDate ? new Date(apiData.projectEndDate).getFullYear() : new Date().getFullYear()
-  
-  // 动态获取项目分类名称
-  let categoryName = ''
-  if (apiData.categoryId) {
-    const category = projectCategories.value.find(cat => cat.id === apiData.categoryId)
-    if (category) {
-      categoryName = category.categoryName
-    }
-  }
-  
+  const startYear = apiData.projectStartDate
+    ? new Date(apiData.projectStartDate).getFullYear()
+    : new Date().getFullYear();
+  const endYear = apiData.projectEndDate
+    ? new Date(apiData.projectEndDate).getFullYear()
+    : new Date().getFullYear();
+
+  // console.log("转换项目数据:", {
+  //   id: apiData.id,
+  //   title: apiData.title,
+  //   categoryName: apiData.categoryName,
+  //   categoryId: apiData.categoryId
+  // });
+
   return {
     id: apiData.id,
     title: apiData.title,
+    titleEn: apiData.titleEn,
     leader: leader,
-    fundingAmount: apiData.fundingAmount || '0',
+    fundingAmount: apiData.fundingAmount || "",
+    amountDisplay: apiData.amountDisplay,
     startYear: startYear,
     endYear: endYear,
     published: apiData.published || false,
-    reference: apiData.reference || '',
-    categoryId: apiData.categoryId, // 添加categoryId字段
-    categoryName: categoryName // 添加categoryName字段
-  }
-}
+    reference: apiData.reference || "",
+    categoryId: apiData.categoryId,
+    categoryName: apiData.categoryName,
+    categoryFullPath: apiData.categoryFullPath,
+    projectTypeId: apiData.projectTypeId,
+    supporter: apiData.supporter,
+    authors: apiData.authors,
+    projectNumber: apiData.projectNumber,
+    projectStartDate: apiData.projectStartDate,
+    projectEndDate: apiData.projectEndDate
+  };
+};
 
 // 响应式数据
-const loading = ref(false)
-const activeCategory = ref('all')
-const selectedYear = ref<number | null>(null)
-const searchKeyword = ref('')
-const currentPage = ref(1)
-const pageSize = ref(20)
-const projects = ref<Project[]>([])
+const loading = ref(false);
+const activeCategory = ref("all");
+const selectedYear = ref<number | null>(null);
+const searchKeyword = ref("");
+const currentPage = ref(1);
+const pageSize = ref(20);
+const projects = ref<ProjectDisplay[]>([]);
+// const totalProjects = ref(0); // 不再需要
+const referenceDialogVisible = ref(false);
+const selectedProject = ref<ProjectDisplay | null>(null);
 
 // 项目分类数据
-const projectCategories = ref<ProjectCategoryDTO[]>([])
+const projectCategories = ref<ProjectCategoryDTO[]>([]);
 
 // 加载项目分类数据
 const loadProjectCategories = async () => {
   try {
-    const response = await getProjectCategoriesApi(2) // 获取parentId=2的项目分类数据
+    const response = await getProjectCategoriesApi(2); // 获取parentId=2的项目分类数据
     if (response.code === 0 && response.data && response.data.length > 0) {
       // 按sortOrder排序
-      const sortedCategories = [...response.data].sort((a, b) => a.sortOrder - b.sortOrder)
-      projectCategories.value = sortedCategories
+      const sortedCategories = [...response.data].sort(
+        (a, b) => a.sortOrder - b.sortOrder
+      );
+      projectCategories.value = sortedCategories;
     }
   } catch (error) {
-    console.error('加载项目分类失败:', error)
-    ElMessage.error('加载项目分类失败')
+    console.error("加载项目分类失败:", error);
+    ElMessage.error("加载项目分类失败");
   }
-}
+};
 
 // 响应式屏幕尺寸检测
-const screenWidth = ref(window.innerWidth)
+const screenWidth = ref(window.innerWidth);
 const updateScreenWidth = () => {
-  screenWidth.value = window.innerWidth
-}
+  screenWidth.value = window.innerWidth;
+};
 
 // 根据屏幕尺寸判断是否为小屏幕
-const isSmallScreen = computed(() => screenWidth.value <= 768)
+const isSmallScreen = computed(() => screenWidth.value <= 768);
 
 // 根据屏幕尺寸动态调整分页布局
 const paginationLayout = computed(() => {
   if (screenWidth.value <= 480) {
-    return 'prev, pager, next'
+    return "prev, pager, next";
   } else if (screenWidth.value <= 768) {
-    return 'total, prev, pager, next'
+    return "total, prev, pager, next";
   } else if (screenWidth.value <= 1024) {
-    return 'total, sizes, prev, pager, next'
+    return "total, sizes, prev, pager, next";
   } else {
-    return 'total, sizes, prev, pager, next, jumper'
+    return "total, sizes, prev, pager, next, jumper";
   }
-})
+});
 
 // 计算属性
 const availableYears = computed(() => {
-  const years = [...new Set(projects.value.flatMap(item => [item.startYear, item.endYear]))]
-  return years.sort((a, b) => b - a)
-})
+  const years = [
+    ...new Set(projects.value.flatMap(item => [item.startYear, item.endYear]))
+  ];
+  return years.sort((a, b) => b - a);
+});
 
 const filteredProjects = computed(() => {
-  let filtered = projects.value
+  let filtered = projects.value;
 
   // 按分类筛选
-  if (activeCategory.value !== 'all') {
-    // 使用categoryId进行筛选，而不是type
+  if (activeCategory.value !== "all") {
     filtered = filtered.filter(item => {
-      // 查找对应的分类
-      const category = projectCategories.value.find(cat => cat.categoryCode === activeCategory.value)
-      return category && item.categoryId === category.id
-    })
+      // 比较 categoryId，注意类型转换
+      return item.categoryId == Number(activeCategory.value);
+    });
   }
 
   // 按年份筛选
   if (selectedYear.value) {
-    filtered = filtered.filter(item => 
-      item.startYear <= selectedYear.value! && item.endYear >= selectedYear.value!
-    )
+    const year = selectedYear.value;
+    filtered = filtered.filter(
+      item => item.startYear === year || item.endYear === year
+    );
   }
 
   // 按关键词搜索
   if (searchKeyword.value) {
-    const keyword = searchKeyword.value.toLowerCase()
-    filtered = filtered.filter(item => 
-      item.title.toLowerCase().includes(keyword) ||
-      item.leader.toLowerCase().includes(keyword)
-    )
+    const keyword = searchKeyword.value.toLowerCase();
+    filtered = filtered.filter(
+      item =>
+        item.title.toLowerCase().includes(keyword) ||
+        item.leader?.toLowerCase().includes(keyword) ||
+        (item.authors &&
+          item.authors.some(author =>
+            author.name.toLowerCase().includes(keyword)
+          ))
+    );
   }
 
-  // 按开始年份从新到旧排序
-  return filtered.sort((a, b) => b.startYear - a.startYear)
-})
+  return filtered;
+});
 
 const paginatedProjects = computed(() => {
-  const start = (currentPage.value - 1) * pageSize.value
-  const end = start + pageSize.value
-  return filteredProjects.value.slice(start, end)
-})
+  const start = (currentPage.value - 1) * pageSize.value;
+  const end = start + pageSize.value;
+  return filteredProjects.value.slice(start, end);
+});
 
 // 方法
-const getCategoryTitle = (category: string) => {
-  if (category === 'all') {
-    return '全部项目'
+const formatFundingAmount = (amount: string | number): string => {
+  if (!amount) return "";
+  const num = typeof amount === "string" ? parseFloat(amount) : amount;
+  if (isNaN(num)) return String(amount);
+  return num.toFixed(2) + "万元";
+};
+
+const getCategoryTitle = (category: string | number) => {
+  if (category === "all") {
+    return "全部项目";
   }
-  
-  // 查找对应的分类名称，使用 categoryCode 进行匹配
+
+  // 查找对应的分类名称，使用 ID 进行匹配
   const foundCategory = projectCategories.value.find(
-    item => item.categoryCode === category
-  )
-  return foundCategory ? foundCategory.categoryName : '全部项目'
-}
+    item => String(item.id) === String(category)
+  );
+  return foundCategory ? foundCategory.categoryName : "全部项目";
+};
 
-const getTypeLabel = (project: any) => {
-  // 通过 categoryId 查找对应的分类名称
-  if (project && project.categoryId) {
-    const foundCategory = projectCategories.value.find(
-      category => category.id === project.categoryId
-    )
-    return foundCategory ? foundCategory.categoryName : "其他"
-  }
-  return "其他"
-}
-
-const getTypeTagType = (project: any) => {
+const getTypeTagType = (project: ProjectDisplay) => {
   // 通过 categoryId 查找对应的分类颜色
   if (project && project.categoryId) {
     const foundCategory = projectCategories.value.find(
       category => category.id === project.categoryId
-    )
-    return foundCategory ? foundCategory.color || "info" : "info"
+    );
+    return foundCategory ? foundCategory.color || "info" : "info";
   }
-  return "info"
-}
-
-const getStatusLabel = (published: boolean) => {
-  return published ? '已结项' : '未结项'
-}
-
-const getStatusTagType = (published: boolean, projectType: Project['type']) => {
-  // 返回与项目类型标签相同的颜色，确保相同项目类型的tag颜色一致
-  return getTypeTagType(projectType)
-}
+  return "info";
+};
 
 const handleCategorySelect = (index: string) => {
-  activeCategory.value = index
-  currentPage.value = 1
-}
+  activeCategory.value = index;
+  currentPage.value = 1;
+  // 不再重新加载数据，使用前端筛选
+};
 
 const handleYearChange = () => {
-  currentPage.value = 1
-}
+  currentPage.value = 1;
+  // 不再重新加载数据，使用前端筛选
+};
 
 const handleSizeChange = (val: number) => {
-  pageSize.value = val
-  currentPage.value = 1
-}
+  pageSize.value = val;
+  currentPage.value = 1;
+};
 
 const handleCurrentChange = (val: number) => {
-  currentPage.value = val
-}
+  currentPage.value = val;
+};
+
+const showReferenceDialog = (project: ProjectDisplay) => {
+  selectedProject.value = project;
+  referenceDialogVisible.value = true;
+};
 
 // API数据加载
 const loadProjects = async () => {
-  loading.value = true
+  loading.value = true;
   try {
-    const response = await getProjectsListApi()
-    if (response.code === 0 && response.data?.rows) {
-      // 获取有效的分类ID列表
-      const validCategoryIds = projectCategories.value.map(category => category.id)
-      
-      // 先按有效分类ID筛选，再转换数据
-      const filteredProjects = response.data.rows.filter(project => {
-        // 如果项目有categoryId，检查是否在有效分类列表中
-        if (project.categoryId) {
-          return validCategoryIds.includes(Number(project.categoryId))
-        }
-        // 如果没有categoryId，暂时保留（可根据需要调整）
-        return true
-      })
-      
-      projects.value = filteredProjects.map(convertApiDataToProject)
+    // 获取所有数据进行前端筛选
+    const params: LabProjectQuery = {
+      pageNum: 1,
+      pageSize: 1000 // 请求足够大的数据量
+    };
+
+    console.log("加载所有项目数据:", params);
+    const response = await getProjectsListApi(params);
+    if (response.code === 0 && response.data) {
+      // 兼容不同的分页响应格式
+      const dataList =
+        response.data.records || response.data.rows || response.data.list || [];
+      const displayProjects = dataList.map(convertApiDataToDisplay);
+      projects.value = displayProjects;
+      // totalProjects 不再使用 API 返回的总数，而是 filteredProjects 的长度 (在模板中使用 filteredProjects.length)
     } else {
-      ElMessage.error('获取项目数据失败')
-      projects.value = []
+      console.error("API 响应错误:", response);
+      ElMessage.error("获取项目数据失败");
+      projects.value = [];
     }
   } catch (error) {
-    console.error('加载项目数据失败:', error)
-    ElMessage.error('获取项目数据失败，请稍后重试')
-    projects.value = []
+    console.error("加载项目数据失败:", error);
+    ElMessage.error("获取项目数据失败，请稍后重试");
+    projects.value = [];
   } finally {
-    loading.value = false
+    loading.value = false;
   }
-}
+};
 
 // 生命周期
 onMounted(async () => {
   // 先加载项目分类数据，再加载项目数据
-  await loadProjectCategories()
-  loadProjects()
-  window.addEventListener('resize', updateScreenWidth)
-})
+  await loadProjectCategories();
+  loadProjects();
+  window.addEventListener("resize", updateScreenWidth);
+});
 
 onUnmounted(() => {
-  window.removeEventListener('resize', updateScreenWidth)
-})
+  window.removeEventListener("resize", updateScreenWidth);
+});
 </script>
 
 <style scoped>
@@ -475,12 +600,14 @@ onUnmounted(() => {
 }
 
 .project-item {
-  padding: 8px 20px;
+  padding: 16px 24px;
   border-bottom: 1px solid #e4e7ed;
   transition: background-color 0.3s;
   display: flex;
-  align-items: flex-start;
+  align-items: center;
+  justify-content: space-between;
   line-height: 1.6;
+  min-height: 60px;
 }
 
 .project-item:hover {
@@ -515,7 +642,7 @@ onUnmounted(() => {
 .project-header {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
   flex-shrink: 0;
 }
 
@@ -525,10 +652,35 @@ onUnmounted(() => {
   font-size: 14px;
 }
 
+.project-info {
+  color: #374151;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
 .project-title {
   color: #2c3e50;
   font-weight: 600;
   font-size: 14px;
+  margin-bottom: 6px;
+}
+
+.project-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+.detail-item {
+  color: #34495e;
+  font-size: 13px;
+  font-weight: 400;
+}
+
+.detail-item.funding {
+  color: #e67e22;
+  font-weight: 500;
 }
 
 .project-leader {
@@ -555,6 +707,67 @@ onUnmounted(() => {
   font-weight: 400;
 }
 
+.reference-content {
+  padding: 0 5px;
+}
+
+.reference-header {
+  margin-bottom: 20px;
+  border-bottom: 1px solid #f0f0f0;
+  padding-bottom: 15px;
+}
+
+.reference-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #303133;
+  line-height: 1.5;
+}
+
+.mt-2 {
+  margin-top: 8px;
+}
+
+.reference-body {
+  margin-top: 15px;
+}
+
+.info-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #606266;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+}
+
+.info-label::before {
+  content: "";
+  display: inline-block;
+  width: 3px;
+  height: 14px;
+  background-color: #409eff;
+  margin-right: 8px;
+  border-radius: 2px;
+}
+
+.info-box {
+  background-color: #f8f9fa;
+  border: 1px solid #ebeef5;
+  border-radius: 4px;
+  padding: 12px 16px;
+  color: #606266;
+  font-size: 14px;
+  line-height: 1.6;
+  word-break: break-word;
+  white-space: pre-wrap;
+}
+
+.project-actions {
+  flex-shrink: 0;
+  margin-left: 16px;
+}
+
 .pagination {
   display: flex;
   justify-content: center;
@@ -571,7 +784,7 @@ onUnmounted(() => {
   .projects-page {
     flex-direction: column;
   }
-  
+
   .sidebar {
     width: 100%;
     height: auto;
@@ -579,17 +792,17 @@ onUnmounted(() => {
     border-right: none;
     border-bottom: 1px solid #e4e7ed;
   }
-  
+
   .sidebar-header {
     padding: 15px 20px;
   }
-  
+
   .category-menu {
     display: flex;
     overflow-x: auto;
     white-space: nowrap;
   }
-  
+
   .category-menu .el-menu-item {
     flex-shrink: 0;
     min-width: 120px;
@@ -597,7 +810,7 @@ onUnmounted(() => {
     height: 40px;
     line-height: 40px;
   }
-  
+
   .main-content {
     padding: 15px;
   }
@@ -610,41 +823,40 @@ onUnmounted(() => {
     align-items: stretch;
     padding: 15px;
   }
-  
+
   .filter-left {
     text-align: center;
   }
-  
+
   .filter-left h2 {
     font-size: 20px;
     margin-bottom: 5px;
   }
-  
+
   .filter-right {
     flex-direction: column;
     gap: 10px;
   }
-  
+
   .year-select,
   .search-input {
     width: 100%;
   }
-  
+
   .project-item {
     flex-direction: column;
     align-items: flex-start;
     padding: 15px;
     gap: 8px;
   }
-  
+
   .project-header {
     display: flex;
     align-items: center;
     gap: 8px;
     flex-shrink: 0;
   }
-  
-  
+
   .project-type-tag {
     margin-right: 0px;
     margin-bottom: 0;
@@ -655,20 +867,20 @@ onUnmounted(() => {
     margin-right: 8px;
     margin-bottom: 0;
   }
-  
+
   .project-content {
     width: 100%;
   }
-  
+
   .project-content {
     line-height: 1.6;
   }
-  
+
   .pagination {
     padding: 15px 10px;
     overflow-x: auto;
   }
-  
+
   .pagination :deep(.el-pagination) {
     flex-wrap: nowrap;
     white-space: nowrap;
@@ -679,15 +891,15 @@ onUnmounted(() => {
   .projects-page {
     min-height: calc(100vh - 60px);
   }
-  
+
   .sidebar-header {
     padding: 10px 15px;
   }
-  
+
   .sidebar-header h3 {
     font-size: 16px;
   }
-  
+
   .category-menu .el-menu-item {
     min-width: 100px;
     font-size: 13px;
@@ -696,52 +908,52 @@ onUnmounted(() => {
     padding-left: 10px;
     padding-right: 10px;
   }
-  
+
   .main-content {
     padding: 10px;
   }
-  
+
   .filter-bar {
     padding: 12px;
   }
-  
+
   .filter-left h2 {
     font-size: 18px;
   }
-  
+
   .project-item {
     padding: 12px;
   }
-  
+
   .project-content {
     font-size: 13px;
   }
-  
+
   .project-title {
     font-size: 13px;
     font-weight: 600;
   }
-  
+
   .project-leader,
   .project-funding,
   .project-year {
     font-size: 12px;
   }
-  
+
   .pagination {
     padding: 10px 5px;
     overflow-x: auto;
   }
-  
+
   .pagination :deep(.el-pagination) {
     justify-content: center;
     min-width: max-content;
   }
-  
+
   .pagination :deep(.el-pagination .el-pager) {
     margin: 0 2px;
   }
-  
+
   .pagination :deep(.el-pagination .btn-prev),
   .pagination :deep(.el-pagination .btn-next) {
     margin: 0 2px;
