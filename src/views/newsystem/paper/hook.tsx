@@ -288,7 +288,7 @@ export function useHook() {
           id: row?.id ?? 0,
           title: row?.title ?? "",
           authors: authors,
-          journal: row?.venue ?? "",
+          publisher: row?.publisher ?? (row as any)?.venue ?? "",
           // 项目开始日期：统一使用projectStartDate字段
           projectStartDate: row?.projectStartDate
             ? new Date(row.projectStartDate).toISOString().slice(0, 7)
@@ -385,7 +385,7 @@ export function useHook() {
               ? formData.projectType
               : null,
           categoryId: formData.categoryId || null,
-          venue: formData.journal || null,
+          publisher: formData.publisher || null,
           publishDate:
             formData.achievementType !== "project" ? formData.publishDate || null : null,
           projectStartDate:
