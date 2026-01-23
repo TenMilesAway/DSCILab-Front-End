@@ -428,8 +428,8 @@ const convertApiDataToAchievement = (apiData: ApiAchievement): Achievement => {
 
   const title = apiData.title || "";
   // 优先使用 publication (期刊名/会议名)，其次是 venue，最后是 publisher
-  const publisher =
-    (apiData as any).publication || apiData.venue || apiData.publisher || "";
+  //const publisher = (apiData as any).publication || apiData.venue || apiData.publisher || "";
+  const publisher = apiData.publisher || "";
   const doi = apiData.doi || "";
 
   // 检查 title 是否已经以点号结尾，避免双重点号
