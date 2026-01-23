@@ -8,6 +8,7 @@ export interface ProjectListQuery {
   pageNum?: number; // 页码，默认1
   pageSize?: number; // 每页大小，默认100
   keyword?: string; // 关键词
+  categoryId?: number; // 项目类型ID（新分类体系）
   projectTypeId?: number; // 项目类型字典值
   supporter?: string; // 支持单位/机构
   ownerUserId?: number; // 拥有者用户ID
@@ -432,7 +433,7 @@ export const toggleMyProjectVisibilityApi = (
 export const getPublicProjectsApi = (params?: PublicProjectQuery) => {
   return http.request<
     ResponseData<{ total: number; rows: PublicProjectDTO[] }>
-  >("get", "/open/achievements", { params });
+  >("get", "/open/projects", { params });
 };
 
 /**

@@ -5,7 +5,7 @@ import { formRules } from "./rule";
 import { ElButton, ElIcon } from "element-plus";
 import { Plus, Delete } from "@element-plus/icons-vue";
 import { getDictCategoryTreeApi, type LabAchievementCategoryDTO } from "@/api/newsystem/achievement-category";
-import { getProjectListApi, type LabProjectDTO } from "@/api/newsystem/project";
+import { getPublicProjectsApi } from "@/api/newsystem/project";
 import { searchLabUsersByKeywordApi, type LabUserProfileDTO } from "@/api/newsystem/user";
 
 interface FormAuthor {
@@ -91,7 +91,7 @@ const searchProjects = async (query: string) => {
   }
   projectLoading.value = true;
   try {
-    const res = await getProjectListApi({
+    const res = await getPublicProjectsApi({
       pageNum: 1,
       pageSize: 1000,
       keyword: q
@@ -115,7 +115,7 @@ const loadInitialProjectOptions = async () => {
     return;
   }
   try {
-    const res = await getProjectListApi({
+    const res = await getPublicProjectsApi({
       pageNum: 1,
       pageSize: 1000
     } as any);
@@ -459,7 +459,7 @@ defineExpose({ getFormRuleRef });
       <re-col :value="12">
         <el-form-item
           :label="
-            newFormInline.achievementType === 'project' ? '开始日期' : '发布时间'
+            newFormInline.achievementType === 'project' ? '开始日期' : '发表时间'
           "
           :prop="newFormInline.achievementType === 'project' ? 'projectStartDate' : 'publishDate'"
         >

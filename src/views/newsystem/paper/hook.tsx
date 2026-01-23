@@ -37,9 +37,10 @@ export function useHook() {
     dateStart: undefined,
     dateEnd: undefined,
     parentCategoryId: undefined,
+    categoryId: undefined,
     ownerUserId: undefined,
     // 默认在成果管理列表中排除“项目”类型
-    excludeProject: true
+    excludeProject: undefined
   });
 
   const formRef = ref();

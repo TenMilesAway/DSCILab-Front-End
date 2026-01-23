@@ -4,7 +4,7 @@
       <el-card class="box-card">
         <template #header>
           <div class="card-header">
-            <span>成果类型管理</span>
+            <span>项目/成果类型管理</span>
           </div>
         </template>
         <div class="empty-content">

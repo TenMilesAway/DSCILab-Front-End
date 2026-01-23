@@ -213,14 +213,78 @@
                         {{ getProjectTypeLabel(project) }}
                       </el-tag>
                       <div class="project-content-member">
-                        <span
-                          v-if="project.reference"
-                          class="project-reference-member"
-                          >{{ project.reference }}</span
-                        >
-                        <span v-else class="project-no-reference-member"
-                          >暂无引用信息</span
-                        >
+                        <span class="project-info-member">
+                          <span v-if="project.title">{{ project.title }}</span>
+                          <span
+                            v-if="
+                              project.title &&
+                              (project.projectNumber ||
+                                project.projectStartDate ||
+                                project.projectEndDate ||
+                                formatFundingAmount(
+                                  project.amountDisplay || project.fundingAmount
+                                ))
+                            "
+                            >.&nbsp;</span
+                          >
+                          <span v-if="project.projectNumber">{{
+                            project.projectNumber
+                          }}</span>
+                          <span
+                            v-if="
+                              project.projectNumber &&
+                              (project.projectStartDate ||
+                                project.projectEndDate)
+                            "
+                            >.&nbsp;</span
+                          >
+                          <span
+                            v-if="
+                              project.projectStartDate || project.projectEndDate
+                            "
+                          >
+                            {{ project.projectStartDate?.slice(0, 7) || ""
+                            }}<span
+                              v-if="
+                                project.projectStartDate &&
+                                project.projectEndDate
+                              "
+                              >&nbsp;-&nbsp;</span
+                            >{{ project.projectEndDate?.slice(0, 7) || "" }}
+                          </span>
+                          <span
+                            v-if="
+                              (project.projectStartDate ||
+                                project.projectEndDate) &&
+                              formatFundingAmount(
+                                project.amountDisplay || project.fundingAmount
+                              )
+                            "
+                            >.&nbsp;</span
+                          >
+                          <span
+                            v-else-if="
+                              project.projectNumber &&
+                              formatFundingAmount(
+                                project.amountDisplay || project.fundingAmount
+                              )
+                            "
+                            >.&nbsp;</span
+                          >
+                          <span
+                            v-if="
+                              formatFundingAmount(
+                                project.amountDisplay || project.fundingAmount
+                              )
+                            "
+                          >
+                            {{
+                              formatFundingAmount(
+                                project.amountDisplay || project.fundingAmount
+                              )
+                            }}
+                          </span>
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -299,7 +363,7 @@
                         </el-tooltip>
                         <el-tooltip
                           :content="
-                            achievement.linkUrl ? '项目主页' : '暂无项目主页'
+                            achievement.linkUrl ? '成果主页' : '暂无成果主页'
                           "
                           placement="top"
                         >
@@ -373,7 +437,7 @@ import {
   type ApiAchievement,
   getAchievementsListApi
 } from "@/api/lab/achievements";
-import { type ApiProject, getProjectsListApi } from "@/api/lab/projects";
+import { type LabProjectDTO, getProjectsListApi } from "@/api/lab/projects";
 import {
   getAchievementCategoriesApi,
   type AchievementCategoryDTO
@@ -384,7 +448,7 @@ import {
 } from "@/api/lab/projectCategory";
 
 // 定义 Github 图标组件
-const _Github = {
+const GithubIcon = {
   name: "Github",
   render() {
     return h(
@@ -428,7 +492,7 @@ interface Member {
 interface Props {
   member: Member | null;
   achievements?: ApiAchievement[];
-  projects?: ApiProject[];
+  projects?: LabProjectDTO[];
 }
 
 const props = defineProps<Props>();
@@ -443,7 +507,7 @@ const isContentVisible = ref(false);
 const internalAchievements = ref<ApiAchievement[]>([]);
 
 // 内部项目数据状态
-const internalProjects = ref<ApiProject[]>([]);
+const internalProjects = ref<LabProjectDTO[]>([]);
 
 // 成果分类数据状态
 const achievementCategories = ref<AchievementCategoryDTO[]>([]);
@@ -612,15 +676,20 @@ const fetchProjects = async () => {
   if (!props.member) return;
 
   try {
-    const response = await getProjectsListApi();
-    if (response.code === 0 && response.data && response.data.rows) {
+    const response = await getProjectsListApi({
+      pageNum: 1,
+      pageSize: 1000
+    });
+    if (response.code === 0 && response.data) {
+      const dataList =
+        response.data.records || response.data.rows || response.data.list || [];
       // 获取有效的分类ID列表
       const validCategoryIds = projectCategories.value.map(
         category => category.id
       );
 
       // 先按有效分类ID筛选，再按当前用户筛选
-      const filteredProjects = response.data.rows.filter(project => {
+      const filteredProjects = dataList.filter(project => {
         // 检查是否属于有效分类
         const isValidCategory = validCategoryIds.includes(
           Number(project.categoryId)
@@ -698,13 +767,13 @@ const sortedProjects = computed(() => {
   const visibleProjects = internalProjects.value.filter(project => {
     if (!project.authors || !props.member) return false;
 
-    // 查找当前成员在作者列表中的记录，使用id匹配而不是name
+    // 查找当前成员在作者列表中的记录，使用name匹配 (Public API doesn't return userId or visible)
     const currentMemberAuthor = project.authors.find(
-      author => author.userId === props.member.id
+      author => author.name === props.member?.name
     );
 
-    // 如果找到当前成员且visible为true，则显示该项目
-    return currentMemberAuthor && currentMemberAuthor.visible;
+    // 对于公开接口返回的数据，只要是作者就认为是可见的
+    return !!currentMemberAuthor;
   });
 
   return [...visibleProjects].sort((a, b) => {
@@ -1028,6 +1097,14 @@ const getProjectLeader = (
   return leader?.name || "未知";
 };
 
+// 格式化经费金额
+const formatFundingAmount = (amount: string | number): string => {
+  if (!amount) return "";
+  const num = typeof amount === "string" ? parseFloat(amount) : amount;
+  if (isNaN(num)) return String(amount);
+  return num.toFixed(2) + "万元";
+};
+
 // 获取项目状态标签文本
 const getProjectStatusLabel = (published?: boolean) => {
   return published ? "已结项" : "未结项";
@@ -1047,7 +1124,7 @@ const handleGithubClick = (url: string) => {
 
 const handleProjectClick = (url: string) => {
   window.open(url, "_blank");
-  ElMessage.success("正在跳转到项目主页");
+  ElMessage.success("正在跳转到成果主页");
 };
 
 const handlePdfDownload = (url: string) => {
@@ -2377,15 +2454,18 @@ const handlePdfDownload = (url: string) => {
 
 .project-item-member {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
+  justify-content: space-between;
   padding: 20px;
-  background: white;
-  border: 1px solid #e5e7eb;
+  line-height: 1.6;
+  background: rgb(255 255 255 / 80%);
   border-radius: 12px;
+  box-shadow: 0 4px 16px rgb(148 163 184 / 10%);
   transition: all 0.3s ease;
 
   &:hover {
-    box-shadow: 0 2px 10px rgb(0 0 0 / 15%);
+    background: rgb(255 255 255 / 95%);
+    box-shadow: 0 8px 24px rgb(148 163 184 / 15%);
     transform: translateY(-2px);
   }
 }
@@ -2394,6 +2474,8 @@ const handlePdfDownload = (url: string) => {
   display: flex;
   flex: 1;
   gap: 12px;
+  align-items: center;
+  margin-right: 16px;
 }
 
 .project-status-tag-member {
@@ -2405,6 +2487,8 @@ const handlePdfDownload = (url: string) => {
 .project-type-tag-member {
   flex-shrink: 0;
   margin-right: 0px;
+  margin-top: 2px;
+  font-weight: 500;
 }
 
 .project-number-member {
@@ -2415,35 +2499,36 @@ const handlePdfDownload = (url: string) => {
   color: #6b7280;
 }
 
-.project-type-tag-member {
-  margin-top: 2px;
-  font-weight: 500;
-}
-
 .project-content-member {
   flex: 1;
-  font-size: 15px;
+  gap: 4px;
+  align-items: center;
+  font-size: 14px;
   line-height: 1.6;
 }
 
+.project-info-member {
+  color: #374151;
+}
+
 .project-title-member {
-  font-weight: 600;
-  color: #1f2937;
+  font-weight: normal;
+  color: #374151;
 }
 
 .project-separator-member {
   margin: 0 2px;
-  color: #6b7280;
+  color: #374151;
 }
 
 .project-leader-member,
 .project-year-member {
-  color: #4b5563;
+  color: #374151;
 }
 
 .project-funding-member {
-  font-weight: 500;
-  color: #e67e22;
+  font-weight: normal;
+  color: #374151;
 }
 
 .no-data {

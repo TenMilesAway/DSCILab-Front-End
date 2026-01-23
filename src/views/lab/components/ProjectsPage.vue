@@ -130,6 +130,15 @@
                   >.&nbsp;</span
                 >
                 <span
+                  v-else-if="
+                    project.projectNumber &&
+                    formatFundingAmount(
+                      project.amountDisplay || project.fundingAmount
+                    )
+                  "
+                  >.&nbsp;</span
+                >
+                <span
                   v-if="
                     formatFundingAmount(
                       project.amountDisplay || project.fundingAmount
@@ -189,7 +198,7 @@
           </div>
 
           <div class="reference-body">
-            <div class="info-label">Reference</div>
+            <div class="info-label">资助声明</div>
             <div class="info-box">
               {{ selectedProject?.reference }}
             </div>

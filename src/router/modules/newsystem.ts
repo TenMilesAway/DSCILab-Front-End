@@ -96,7 +96,7 @@ export default [
     component: Layout,
     redirect: "/newsystem/achievement-category/index",
     meta: {
-      title: "成果类型管理",
+      title: "项目/成果类型管理",
       rank: 5
     },
     children: [
@@ -105,7 +105,7 @@ export default [
         name: "NewSystemAchievementCategory",
         component: () => import("@/views/newsystem/achievement-category/index.vue"),
         meta: {
-          title: "成果类型管理",
+          title: "项目/成果类型管理",
           showLink: true,
           showParent: false,
           roles: ["admin"]

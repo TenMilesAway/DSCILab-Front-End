@@ -44,8 +44,13 @@ const loadCategoryTree = async () => {
     if (response.code === 0) {
       categoryTree.value = response.data;
       topLevelCategories.value = response.data; // 一级项目类型
-      paperCategories.value = categoryTree.value.filter(cat => cat.type === 1);
-      projectCategories.value = categoryTree.value.filter(cat => cat.type === 2);
+      
+      // 按ID筛选，一级默认是2（项目）
+      const paperRoot = categoryTree.value.find(cat => cat.id === 1);
+      const projectRoot = categoryTree.value.find(cat => cat.id === 2);
+      
+      paperCategories.value = paperRoot?.children || [];
+      projectCategories.value = projectRoot?.children || [];
     }
   } catch (error) {
     console.error('获取项目类型失败:', error);
@@ -73,7 +78,22 @@ onMounted(() => {
           class="!w-[200px]"
         />
       </el-form-item>
-      <!-- 已隐藏：项目类型筛选（默认在钩子中按“项目”进行筛选） -->
+      <!-- 项目类型筛选 -->
+      <el-form-item label="项目类型：" prop="categoryId">
+        <el-select
+          v-model="searchFormParams.categoryId"
+          placeholder="请选择项目类型"
+          clearable
+          class="!w-[200px]"
+        >
+          <el-option
+            v-for="item in projectCategories"
+            :key="item.id"
+            :label="item.categoryName"
+            :value="item.id"
+          />
+        </el-select>
+      </el-form-item>
       <el-form-item>
         <el-button
           type="primary"
