@@ -32,6 +32,7 @@ export function useHook() {
     pageNum: 1,
     pageSize: 10,
     keyword: undefined,
+    categoryId: undefined,
     projectTypeId: undefined,
     supporter: undefined,
     ownerUserId: undefined,
