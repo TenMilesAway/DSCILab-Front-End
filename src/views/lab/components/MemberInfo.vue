@@ -919,9 +919,9 @@ const handleImageLoad = () => {
 // 处理图片加载错误
 const handleImageError = (event: Event) => {
   const img = event.target as HTMLImageElement;
-  const defaultAvatar = "/src/assets/lab/default_user_avatar.png";
+  // const defaultAvatar = "/src/assets/lab/default_user_avatar.png";
   // 部署时
-  // const defaultAvatar = "/static/png/default_user_avatar.png";
+  const defaultAvatar = "/static/png/default_user_avatar.png";
   // 防止无限循环，只有当前src不是默认头像时才切换
   if (img.src !== window.location.origin + defaultAvatar) {
     img.src = defaultAvatar;
