@@ -53,6 +53,7 @@
             >
               <div class="avatar-container">
                 <img
+                  ref="avatarImgRef"
                   :src="avatarUrl"
                   :alt="member.name"
                   class="member-avatar"
@@ -716,6 +717,8 @@ const fetchProjects = async () => {
   }
 };
 
+const avatarImgRef = ref<HTMLImageElement | null>(null);
+
 // 监听member变化，重置头像加载状态和动画状态，并获取成果和项目数据
 watch(
   () => props.member,
@@ -733,6 +736,9 @@ watch(
 
     // 延迟触发动画，确保组件已渲染
     nextTick(() => {
+      if (avatarImgRef.value && avatarImgRef.value.complete) {
+        isAvatarLoaded.value = true;
+      }
       setTimeout(() => {
         isContentVisible.value = true;
       }, 100);
