@@ -140,7 +140,17 @@ router.beforeEach((to: ToRouteType, _from, next) => {
       if (path === '/welcome/member' && to.fullPath.startsWith('/welcome/member/')) return true;
       return false;
     });
-    isInWhiteList && userInfo ? next(_from.fullPath) : next();
+
+    // 如果目标是白名单路径，且用户已登录，则允许访问白名单路径
+    // 原来的逻辑是：如果已登录且访问白名单路径，则强制返回上一页或留在当前页
+    // 这会导致如果用户手动输入白名单路径（如 /welcome），会被强制重定向回原来的页面（可能是后台页面）
+    // 如果原来的页面也因为某种原因触发重定向（例如后台页面需要特定参数），就可能形成死循环
+    // 修改为：如果用户已登录，允许访问白名单页面
+    if (isInWhiteList && userInfo) {
+      next();
+    } else {
+      next();
+    }
   }
   if (userInfo) {
     // 无权限跳转403页面

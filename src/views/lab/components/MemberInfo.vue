@@ -526,7 +526,9 @@ const loadAchievementCategories = async () => {
       result.data &&
       Array.isArray(result.data)
     ) {
-      achievementCategories.value = result.data;
+      achievementCategories.value = result.data.sort(
+        (a, b) => (a.sortOrder || 0) - (b.sortOrder || 0)
+      );
     } else {
       console.error("获取成果分类数据格式错误:", result);
     }
@@ -777,7 +779,18 @@ const sortedProjects = computed(() => {
   });
 
   return [...visibleProjects].sort((a, b) => {
-    // 优先使用项目开始时间排序
+    // 1. 优先按项目类型排序
+    const categoryA = projectCategories.value.find(c => c.id === a.categoryId);
+    const categoryB = projectCategories.value.find(c => c.id === b.categoryId);
+    // 使用 sortOrder 排序，如果没有则排在最后
+    const orderA = categoryA?.sortOrder ?? 999;
+    const orderB = categoryB?.sortOrder ?? 999;
+
+    if (orderA !== orderB) {
+      return orderA - orderB;
+    }
+
+    // 2. 类型相同则按项目开始时间排序
     const aDate = a.projectStartDate
       ? new Date(a.projectStartDate).getTime()
       : 0;
@@ -788,7 +801,7 @@ const sortedProjects = computed(() => {
   });
 });
 
-// 按时间排序的成果列表（从新到旧）
+// 按类型和时间排序的成果列表
 const sortedAchievements = computed(() => {
   if (!internalAchievements.value || internalAchievements.value.length === 0) {
     return [];
@@ -808,7 +821,24 @@ const sortedAchievements = computed(() => {
   });
 
   return [...visibleAchievements].sort((a, b) => {
-    // 优先使用发表时间排序
+    // 1. 优先按成果类型排序
+    // 使用 achievementCategories 数组中的顺序作为排序依据
+    const indexA = achievementCategories.value.findIndex(
+      c => c.id === a.categoryId
+    );
+    const indexB = achievementCategories.value.findIndex(
+      c => c.id === b.categoryId
+    );
+
+    // 如果找不到分类，放到最后
+    const orderA = indexA === -1 ? 999 : indexA;
+    const orderB = indexB === -1 ? 999 : indexB;
+
+    if (orderA !== orderB) {
+      return orderA - orderB;
+    }
+
+    // 2. 类型相同则按发表时间排序
     const aDate = a.publishDate ? new Date(a.publishDate).getTime() : 0;
     const bDate = b.publishDate ? new Date(b.publishDate).getTime() : 0;
     return bDate - aDate; // 从新到旧排序
