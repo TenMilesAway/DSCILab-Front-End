@@ -13,10 +13,7 @@ import {
   getAchievementsListApi,
   type ApiAchievement
 } from "@/api/lab/achievements";
-import {
-  getProjectsListApi,
-  type ApiProject
-} from "@/api/lab/projects";
+import { getProjectsListApi, type ApiProject } from "@/api/lab/projects";
 
 defineOptions({
   name: "MembersPage"
@@ -75,7 +72,6 @@ const loading = ref(false);
 // 模拟加载开关
 const simulateLoading = ref(false);
 
-
 // API获取的成果数据
 const apiAchievements = ref<ApiAchievement[]>([]);
 // API获取的项目数据
@@ -119,7 +115,10 @@ const getAcademicStatusTitle = (
 };
 
 // 根据职称获取颜色
-const getTitleColor = (academicStatus: number | null, hasGraduation: boolean): string => {
+const getTitleColor = (
+  academicStatus: number | null,
+  hasGraduation: boolean
+): string => {
   // 已毕业学生使用明亮的橙色
   if (hasGraduation) {
     return "#ff6b35"; // 明亮的橙色
@@ -132,7 +131,7 @@ const getTitleColor = (academicStatus: number | null, hasGraduation: boolean): s
     3: "#d97706", // 讲师 - 橙色
     4: "#059669", // 博士生 - 绿色
     5: "#0891b2", // 硕士生 - 青色
-    6: "#7c3aed"  // 本科生 - 紫色
+    6: "#7c3aed" // 本科生 - 紫色
   };
 
   return colorMap[academicStatus || 6] || "#6b7280"; // 默认灰色
@@ -419,16 +418,24 @@ const getCategoryName = (categoryKey: string) => {
             >
               <div class="member-info">
                 <span class="member-field member-name">{{ member.name }}</span>
-                <span 
+                <span
                   class="member-field member-title"
-                  :style="{ color: getTitleColor(member.academicStatus, member.category === 'graduates') }"
-                >{{
-                  member.title
-                }}</span>
+                  :style="{
+                    color: getTitleColor(
+                      member.academicStatus,
+                      member.category === 'graduates'
+                    )
+                  }"
+                  >{{ member.title }}</span
+                >
                 <span
                   v-if="member.category === 'graduates'"
                   class="member-field member-graduation"
-                  >毕业去向：{{ member.graduation && member.graduation.trim() ? member.graduation : '暂未统计' }}</span
+                  >毕业去向：{{
+                    member.graduation && member.graduation.trim()
+                      ? member.graduation
+                      : "暂未统计"
+                  }}</span
                 >
               </div>
               <div class="member-action">
@@ -544,7 +551,7 @@ const getCategoryName = (categoryKey: string) => {
 
     .sidebar-header {
       margin-bottom: 12px;
-      
+
       h3 {
         font-size: 1rem;
         text-align: center;
@@ -565,7 +572,7 @@ const getCategoryName = (categoryKey: string) => {
       min-height: 36px;
       justify-content: center;
       text-align: center;
-      
+
       .nav-text {
         font-weight: 500;
       }
@@ -574,11 +581,11 @@ const getCategoryName = (categoryKey: string) => {
         font-size: 10px;
         margin-left: 4px;
       }
-      
+
       &:hover {
         transform: none;
       }
-      
+
       &.active {
         font-size: 12px;
       }
@@ -588,15 +595,15 @@ const getCategoryName = (categoryKey: string) => {
   .members-content {
     .category-header {
       margin-bottom: 16px;
-      
+
       h3 {
         font-size: 1.2rem;
-        
+
         .category-count {
           font-size: 0.9rem;
         }
       }
-      
+
       .search-container {
         .search-input {
           font-size: 14px;
@@ -608,7 +615,7 @@ const getCategoryName = (categoryKey: string) => {
   .member-card {
     padding: 12px;
     border-radius: 10px;
-    
+
     &:hover {
       transform: none;
     }
@@ -650,25 +657,25 @@ const getCategoryName = (categoryKey: string) => {
     max-width: 320px;
     margin: 0 auto;
     padding: 10px;
-    
+
     .sidebar-header {
       h3 {
         font-size: 0.95rem;
         text-align: center;
       }
     }
-    
+
     .category-nav {
       grid-template-columns: repeat(2, 1fr);
       gap: 6px;
       justify-content: center;
     }
-    
+
     .nav-item {
       padding: 6px 8px;
       font-size: 11px;
       min-height: 32px;
-      
+
       .nav-count {
         font-size: 9px;
       }
@@ -679,7 +686,7 @@ const getCategoryName = (categoryKey: string) => {
     .category-header {
       h3 {
         font-size: 1.1rem;
-        
+
         .category-count {
           font-size: 0.85rem;
         }
@@ -704,7 +711,7 @@ const getCategoryName = (categoryKey: string) => {
         padding: 2px 5px;
       }
     }
-    
+
     .member-action {
       .view-detail {
         font-size: 10px;
@@ -793,17 +800,39 @@ const getCategoryName = (categoryKey: string) => {
   animation-fill-mode: both;
 }
 
-.loading-char:nth-child(1) { animation-delay: 0.1s; }
-.loading-char:nth-child(2) { animation-delay: 0.2s; }
-.loading-char:nth-child(3) { animation-delay: 0.3s; }
-.loading-char:nth-child(4) { animation-delay: 0.4s; }
-.loading-char:nth-child(5) { animation-delay: 0.5s; }
-.loading-char:nth-child(6) { animation-delay: 0.6s; }
-.loading-char:nth-child(7) { animation-delay: 0.7s; }
-.loading-char:nth-child(8) { animation-delay: 0.8s; }
-.loading-char:nth-child(9) { animation-delay: 0.9s; }
-.loading-char:nth-child(10) { animation-delay: 1.0s; }
-.loading-char:nth-child(11) { animation-delay: 1.1s; }
+.loading-char:nth-child(1) {
+  animation-delay: 0.1s;
+}
+.loading-char:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.loading-char:nth-child(3) {
+  animation-delay: 0.3s;
+}
+.loading-char:nth-child(4) {
+  animation-delay: 0.4s;
+}
+.loading-char:nth-child(5) {
+  animation-delay: 0.5s;
+}
+.loading-char:nth-child(6) {
+  animation-delay: 0.6s;
+}
+.loading-char:nth-child(7) {
+  animation-delay: 0.7s;
+}
+.loading-char:nth-child(8) {
+  animation-delay: 0.8s;
+}
+.loading-char:nth-child(9) {
+  animation-delay: 0.9s;
+}
+.loading-char:nth-child(10) {
+  animation-delay: 1s;
+}
+.loading-char:nth-child(11) {
+  animation-delay: 1.1s;
+}
 
 @keyframes spin-detail {
   0% {
@@ -815,7 +844,9 @@ const getCategoryName = (categoryKey: string) => {
 }
 
 @keyframes wave-detail {
-  0%, 60%, 100% {
+  0%,
+  60%,
+  100% {
     transform: translateY(0);
     color: #64748b;
   }
@@ -837,27 +868,27 @@ const getCategoryName = (categoryKey: string) => {
     max-width: 280px;
     margin: 0 auto;
     padding: 8px;
-    
+
     .sidebar-header {
       margin-bottom: 8px;
-      
+
       h3 {
         font-size: 0.9rem;
         text-align: center;
       }
     }
-    
+
     .category-nav {
       grid-template-columns: 1fr;
       gap: 4px;
       justify-content: center;
     }
-    
+
     .nav-item {
       padding: 8px 6px;
       font-size: 10px;
       min-height: 28px;
-      
+
       .nav-count {
         font-size: 8px;
       }
@@ -868,7 +899,7 @@ const getCategoryName = (categoryKey: string) => {
     .category-header {
       h3 {
         font-size: 1rem;
-        
+
         .category-count {
           font-size: 0.8rem;
         }
@@ -894,7 +925,7 @@ const getCategoryName = (categoryKey: string) => {
         padding: 2px 4px;
       }
     }
-    
+
     .member-action {
       .view-detail {
         font-size: 9px;
@@ -923,7 +954,7 @@ const getCategoryName = (categoryKey: string) => {
 
     .sidebar-header {
       margin-bottom: 18px;
-      
+
       h3 {
         font-size: 1.2rem;
         text-align: center;
@@ -944,20 +975,20 @@ const getCategoryName = (categoryKey: string) => {
       padding: 12px 16px;
       font-size: 14px;
       border-radius: 12px;
-      
+
       .nav-text {
         font-weight: 500;
       }
-      
+
       .nav-count {
         font-size: 12px;
         margin-left: 6px;
       }
-      
+
       &:hover {
         transform: translateY(-2px);
       }
-      
+
       &.active {
         transform: translateY(-1px);
       }
@@ -979,11 +1010,11 @@ const getCategoryName = (categoryKey: string) => {
         min-width: auto;
         padding: 12px 10px;
         font-size: 14px;
-        
+
         .nav-text {
           font-weight: 500;
         }
-        
+
         .nav-count {
           font-size: 12px;
           margin-left: 4px;
@@ -1021,7 +1052,7 @@ const getCategoryName = (categoryKey: string) => {
 
     .sidebar-header {
       margin-bottom: 16px;
-      
+
       h3 {
         font-size: 1.1rem;
         text-align: center;
@@ -1042,16 +1073,16 @@ const getCategoryName = (categoryKey: string) => {
       padding: 10px 8px;
       font-size: 13px;
       border-radius: 10px;
-      
+
       .nav-text {
         font-weight: 500;
       }
-      
+
       .nav-count {
         font-size: 11px;
         margin-left: 4px;
       }
-      
+
       &:hover {
         transform: translateY(-2px);
       }
@@ -1067,7 +1098,7 @@ const getCategoryName = (categoryKey: string) => {
 
       h3 {
         font-size: 1.4rem;
-        
+
         .category-count {
           font-size: 1rem;
         }
@@ -1096,7 +1127,7 @@ const getCategoryName = (categoryKey: string) => {
     align-items: flex-start;
     padding: 14px;
     border-radius: 12px;
-    
+
     &:hover {
       transform: translateY(-2px);
     }
@@ -1135,7 +1166,7 @@ const getCategoryName = (categoryKey: string) => {
 
     .member-action {
       align-self: flex-end;
-      
+
       .view-detail {
         padding: 6px 12px;
         font-size: 13px;
@@ -1229,14 +1260,14 @@ const getCategoryName = (categoryKey: string) => {
       background: rgb(59 130 246 / 10%);
       transform: translateX(4px);
     }
-    
+
     /* 移动端触摸反馈 */
     @media (hover: none) and (pointer: coarse) {
       &:active {
         background: rgb(59 130 246 / 15%);
         transform: scale(0.98);
       }
-      
+
       &:hover {
         transform: none;
       }
@@ -1246,7 +1277,7 @@ const getCategoryName = (categoryKey: string) => {
       color: white;
       background: linear-gradient(135deg, #3b82f6, #1d4ed8);
       box-shadow: 0 4px 12px rgb(59 130 246 / 30%);
-      
+
       /* 移动端激活状态优化 */
       @media (hover: none) and (pointer: coarse) {
         &:active {
@@ -1351,7 +1382,7 @@ const getCategoryName = (categoryKey: string) => {
     box-shadow: 0 8px 24px rgb(148 163 184 / 20%);
     transform: translateX(4px);
   }
-  
+
   /* 移动端触摸反馈 */
   @media (hover: none) and (pointer: coarse) {
     &:active {
@@ -1359,7 +1390,7 @@ const getCategoryName = (categoryKey: string) => {
       transform: scale(0.98);
       box-shadow: 0 2px 8px rgb(148 163 184 / 15%);
     }
-    
+
     &:hover {
       transform: none;
     }

@@ -7,7 +7,10 @@ import { useRenderIcon } from "@/components/ReIcon/src/hooks";
 import Delete from "@iconify-icons/ep/delete";
 import EditPen from "@iconify-icons/ep/edit-pen";
 import { useUserStoreHook } from "@/store/modules/user";
-import { getDictCategoryTreeApi, type LabAchievementCategoryDTO } from "@/api/newsystem/achievement-category";
+import {
+  getDictCategoryTreeApi,
+  type LabAchievementCategoryDTO
+} from "@/api/newsystem/achievement-category";
 
 import {
   getAchievementListApi,
@@ -75,7 +78,7 @@ export function useHook() {
         categoryMap.value = map;
       }
     } catch (error) {
-      console.error('获取成果类型映射失败:', error);
+      console.error("获取成果类型映射失败:", error);
     }
   };
 
@@ -155,8 +158,9 @@ export function useHook() {
 
         return (
           <div
-            style={`display: flex; align-items: center; ${!isTeacher ? "justify-content: center;" : ""
-              }`}
+            style={`display: flex; align-items: center; ${
+              !isTeacher ? "justify-content: center;" : ""
+            }`}
           >
             <el-button
               link
@@ -266,21 +270,21 @@ export function useHook() {
     const authors =
       row?.authors?.length > 0
         ? row.authors.map((author, index) => ({
-          userId: author.userId || null,
-          name: author.name,
-          authorOrder: index + 1,
-          isCorresponding: author.isCorresponding || false,
-          visible: author.visible !== false
-        }))
+            userId: author.userId || null,
+            name: author.name,
+            authorOrder: index + 1,
+            isCorresponding: author.isCorresponding || false,
+            visible: author.visible !== false
+          }))
         : [
-          {
-            userId: null,
-            name: "",
-            authorOrder: 1,
-            isCorresponding: false,
-            visible: true
-          }
-        ];
+            {
+              userId: null,
+              name: "",
+              authorOrder: 1,
+              isCorresponding: false,
+              visible: true
+            }
+          ];
 
     addDialog({
       title: `${title}成果`,
@@ -299,7 +303,8 @@ export function useHook() {
             // 对非项目类型，直接使用完整的发布时间字符串（YYYY-MM-DD）
             const isProject = (() => {
               if (row?.categoryId && categoryMap.value.has(row.categoryId)) {
-                const categoryName = categoryMap.value.get(row.categoryId) || "";
+                const categoryName =
+                  categoryMap.value.get(row.categoryId) || "";
                 return categoryName.includes("项目");
               }
               return row?.type === 2;
@@ -388,7 +393,9 @@ export function useHook() {
           categoryId: formData.categoryId || null,
           publisher: formData.publisher || null,
           publishDate:
-            formData.achievementType !== "project" ? formData.publishDate || null : null,
+            formData.achievementType !== "project"
+              ? formData.publishDate || null
+              : null,
           projectStartDate:
             formData.achievementType === "project"
               ? formData.projectStartDate || null
@@ -405,14 +412,15 @@ export function useHook() {
           published: formData.published,
           authors: authorsData,
           projectIds:
-            formData.achievementType === "paper" && Array.isArray(formData.projectIds)
+            formData.achievementType === "paper" &&
+            Array.isArray(formData.projectIds)
               ? formData.projectIds
               : null
         };
 
         // 处理空值，将空字符串转换为null
         Object.keys(curData).forEach(key => {
-          if (curData[key] === '' || curData[key] === undefined) {
+          if (curData[key] === "" || curData[key] === undefined) {
             curData[key] = null;
           }
         });

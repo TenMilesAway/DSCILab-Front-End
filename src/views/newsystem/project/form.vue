@@ -3,9 +3,15 @@ import { ref, onMounted } from "vue";
 import ReCol from "@/components/ReCol";
 import { formRules } from "./rule";
 import { ElButton, ElIcon } from "element-plus";
-import { searchLabUsersByKeywordApi, type LabUserProfileDTO } from "@/api/newsystem/user";
+import {
+  searchLabUsersByKeywordApi,
+  type LabUserProfileDTO
+} from "@/api/newsystem/user";
 import { Plus, Delete } from "@element-plus/icons-vue";
-import { getDictCategoryTreeApi, type LabAchievementCategoryDTO } from "@/api/newsystem/achievement-category";
+import {
+  getDictCategoryTreeApi,
+  type LabAchievementCategoryDTO
+} from "@/api/newsystem/achievement-category";
 
 interface FormAuthor {
   userId?: number | null; // 内部作者userId；外部作者为null
@@ -76,9 +82,12 @@ const loadCategoryTree = async () => {
       categoryTree.value = response.data;
       // 查找一级分类为“项目”的节点（通常ID为2，或通过名称判断）
       const projectRoot = response.data.find(
-        cat => cat.id === 2 || cat.categoryName === '项目' || (cat.categoryCode && cat.categoryCode.toLowerCase() === 'project')
+        cat =>
+          cat.id === 2 ||
+          cat.categoryName === "项目" ||
+          (cat.categoryCode && cat.categoryCode.toLowerCase() === "project")
       );
-      
+
       if (projectRoot && projectRoot.children) {
         projectCategories.value = projectRoot.children;
       } else {
@@ -86,7 +95,7 @@ const loadCategoryTree = async () => {
       }
     }
   } catch (error) {
-    console.error('获取项目类型失败:', error);
+    console.error("获取项目类型失败:", error);
   }
 };
 
@@ -145,7 +154,7 @@ const moveAuthorDown = (index: number) => {
 
 // 负责人勾选：确保同一项目仅可选择一位负责人
 function onLeaderToggle(selectedIndex: number) {
-  if (newFormInline.value.achievementType !== 'project') return;
+  if (newFormInline.value.achievementType !== "project") return;
   const authors = newFormInline.value.authors;
   if (authors[selectedIndex].isLeader) {
     authors.forEach((a, idx) => {
@@ -157,7 +166,14 @@ function onLeaderToggle(selectedIndex: number) {
 // 参与人模糊搜索建议
 const fetchUserSuggest = async (
   query: string,
-  cb: (results: Array<{ value: string; id: number; username?: string; englishName?: string | null }>) => void
+  cb: (
+    results: Array<{
+      value: string;
+      id: number;
+      username?: string;
+      englishName?: string | null;
+    }>
+  ) => void
 ) => {
   const q = (query || "").trim();
   if (!q) {
@@ -166,7 +182,7 @@ const fetchUserSuggest = async (
   }
   try {
     const res = await searchLabUsersByKeywordApi(q);
-    const list: LabUserProfileDTO[] = res.code === 0 ? (res.data || []) : [];
+    const list: LabUserProfileDTO[] = res.code === 0 ? res.data || [] : [];
     cb(
       list.map(u => ({
         value: u.realName,
@@ -255,9 +271,7 @@ defineExpose({ getFormRuleRef });
                   <span v-if="newFormInline.achievementType === 'project'">
                     参与人
                   </span>
-                  <span v-else>
-                    第{{ index + 1 }}作者
-                  </span>
+                  <span v-else> 第{{ index + 1 }}作者 </span>
                 </span>
                 <div class="author-actions">
                   <el-button
@@ -289,13 +303,15 @@ defineExpose({ getFormRuleRef });
               <div class="author-fields">
                 <el-row :gutter="16">
                   <el-col :span="8">
-                    <el-form-item
-                      :prop="`authors.${index}.name`"
-                    >
+                    <el-form-item :prop="`authors.${index}.name`">
                       <el-autocomplete
                         v-model="author.name"
                         :fetch-suggestions="fetchUserSuggest"
-                        :placeholder="newFormInline.achievementType === 'project' ? '姓名' : '作者姓名'"
+                        :placeholder="
+                          newFormInline.achievementType === 'project'
+                            ? '姓名'
+                            : '作者姓名'
+                        "
                         class="w-full"
                         clearable
                         @select="item => onUserSelect(index, item)"
@@ -303,20 +319,27 @@ defineExpose({ getFormRuleRef });
                       />
                     </el-form-item>
                   </el-col>
-                  <el-col :span="8" v-if="newFormInline.achievementType === 'project'">
+                  <el-col
+                    :span="8"
+                    v-if="newFormInline.achievementType === 'project'"
+                  >
                     <el-form-item>
-                      <el-checkbox v-model="author.isLeader" @change="onLeaderToggle(index)">
+                      <el-checkbox
+                        v-model="author.isLeader"
+                        @change="onLeaderToggle(index)"
+                      >
                         负责人
                       </el-checkbox>
                     </el-form-item>
                   </el-col>
-
                 </el-row>
                 <el-row
                   :gutter="16"
-                  v-if="newFormInline.achievementType === 'paper' || newFormInline.achievementType === 'other'"
+                  v-if="
+                    newFormInline.achievementType === 'paper' ||
+                    newFormInline.achievementType === 'other'
+                  "
                 >
-
                   <el-col :span="8">
                     <el-form-item>
                       <el-checkbox v-model="author.isCorresponding">
@@ -353,8 +376,11 @@ defineExpose({ getFormRuleRef });
 
       <re-col
         :value="12"
-        v-if="newFormInline.achievementType === 'paper' || newFormInline.achievementType === 'other'"
-      ></re-col>
+        v-if="
+          newFormInline.achievementType === 'paper' ||
+          newFormInline.achievementType === 'other'
+        "
+      />
 
       <re-col :value="12">
         <el-form-item label="开始日期" prop="projectStartDate">
@@ -397,10 +423,7 @@ defineExpose({ getFormRuleRef });
       </re-col>
 
       <re-col :value="12">
-        <el-form-item
-          label="编号"
-          prop="projectNumber"
-        >
+        <el-form-item label="编号" prop="projectNumber">
           <el-input
             v-model="newFormInline.projectNumber"
             clearable
@@ -409,10 +432,12 @@ defineExpose({ getFormRuleRef });
         </el-form-item>
       </re-col>
 
-
-
       <re-col :value="24">
-        <el-form-item label="资助声明" prop="reference" style="white-space: nowrap;">
+        <el-form-item
+          label="资助声明"
+          prop="reference"
+          style="white-space: nowrap"
+        >
           <el-input
             v-model="newFormInline.reference"
             clearable
@@ -420,8 +445,6 @@ defineExpose({ getFormRuleRef });
           />
         </el-form-item>
       </re-col>
-
-
     </el-row>
   </el-form>
 </template>
@@ -481,36 +504,13 @@ defineExpose({ getFormRuleRef });
   font-weight: 700 !important;
 }
 </style>
-// 用户模糊搜索建议
-async function fetchUserSuggest(query: string, cb: (results: Array<{ value: string; id: number; username?: string; englishName?: string | null }>) => void) {
-  const q = (query || "").trim();
-  if (!q) {
-    cb([]);
-    return;
-  }
-  try {
-    const res = await searchLabUsersByKeywordApi(q);
-    const list: LabUserProfileDTO[] = res.code === 0 ? (res.data || []) : [];
-    cb(
-      list.map(u => ({
-        value: u.realName,
-        id: u.id,
-        username: u.username,
-        englishName: u.englishName
-      }))
-    );
-  } catch {
-    cb([]);
-  }
-}
-
-function onUserSelect(index: number, item: { value: string; id: number }) {
-  const a = newFormInline.value.authors[index];
-  a.userId = item.id;
-  a.name = item.value;
-}
-
-function onUserClear(index: number) {
-  const a = newFormInline.value.authors[index];
-  a.userId = null;
-}
+// 用户模糊搜索建议 async function fetchUserSuggest(query: string, cb: (results:
+Array<{ value: string; id: number; username?: string; englishName?: string |
+null }>) => void) { const q = (query || "").trim(); if (!q) { cb([]); return; }
+try { const res = await searchLabUsersByKeywordApi(q); const list:
+LabUserProfileDTO[] = res.code === 0 ? (res.data || []) : []; cb( list.map(u =>
+({ value: u.realName, id: u.id, username: u.username, englishName: u.englishName
+})) ); } catch { cb([]); } } function onUserSelect(index: number, item: { value:
+string; id: number }) { const a = newFormInline.value.authors[index]; a.userId =
+item.id; a.name = item.value; } function onUserClear(index: number) { const a =
+newFormInline.value.authors[index]; a.userId = null; }

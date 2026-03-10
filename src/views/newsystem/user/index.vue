@@ -163,8 +163,8 @@ const isAdminUser = (row: any) => {
             >
               修改
             </el-button>
-            <el-popconfirm 
-              title="是否确认删除?" 
+            <el-popconfirm
+              title="是否确认删除?"
               @confirm="handleDelete(row)"
               :disabled="isAdminUser(row)"
             >

@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import resetPwd from "./resetPwd.vue";
 import userInfo from "./userInfo.vue";
-import userAvatar from "./userAvatar.vue";
 // import userAvatar from "./userAvatar";
 // import { getUserProfile } from '@/api/system/user';
 // import * as userApi from "@/api/system/userApi";
@@ -43,10 +42,6 @@ getUser();
             </div>
           </template>
           <div>
-            <div class="text-center">
-              <userAvatar :user="state.user" />
-            </div>
-
             <el-row>
               <el-descriptions :column="1">
                 <el-descriptions-item label="用户名称">{{

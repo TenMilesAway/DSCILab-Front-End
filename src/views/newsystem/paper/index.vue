@@ -3,7 +3,10 @@ import { ref, onMounted } from "vue";
 import { useHook } from "./hook";
 import { PureTableBar } from "@/components/RePureTableBar";
 import { useRenderIcon } from "@/components/ReIcon/src/hooks";
-import { getDictCategoryTreeApi, type LabAchievementCategoryDTO } from "@/api/newsystem/achievement-category";
+import {
+  getDictCategoryTreeApi,
+  type LabAchievementCategoryDTO
+} from "@/api/newsystem/achievement-category";
 
 import Delete from "@iconify-icons/ep/delete";
 import EditPen from "@iconify-icons/ep/edit-pen";
@@ -46,7 +49,7 @@ const loadCategoryTree = async () => {
       }
     }
   } catch (error) {
-    console.error('获取成果类型失败:', error);
+    console.error("获取成果类型失败:", error);
   }
 };
 

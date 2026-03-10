@@ -20,7 +20,7 @@ const inputRef = ref();
 // 研究方向标签相关
 const researchAreaTags = ref<string[]>([]);
 const inputVisible = ref(false);
-const inputValue = ref('');
+const inputValue = ref("");
 
 const props = defineProps<{
   user: UserProfile | any;
@@ -35,7 +35,10 @@ const currentUserInfo = useUserStoreHook()?.currentUserInfo;
 
 // 判断当前用户是否为管理员且正在修改自己的信息
 const isAdminEditingSelf = computed(() => {
-  return currentUserInfo?.userInfo?.identity === 1 && currentUserInfo?.userInfo?.id === props.user.id;
+  return (
+    currentUserInfo?.userInfo?.identity === 1 &&
+    currentUserInfo?.userInfo?.id === props.user.id
+  );
 });
 
 const userModel = reactive<UpdateProfileRequest>({
@@ -71,7 +74,9 @@ watch(
         newUser.researchArea || newUser.research_area || "";
       // 初始化研究方向标签
       const researchArea = newUser.researchArea || newUser.research_area || "";
-      researchAreaTags.value = researchArea ? researchArea.split('，').filter(tag => tag.trim()) : [];
+      researchAreaTags.value = researchArea
+        ? researchArea.split("，").filter(tag => tag.trim())
+        : [];
       userModel.phone = newUser.phone || "";
       userModel.email = newUser.email || "";
       userModel.status = newUser.status || undefined;
@@ -91,7 +96,7 @@ watch(
 // 监听状态变化，当选择在读/在职时自动清空毕业/离职相关信息
 watch(
   () => userModel.status,
-  (newStatus) => {
+  newStatus => {
     // 当状态为1（在读/在职）时，清空毕业/离职年份和去向
     if (newStatus === 1) {
       userModel.graduationYear = undefined;
@@ -137,7 +142,7 @@ const rules = ref<FormRules>({
     {
       validator: (rule: any, value: any, callback: any) => {
         if (value && (value < 1900 || value > new Date().getFullYear() + 10)) {
-          callback(new Error('请输入合理的年份'));
+          callback(new Error("请输入合理的年份"));
         } else {
           callback();
         }
@@ -183,11 +188,11 @@ const handleInputConfirm = () => {
     }
   }
   inputVisible.value = false;
-  inputValue.value = '';
+  inputValue.value = "";
 };
 
 const updateResearchAreaString = () => {
-  userModel.researchArea = researchAreaTags.value.join('，');
+  userModel.researchArea = researchAreaTags.value.join("，");
 };
 
 /** 提交按钮 */
@@ -199,7 +204,7 @@ function submit() {
     });
     return;
   }
-  
+
   console.log(userRef.value);
   // 确保提交前更新研究方向字符串
   updateResearchAreaString();
@@ -208,7 +213,7 @@ function submit() {
       // 处理空值，将空字符串转换为null，但保留数字0
       const submitData = { ...userModel };
       Object.keys(submitData).forEach(key => {
-        if (submitData[key] === '' || submitData[key] === undefined) {
+        if (submitData[key] === "" || submitData[key] === undefined) {
           submitData[key] = null;
         }
       });
@@ -217,10 +222,10 @@ function submit() {
         submitData.academicStatus = 0;
       }
       // 特殊处理status，确保数字值不被转换为null
-      if (typeof userModel.status === 'number') {
+      if (typeof userModel.status === "number") {
         submitData.status = userModel.status;
       }
-      
+
       console.log("发送的数据:", submitData);
       updateUserProfileApi(submitData)
         .then(response => {
@@ -229,7 +234,7 @@ function submit() {
             type: "success"
           });
           // 通知父组件刷新用户数据
-          emit('refresh');
+          emit("refresh");
         })
         .catch(error => {
           console.error("API调用失败:", error);
@@ -248,10 +253,18 @@ function submit() {
       <el-input v-model="userModel.realName" maxlength="30" />
     </el-form-item>
     <el-form-item label="英文名">
-      <el-input v-model="userModel.englishName" maxlength="50" placeholder="请输入英文名" />
+      <el-input
+        v-model="userModel.englishName"
+        maxlength="50"
+        placeholder="请输入英文名"
+      />
     </el-form-item>
     <el-form-item :label="props.user.identity === 2 ? '工号' : '学号'">
-      <el-input v-model="userModel.studentNumber" maxlength="20" :placeholder="props.user.identity === 2 ? '请输入工号' : '请输入学号'" />
+      <el-input
+        v-model="userModel.studentNumber"
+        maxlength="20"
+        :placeholder="props.user.identity === 2 ? '请输入工号' : '请输入学号'"
+      />
     </el-form-item>
     <el-form-item label="性别">
       <el-select v-model="userModel.gender" placeholder="请选择性别" clearable>
@@ -295,7 +308,7 @@ function submit() {
           :key="index"
           closable
           @close="removeResearchAreaTag(index)"
-          style="margin-right: 8px; margin-bottom: 8px;"
+          style="margin-right: 8px; margin-bottom: 8px"
         >
           {{ tag }}
         </el-tag>
@@ -304,15 +317,11 @@ function submit() {
           ref="inputRef"
           v-model="inputValue"
           size="small"
-          style="width: 120px;"
+          style="width: 120px"
           @keyup.enter="handleInputConfirm"
           @blur="handleInputConfirm"
         />
-        <el-button
-          v-else
-          size="small"
-          @click="showInput"
-        >
+        <el-button v-else size="small" @click="showInput">
           + 添加研究方向
         </el-button>
       </div>
@@ -349,7 +358,9 @@ function submit() {
       <el-input
         v-model.number="userModel.enrollmentYear"
         type="number"
-        :placeholder="props.user.identity === 2 ? '请输入入职年份' : '请输入入学年份'"
+        :placeholder="
+          props.user.identity === 2 ? '请输入入职年份' : '请输入入学年份'
+        "
       />
     </el-form-item>
     <el-form-item label="个人简介">
@@ -362,50 +373,50 @@ function submit() {
       />
     </el-form-item>
     <el-form-item label="状态">
-      <el-select
-        v-model="userModel.status"
-        placeholder="请选择状态"
-        clearable
-      >
-        <el-option 
-          :label="props.user.identity === 2 ? '在职' : '在读'" 
-          :value="1" 
+      <el-select v-model="userModel.status" placeholder="请选择状态" clearable>
+        <el-option
+          :label="props.user.identity === 2 ? '在职' : '在读'"
+          :value="1"
         />
-        <el-option 
-          :label="props.user.identity === 2 ? '离职' : '毕业'" 
-          :value="2" 
+        <el-option
+          :label="props.user.identity === 2 ? '离职' : '毕业'"
+          :value="2"
         />
       </el-select>
     </el-form-item>
-    <el-form-item 
+    <el-form-item
       v-if="userModel.status === 2"
       :label="props.user.identity === 2 ? '离职年份' : '毕业年份'"
     >
       <el-input
         v-model.number="userModel.graduationYear"
         type="number"
-        :placeholder="props.user.identity === 2 ? '请输入离职年份' : '请输入毕业年份'"
+        :placeholder="
+          props.user.identity === 2 ? '请输入离职年份' : '请输入毕业年份'
+        "
       />
     </el-form-item>
-    <el-form-item 
+    <el-form-item
       v-if="userModel.status === 2"
       :label="props.user.identity === 2 ? '离职去向' : '毕业去向'"
     >
       <el-input
         v-model="userModel.graduationDest"
         maxlength="100"
-        :placeholder="props.user.identity === 2 ? '请输入离职去向' : '请输入毕业去向'"
+        :placeholder="
+          props.user.identity === 2 ? '请输入离职去向' : '请输入毕业去向'
+        "
       />
     </el-form-item>
     <el-form-item>
-      <el-button 
-        type="primary" 
-        @click="submit"
-        :disabled="isAdminEditingSelf"
-      >
+      <el-button type="primary" @click="submit" :disabled="isAdminEditingSelf">
         保存
       </el-button>
-      <el-text v-if="isAdminEditingSelf" type="warning" style="margin-left: 10px;">
+      <el-text
+        v-if="isAdminEditingSelf"
+        type="warning"
+        style="margin-left: 10px"
+      >
         管理员不能修改自己的信息
       </el-text>
     </el-form-item>

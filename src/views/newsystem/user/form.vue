@@ -61,7 +61,7 @@ const newFormInline = ref(props.formInline);
 // 研究方向标签相关
 const researchAreaTags = ref<string[]>([]);
 const inputVisible = ref(false);
-const inputValue = ref('');
+const inputValue = ref("");
 const inputRef = ref();
 
 const formRuleRef = ref();
@@ -69,7 +69,9 @@ const formRuleRef = ref();
 // 初始化研究方向标签
 const initResearchAreaTags = () => {
   if (newFormInline.value.researchArea) {
-    researchAreaTags.value = newFormInline.value.researchArea.split('，').filter(tag => tag.trim());
+    researchAreaTags.value = newFormInline.value.researchArea
+      .split("，")
+      .filter(tag => tag.trim());
   } else {
     researchAreaTags.value = [];
   }
@@ -106,11 +108,11 @@ const handleInputConfirm = () => {
     }
   }
   inputVisible.value = false;
-  inputValue.value = '';
+  inputValue.value = "";
 };
 
 const updateResearchAreaString = () => {
-  newFormInline.value.researchArea = researchAreaTags.value.join('，');
+  newFormInline.value.researchArea = researchAreaTags.value.join("，");
 };
 
 function getFormRuleRef() {
@@ -283,7 +285,7 @@ defineExpose({ getFormRuleRef });
               :key="index"
               closable
               @close="removeResearchAreaTag(index)"
-              style="margin-right: 8px; margin-bottom: 8px;"
+              style="margin-right: 8px; margin-bottom: 8px"
             >
               {{ tag }}
             </el-tag>
@@ -292,15 +294,11 @@ defineExpose({ getFormRuleRef });
               ref="inputRef"
               v-model="inputValue"
               size="small"
-              style="width: 120px;"
+              style="width: 120px"
               @keyup.enter="handleInputConfirm"
               @blur="handleInputConfirm"
             />
-            <el-button
-              v-else
-              size="small"
-              @click="showInput"
-            >
+            <el-button v-else size="small" @click="showInput">
               + 添加研究方向
             </el-button>
           </div>

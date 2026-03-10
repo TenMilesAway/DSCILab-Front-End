@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted } from "vue";
 
 defineOptions({
   name: "LabNavbar"
@@ -10,7 +10,7 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  activeIndex: '1'
+  activeIndex: "1"
 });
 
 const emit = defineEmits<{
@@ -22,7 +22,7 @@ const isMobileMenuOpen = ref(false);
 
 // 处理菜单选择事件
 const handleSelect = (key: string) => {
-  emit('select', key);
+  emit("select", key);
   // 手机端选择菜单项后自动关闭菜单
   isMobileMenuOpen.value = false;
 };
@@ -35,8 +35,8 @@ const toggleMobileMenu = () => {
 // 点击外部区域关闭菜单
 const handleClickOutside = (event: Event) => {
   const target = event.target as HTMLElement;
-  const navbar = document.querySelector('.lab-navbar');
-  
+  const navbar = document.querySelector(".lab-navbar");
+
   if (navbar && !navbar.contains(target) && isMobileMenuOpen.value) {
     isMobileMenuOpen.value = false;
   }
@@ -44,11 +44,11 @@ const handleClickOutside = (event: Event) => {
 
 // 监听点击事件
 onMounted(() => {
-  document.addEventListener('click', handleClickOutside);
+  document.addEventListener("click", handleClickOutside);
 });
 
 onUnmounted(() => {
-  document.removeEventListener('click', handleClickOutside);
+  document.removeEventListener("click", handleClickOutside);
 });
 </script>
 
@@ -58,53 +58,62 @@ onUnmounted(() => {
       <img src="@/assets/lab/logo.png" alt="实验室标志" class="lab-logo" />
       <span class="lab-title">数据科学与情报分析实验室</span>
     </div>
-    
+
     <!-- 桌面端菜单 -->
-    <el-menu 
-      :default-active="activeIndex" 
-      class="lab-menu lab-menu-desktop" 
-      mode="horizontal" 
+    <el-menu
+      :default-active="activeIndex"
+      class="lab-menu lab-menu-desktop"
+      mode="horizontal"
       @select="handleSelect"
       background-color="transparent"
       text-color="#ffffff"
-      active-text-color="#e3f2fd">
+      active-text-color="#e3f2fd"
+    >
       <el-menu-item index="1">主页</el-menu-item>
       <el-menu-item index="2">成员列表</el-menu-item>
       <el-menu-item index="3">实验室成果</el-menu-item>
       <el-menu-item index="4">实验室项目</el-menu-item>
       <!-- <el-menu-item index="5">活动</el-menu-item> -->
     </el-menu>
-    
+
     <!-- 移动端汉堡菜单按钮 -->
     <div class="mobile-menu-toggle" @click="toggleMobileMenu">
-      <div class="hamburger" :class="{ 'active': isMobileMenuOpen }">
-        <span></span>
-        <span></span>
-        <span></span>
+      <div class="hamburger" :class="{ active: isMobileMenuOpen }">
+        <span />
+        <span />
+        <span />
       </div>
     </div>
-    
+
     <!-- 移动端下拉菜单 -->
-    <div class="mobile-dropdown-menu" :class="{ 'active': isMobileMenuOpen }">
+    <div class="mobile-dropdown-menu" :class="{ active: isMobileMenuOpen }">
       <div class="mobile-menu-items">
-        <div class="mobile-menu-item" 
-             :class="{ 'active': activeIndex === '1' }"
-             @click="handleSelect('1')">
+        <div
+          class="mobile-menu-item"
+          :class="{ active: activeIndex === '1' }"
+          @click="handleSelect('1')"
+        >
           首页
         </div>
-        <div class="mobile-menu-item" 
-             :class="{ 'active': activeIndex === '2' }"
-             @click="handleSelect('2')">
+        <div
+          class="mobile-menu-item"
+          :class="{ active: activeIndex === '2' }"
+          @click="handleSelect('2')"
+        >
           成员
         </div>
-        <div class="mobile-menu-item" 
-             :class="{ 'active': activeIndex === '3' }"
-             @click="handleSelect('3')">
+        <div
+          class="mobile-menu-item"
+          :class="{ active: activeIndex === '3' }"
+          @click="handleSelect('3')"
+        >
           成果
         </div>
-        <div class="mobile-menu-item" 
-             :class="{ 'active': activeIndex === '4' }"
-             @click="handleSelect('4')">
+        <div
+          class="mobile-menu-item"
+          :class="{ active: activeIndex === '4' }"
+          @click="handleSelect('4')"
+        >
           项目
         </div>
         <!-- <div class="mobile-menu-item" 
@@ -168,12 +177,12 @@ onUnmounted(() => {
   &:focus {
     background-color: rgba(255, 255, 255, 0.1) !important;
   }
-  
+
   &:focus-visible {
     background-color: rgba(255, 255, 255, 0.1) !important;
     outline: none;
   }
-  
+
   &.is-active:focus {
     background-color: rgba(255, 255, 255, 0.1) !important;
   }
@@ -193,7 +202,7 @@ onUnmounted(() => {
   position: relative;
   transform: rotate(0deg);
   transition: 0.3s ease-in-out;
-  
+
   span {
     display: block;
     position: absolute;
@@ -205,32 +214,32 @@ onUnmounted(() => {
     left: 0;
     transform: rotate(0deg);
     transition: 0.3s ease-in-out;
-    
+
     &:nth-child(1) {
       top: 0px;
     }
-    
+
     &:nth-child(2) {
       top: 8px;
     }
-    
+
     &:nth-child(3) {
       top: 16px;
     }
   }
-  
+
   &.active {
     span {
       &:nth-child(1) {
         top: 8px;
         transform: rotate(135deg);
       }
-      
+
       &:nth-child(2) {
         opacity: 0;
         left: -60px;
       }
-      
+
       &:nth-child(3) {
         top: 8px;
         transform: rotate(-135deg);
@@ -257,7 +266,7 @@ onUnmounted(() => {
   pointer-events: none;
   transition: all 0.3s ease;
   z-index: 999;
-  
+
   &.active {
     transform: translateY(0);
     opacity: 1;
@@ -280,24 +289,28 @@ onUnmounted(() => {
   cursor: pointer;
   transition: all 0.2s ease;
   border-bottom: 1px solid rgba(229, 231, 235, 0.5);
-  
+
   &:last-child {
     border-bottom: none;
   }
-  
+
   &:hover {
     background-color: rgba(59, 130, 246, 0.08);
     color: #2563eb;
   }
-  
+
   &.active {
-    background: linear-gradient(135deg, rgba(30, 60, 114, 0.1), rgba(42, 82, 152, 0.1));
+    background: linear-gradient(
+      135deg,
+      rgba(30, 60, 114, 0.1),
+      rgba(42, 82, 152, 0.1)
+    );
     color: #1e3c72;
     font-weight: 600;
     position: relative;
-    
+
     &::before {
-      content: '';
+      content: "";
       position: absolute;
       left: 50%;
       top: 0;
@@ -315,11 +328,11 @@ onUnmounted(() => {
   .lab-navbar {
     padding: 0 20px;
   }
-  
+
   .lab-title {
     font-size: 1.1rem;
   }
-  
+
   .lab-menu-desktop {
     :deep(.el-menu-item) {
       padding: 0 12px;
@@ -334,23 +347,23 @@ onUnmounted(() => {
     height: 60px;
     position: relative;
   }
-  
+
   .lab-logo {
     height: 32px;
   }
-  
+
   .lab-title {
     font-size: 1rem;
   }
-  
+
   .lab-menu-desktop {
     display: none;
   }
-  
+
   .mobile-menu-toggle {
     display: block;
   }
-  
+
   .mobile-dropdown-menu {
     display: block;
   }
@@ -361,17 +374,17 @@ onUnmounted(() => {
     padding: 0 12px;
     height: 56px;
   }
-  
+
   .lab-logo {
     height: 28px;
     margin-right: 8px;
   }
-  
+
   .lab-title {
     font-size: 0.9rem;
     line-height: 1.2;
   }
-  
+
   .mobile-menu-item {
     padding: 14px 20px;
     font-size: 15px;
@@ -382,7 +395,7 @@ onUnmounted(() => {
   .lab-title {
     display: none;
   }
-  
+
   .mobile-menu-item {
     padding: 12px 16px;
     font-size: 14px;

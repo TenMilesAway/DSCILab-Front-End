@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import resetPwd from "./resetPwd.vue";
 import userInfo from "./userInfo.vue";
-import userAvatar from "./userAvatar.vue";
 import { reactive, ref, onMounted } from "vue";
 import { useUserStoreHook } from "@/store/modules/user";
 import { getUserProfileApi, UserProfile } from "@/api/newsystem/user";
@@ -24,14 +23,14 @@ const currentUserInfo = useUserStoreHook()?.currentUserInfo;
 
 // 根据身份和状态值返回对应的状态文本
 function getStatusText(status: number, identity: number) {
-  if (!status) return '';
-  
+  if (!status) return "";
+
   if (identity === 2) {
     // 教师
-    return status === 1 ? '在职' : '离职';
+    return status === 1 ? "在职" : "离职";
   } else {
     // 学生
-    return status === 1 ? '在读' : '毕业';
+    return status === 1 ? "在读" : "毕业";
   }
 }
 
@@ -43,7 +42,7 @@ function getUser() {
       if (response.code === 0) {
         state.user = response.data;
         console.log("获取用户信息成功:", response.data);
-        
+
         // 更新用户store中的头像信息
         const userStore = useUserStoreHook();
         if (userStore.currentUserInfo && response.data.photo) {
@@ -82,10 +81,6 @@ onMounted(() => {
             </div>
           </template>
           <div>
-            <div class="text-center">
-              <userAvatar :user="state.user" @refresh="getUser" />
-            </div>
-
             <el-row v-loading="state.loading">
               <el-descriptions :column="1">
                 <el-descriptions-item label="姓名">{{
@@ -95,7 +90,11 @@ onMounted(() => {
                 <!-- 学号/工号：根据身份显示不同标签 -->
                 <el-descriptions-item
                   v-if="state.user.studentNumber"
-                  :label="(state.user.identity || currentUserInfo.identity) === 2 ? '工号' : '学号'"
+                  :label="
+                    (state.user.identity || currentUserInfo.identity) === 2
+                      ? '工号'
+                      : '学号'
+                  "
                   >{{ state.user.studentNumber }}</el-descriptions-item
                 >
 
@@ -136,30 +135,46 @@ onMounted(() => {
                 }}</el-descriptions-item>
 
                 <el-descriptions-item label="状态">
-                  {{ getStatusText(state.user.status, state.user.identity || currentUserInfo.identity) }}
+                  {{
+                    getStatusText(
+                      state.user.status,
+                      state.user.identity || currentUserInfo.identity
+                    )
+                  }}
                 </el-descriptions-item>
 
                 <!-- 教师显示离职年份，学生显示毕业年份 -->
                 <el-descriptions-item
                   v-if="state.user.graduationYear"
-                  :label="(state.user.identity || currentUserInfo.identity) === 2 ? '离职年份' : '毕业年份'"
+                  :label="
+                    (state.user.identity || currentUserInfo.identity) === 2
+                      ? '离职年份'
+                      : '毕业年份'
+                  "
                   >{{ state.user.graduationYear }}</el-descriptions-item
                 >
 
                 <!-- 教师显示离职去向，学生显示毕业去向 -->
                 <el-descriptions-item
                   v-if="state.user.graduationDest"
-                  :label="(state.user.identity || currentUserInfo.identity) === 2 ? '离职去向' : '毕业去向'"
+                  :label="
+                    (state.user.identity || currentUserInfo.identity) === 2
+                      ? '离职去向'
+                      : '毕业去向'
+                  "
                   >{{ state.user.graduationDest }}</el-descriptions-item
                 >
 
                 <!-- 教师显示入职年份，学生显示入学年份 -->
                 <el-descriptions-item
                   v-if="state.user.enrollmentYear"
-                  :label="(state.user.identity || currentUserInfo.identity) === 2 ? '入职年份' : '入学年份'"
-                >{{
-                  state.user.enrollmentYear
-                }}</el-descriptions-item>
+                  :label="
+                    (state.user.identity || currentUserInfo.identity) === 2
+                      ? '入职年份'
+                      : '入学年份'
+                  "
+                  >{{ state.user.enrollmentYear }}</el-descriptions-item
+                >
               </el-descriptions>
             </el-row>
           </div>

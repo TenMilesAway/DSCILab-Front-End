@@ -67,11 +67,14 @@ export const router: Router = createRouter({
   scrollBehavior(to, from, savedPosition) {
     return new Promise(resolve => {
       // 如果是从member详情页返回到members页面，使用平滑滚动到顶部
-      if (from.path.startsWith('/welcome/member/') && to.path === '/welcome/members') {
-        resolve({ left: 0, top: 0, behavior: 'smooth' });
+      if (
+        from.path.startsWith("/welcome/member/") &&
+        to.path === "/welcome/members"
+      ) {
+        resolve({ left: 0, top: 0, behavior: "smooth" });
         return;
       }
-      
+
       if (savedPosition) {
         return savedPosition;
       } else {
@@ -137,7 +140,11 @@ router.beforeEach((to: ToRouteType, _from, next) => {
     const isInWhiteList = whiteList.some(path => {
       if (path === to.fullPath) return true;
       // 支持带参数的路径匹配
-      if (path === '/welcome/member' && to.fullPath.startsWith('/welcome/member/')) return true;
+      if (
+        path === "/welcome/member" &&
+        to.fullPath.startsWith("/welcome/member/")
+      )
+        return true;
       return false;
     });
 
@@ -218,7 +225,11 @@ router.beforeEach((to: ToRouteType, _from, next) => {
       const isInWhiteList = whiteList.some(path => {
         if (path === to.path) return true;
         // 支持带参数的路径匹配
-        if (path === '/welcome/member' && to.path.startsWith('/welcome/member/')) return true;
+        if (
+          path === "/welcome/member" &&
+          to.path.startsWith("/welcome/member/")
+        )
+          return true;
         return false;
       });
       if (isInWhiteList) {

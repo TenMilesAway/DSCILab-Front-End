@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref } from "vue";
 
 defineOptions({
   name: "ResearchSection"
@@ -24,33 +24,38 @@ const selectArea = (index: number) => {
 };
 
 withDefaults(defineProps<Props>(), {
-  title: '研究方向',
-  subtitle: 'RESEARCH AREAS',
+  title: "研究方向",
+  subtitle: "RESEARCH AREAS",
   researchAreas: () => [
     {
-      icon: 'el-icon-data-analysis',
-      title: '知识图谱',
-      description: '研究知识图谱领域知识本体构建、知识实例抽取、知识关系抽取、知识属性值抽取、知识融合等知识图谱核心关键技术，深度处理各类多源异构海量数据并构建专业领域知识图谱，为各类上层应用（例如智能问答、语义检索、规律挖掘等）提供底层知识图谱数据支撑。'
+      icon: "el-icon-data-analysis",
+      title: "知识图谱",
+      description:
+        "研究知识图谱领域知识本体构建、知识实例抽取、知识关系抽取、知识属性值抽取、知识融合等知识图谱核心关键技术，深度处理各类多源异构海量数据并构建专业领域知识图谱，为各类上层应用（例如智能问答、语义检索、规律挖掘等）提供底层知识图谱数据支撑。"
     },
     {
-      icon: 'el-icon-cpu',
-      title: '时序数据分析',
-      description: '采集并利用海量开源的轨迹数据，通过时序深度学习技术，理解多个目标之间的运动关系，预测感兴趣的目标轨迹，并对目标行为进行多角度的分析和预测。'
+      icon: "el-icon-cpu",
+      title: "时序数据分析",
+      description:
+        "采集并利用海量开源的轨迹数据，通过时序深度学习技术，理解多个目标之间的运动关系，预测感兴趣的目标轨迹，并对目标行为进行多角度的分析和预测。"
     },
     {
-      icon: 'el-icon-view',
-      title: '计算机视觉',
-      description: '针对空中拍摄图像，采用图像增强、图像配准等图像处理技术，对于所拍摄到的目标物体进行检测、识别、跟踪等操作，并在此基础上实现对于场景内容的髙语义理解。'
+      icon: "el-icon-view",
+      title: "计算机视觉",
+      description:
+        "针对空中拍摄图像，采用图像增强、图像配准等图像处理技术，对于所拍摄到的目标物体进行检测、识别、跟踪等操作，并在此基础上实现对于场景内容的髙语义理解。"
     },
     {
-      icon: 'el-icon-connection',
-      title: '边缘计算',
-      description: '针对端边云协同快速发展趋势，探索面向性能优化的多级算力自适应协同机制，实现复杂计算任务所需算力实时动态调配，使端、边、云节点可以进行数据和资源的分布式统一调度。'
+      icon: "el-icon-connection",
+      title: "边缘计算",
+      description:
+        "针对端边云协同快速发展趋势，探索面向性能优化的多级算力自适应协同机制，实现复杂计算任务所需算力实时动态调配，使端、边、云节点可以进行数据和资源的分布式统一调度。"
     },
     {
-      icon: 'el-icon-magic-stick',
-      title: '虚拟现实',
-      description: '针对虚拟漫游中物理空间有限的问题，通过重新映射用户在虚拟环境中的运动，从而突破空间限制，允许用户在有限的物理空间内实现更大范围的虚拟漫游。'
+      icon: "el-icon-magic-stick",
+      title: "虚拟现实",
+      description:
+        "针对虚拟漫游中物理空间有限的问题，通过重新映射用户在虚拟环境中的运动，从而突破空间限制，允许用户在有限的物理空间内实现更大范围的虚拟漫游。"
     }
   ]
 });
@@ -63,29 +68,32 @@ withDefaults(defineProps<Props>(), {
         <h2 class="research-title">{{ title }}</h2>
         <p class="research-subtitle">{{ subtitle }}</p>
       </div>
-      
+
       <div class="research-scroll-container">
-        <div 
-          v-for="(item, index) in researchAreas" 
-          :key="index" 
+        <div
+          v-for="(item, index) in researchAreas"
+          :key="index"
           class="research-item"
-          :class="{ 'expanded': selectedIndex === index, [`research-item-${index}`]: true }"
+          :class="{
+            expanded: selectedIndex === index,
+            [`research-item-${index}`]: true
+          }"
           @click="selectArea(index)"
         >
           <!-- 折叠状态的标题卡片 -->
           <div class="research-tab">
             <div class="tab-icon">
-              <i :class="item.icon"></i>
+              <i :class="item.icon" />
             </div>
             <h3 class="tab-title">{{ item.title }}</h3>
           </div>
-          
+
           <!-- 展开状态的详细内容 -->
           <div class="research-content">
             <div class="content-inner">
               <div class="content-header">
                 <div class="content-icon">
-                  <i :class="item.icon"></i>
+                  <i :class="item.icon" />
                 </div>
                 <h3 class="content-title">{{ item.title }}</h3>
               </div>
@@ -136,7 +144,7 @@ withDefaults(defineProps<Props>(), {
 }
 
 .research-title::after {
-  content: '';
+  content: "";
   position: absolute;
   bottom: -15px;
   left: 50%;
@@ -177,9 +185,9 @@ withDefaults(defineProps<Props>(), {
   cursor: pointer;
   overflow: hidden;
   background: linear-gradient(135deg, rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.1));
-  
+
   &::before {
-    content: '';
+    content: "";
     position: absolute;
     top: 0;
     left: 0;
@@ -193,9 +201,9 @@ withDefaults(defineProps<Props>(), {
     transition: all 0.8s ease;
     z-index: 1;
   }
-  
+
   &::after {
-    content: '';
+    content: "";
     position: absolute;
     top: 0;
     left: 0;
@@ -203,118 +211,178 @@ withDefaults(defineProps<Props>(), {
     bottom: 0;
     z-index: 2;
   }
-  
+
   &.expanded {
     flex: 3;
-    
+
     &::before {
       opacity: 0.6;
       transform: rotate(0deg) scale(1.05);
     }
   }
-  
+
   &:not(.expanded):hover {
     transform: translateY(-5px);
     box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
-    
+
     &::before {
       opacity: 0.5;
       transform: rotate(3deg) scale(1.08);
     }
   }
-  
+
   /* 知识图谱 - 紫色主题 */
   &.research-item-0 {
     &::before {
-      background-image: url('@/assets/lab/知识图谱.png');
+      background-image: url("@/assets/lab/知识图谱.png");
     }
-    
+
     &::after {
-      background: linear-gradient(135deg, rgba(139, 92, 246, 0.3), rgba(168, 85, 247, 0.2));
+      background: linear-gradient(
+        135deg,
+        rgba(139, 92, 246, 0.3),
+        rgba(168, 85, 247, 0.2)
+      );
     }
-    
+
     &.expanded::after {
-      background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(168, 85, 247, 0.1));
+      background: linear-gradient(
+        135deg,
+        rgba(139, 92, 246, 0.15),
+        rgba(168, 85, 247, 0.1)
+      );
     }
-    
+
     &:hover::after {
-      background: linear-gradient(135deg, rgba(139, 92, 246, 0.25), rgba(168, 85, 247, 0.15));
+      background: linear-gradient(
+        135deg,
+        rgba(139, 92, 246, 0.25),
+        rgba(168, 85, 247, 0.15)
+      );
     }
   }
-  
+
   /* 时序数据分析 - 蓝绿色主题 */
   &.research-item-1 {
     &::before {
-      background-image: url('@/assets/lab/时序数据分析.jpg');
+      background-image: url("@/assets/lab/时序数据分析.jpg");
     }
-    
+
     &::after {
-      background: linear-gradient(135deg, rgba(6, 182, 212, 0.3), rgba(14, 165, 233, 0.2));
+      background: linear-gradient(
+        135deg,
+        rgba(6, 182, 212, 0.3),
+        rgba(14, 165, 233, 0.2)
+      );
     }
-    
+
     &.expanded::after {
-      background: linear-gradient(135deg, rgba(6, 182, 212, 0.15), rgba(14, 165, 233, 0.1));
+      background: linear-gradient(
+        135deg,
+        rgba(6, 182, 212, 0.15),
+        rgba(14, 165, 233, 0.1)
+      );
     }
-    
+
     &:hover::after {
-      background: linear-gradient(135deg, rgba(6, 182, 212, 0.25), rgba(14, 165, 233, 0.15));
+      background: linear-gradient(
+        135deg,
+        rgba(6, 182, 212, 0.25),
+        rgba(14, 165, 233, 0.15)
+      );
     }
   }
-  
+
   /* 计算机视觉 - 绿色主题 */
   &.research-item-2 {
     &::before {
-      background-image: url('@/assets/lab/计算机视觉.png');
+      background-image: url("@/assets/lab/计算机视觉.png");
     }
-    
+
     &::after {
-      background: linear-gradient(135deg, rgba(16, 185, 129, 0.3), rgba(34, 197, 94, 0.2));
+      background: linear-gradient(
+        135deg,
+        rgba(16, 185, 129, 0.3),
+        rgba(34, 197, 94, 0.2)
+      );
     }
-    
+
     &.expanded::after {
-      background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(34, 197, 94, 0.1));
+      background: linear-gradient(
+        135deg,
+        rgba(16, 185, 129, 0.15),
+        rgba(34, 197, 94, 0.1)
+      );
     }
-    
+
     &:hover::after {
-      background: linear-gradient(135deg, rgba(16, 185, 129, 0.25), rgba(34, 197, 94, 0.15));
+      background: linear-gradient(
+        135deg,
+        rgba(16, 185, 129, 0.25),
+        rgba(34, 197, 94, 0.15)
+      );
     }
   }
-  
+
   /* 边缘计算 - 橙色主题 */
   &.research-item-3 {
     &::before {
-      background-image: url('@/assets/lab/边缘计算.jpg');
+      background-image: url("@/assets/lab/边缘计算.jpg");
     }
-    
+
     &::after {
-      background: linear-gradient(135deg, rgba(245, 158, 11, 0.3), rgba(251, 146, 60, 0.2));
+      background: linear-gradient(
+        135deg,
+        rgba(245, 158, 11, 0.3),
+        rgba(251, 146, 60, 0.2)
+      );
     }
-    
+
     &.expanded::after {
-      background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(251, 146, 60, 0.1));
+      background: linear-gradient(
+        135deg,
+        rgba(245, 158, 11, 0.15),
+        rgba(251, 146, 60, 0.1)
+      );
     }
-    
+
     &:hover::after {
-      background: linear-gradient(135deg, rgba(245, 158, 11, 0.25), rgba(251, 146, 60, 0.15));
+      background: linear-gradient(
+        135deg,
+        rgba(245, 158, 11, 0.25),
+        rgba(251, 146, 60, 0.15)
+      );
     }
   }
-  
+
   /* 虚拟现实 - 粉红色主题 */
   &.research-item-4 {
     &::before {
-      background-image: url('@/assets/lab/虚拟现实.jpeg');
+      background-image: url("@/assets/lab/虚拟现实.jpeg");
     }
-    
+
     &::after {
-      background: linear-gradient(135deg, rgba(236, 72, 153, 0.3), rgba(219, 39, 119, 0.2));
+      background: linear-gradient(
+        135deg,
+        rgba(236, 72, 153, 0.3),
+        rgba(219, 39, 119, 0.2)
+      );
     }
-    
+
     &.expanded::after {
-      background: linear-gradient(135deg, rgba(236, 72, 153, 0.15), rgba(219, 39, 119, 0.1));
+      background: linear-gradient(
+        135deg,
+        rgba(236, 72, 153, 0.15),
+        rgba(219, 39, 119, 0.1)
+      );
     }
-    
+
     &:hover::after {
-      background: linear-gradient(135deg, rgba(236, 72, 153, 0.25), rgba(219, 39, 119, 0.15));
+      background: linear-gradient(
+        135deg,
+        rgba(236, 72, 153, 0.25),
+        rgba(219, 39, 119, 0.15)
+      );
     }
   }
 }
@@ -335,7 +403,7 @@ withDefaults(defineProps<Props>(), {
   color: white;
   transition: all 0.5s ease;
   z-index: 3;
-  
+
   .research-item.expanded & {
     opacity: 0;
     transform: translateX(-100%);
@@ -346,11 +414,11 @@ withDefaults(defineProps<Props>(), {
   font-size: 3rem;
   margin-bottom: 15px;
   transition: all 0.3s ease;
-  
+
   i {
     filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
   }
-  
+
   .research-item:hover & {
     transform: scale(1.1) rotateY(10deg);
   }
@@ -364,7 +432,7 @@ withDefaults(defineProps<Props>(), {
   text-orientation: mixed;
   letter-spacing: 2px;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-  
+
   @media (max-width: 768px) {
     writing-mode: horizontal-tb;
     font-size: 1rem;
@@ -381,10 +449,14 @@ withDefaults(defineProps<Props>(), {
   opacity: 0;
   transform: translateX(100%);
   transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-  background: linear-gradient(135deg, rgba(248, 250, 252, 0.95), rgba(226, 232, 240, 0.95));
+  background: linear-gradient(
+    135deg,
+    rgba(248, 250, 252, 0.95),
+    rgba(226, 232, 240, 0.95)
+  );
   backdrop-filter: blur(15px);
   z-index: 4;
-  
+
   .research-item.expanded & {
     opacity: 1;
     transform: translateX(0);
@@ -398,7 +470,7 @@ withDefaults(defineProps<Props>(), {
   flex-direction: column;
   justify-content: center;
   animation: slideInContent 0.8s ease-out 0.3s both;
-  
+
   .research-item.expanded & {
     animation: slideInContent 0.8s ease-out 0.3s both;
   }
@@ -408,17 +480,17 @@ withDefaults(defineProps<Props>(), {
   display: flex;
   align-items: center;
   margin-bottom: 30px;
-  
+
   .content-icon {
     font-size: 2.5rem;
     color: #1e3a8a;
     margin-right: 20px;
-    
+
     i {
       filter: drop-shadow(0 2px 4px rgba(30, 58, 138, 0.3));
     }
   }
-  
+
   .content-title {
     font-size: 2rem;
     font-weight: 700;
@@ -432,7 +504,7 @@ withDefaults(defineProps<Props>(), {
 
 .content-body {
   flex: 1;
-  
+
   .content-description {
     font-size: 1.1rem;
     color: #374151;
@@ -470,19 +542,19 @@ withDefaults(defineProps<Props>(), {
   .research-section {
     padding: 70px 0;
   }
-  
+
   .research-title {
     font-size: 2.2rem;
   }
-  
+
   .research-scroll-container {
     height: 350px;
   }
-  
+
   .content-inner {
     padding: 30px;
   }
-  
+
   .content-header .content-title {
     font-size: 1.6rem;
   }
@@ -492,53 +564,53 @@ withDefaults(defineProps<Props>(), {
   .research-section {
     padding: 60px 0;
   }
-  
+
   .research-title {
     font-size: 2rem;
   }
-  
+
   .research-scroll-container {
     flex-direction: column;
     height: auto;
     gap: 10px;
   }
-  
+
   .research-item {
     flex: none;
     height: 80px;
     border-radius: 12px;
-    
+
     &.expanded {
       height: auto;
       min-height: 350px;
     }
-    
+
     /* 确保点击区域足够大 */
     &:not(.expanded) {
       cursor: pointer;
-      
+
       &:active {
         transform: scale(0.98);
       }
     }
   }
-  
+
   .research-tab {
     flex-direction: row;
     padding: 15px;
-    
+
     .tab-icon {
       font-size: 2rem;
       margin-right: 15px;
       margin-bottom: 0;
     }
-    
+
     .tab-title {
       font-size: 1.1rem;
       font-weight: 600;
     }
   }
-  
+
   /* 展开内容在手机端的优化 */
   .research-content {
     position: absolute;
@@ -553,13 +625,13 @@ withDefaults(defineProps<Props>(), {
     backdrop-filter: blur(20px);
     border-radius: 12px;
     z-index: 10;
-    
+
     .research-item.expanded & {
       opacity: 1;
       transform: translateY(0);
     }
   }
-  
+
   .content-inner {
     padding: 20px;
     height: 100%;
@@ -568,27 +640,27 @@ withDefaults(defineProps<Props>(), {
     justify-content: flex-start;
     overflow-y: auto;
   }
-  
+
   .content-header {
     flex-direction: row;
     align-items: center;
     margin-bottom: 20px;
-    
+
     .content-icon {
       margin-right: 15px;
       margin-bottom: 0;
       font-size: 2rem;
     }
-    
+
     .content-title {
       font-size: 1.4rem;
     }
   }
-  
+
   .content-body {
     flex: 1;
     overflow-y: auto;
-    
+
     .content-description {
       font-size: 1rem;
       line-height: 1.6;
@@ -596,7 +668,7 @@ withDefaults(defineProps<Props>(), {
       color: #374151;
       font-weight: 500;
     }
-    
+
     .content-detail {
       font-size: 0.9rem;
       padding: 15px;
@@ -614,60 +686,60 @@ withDefaults(defineProps<Props>(), {
   .research-container {
     padding: 0 15px;
   }
-  
+
   .research-title {
     font-size: 1.8rem;
   }
-  
+
   .research-item {
     height: 70px;
-    
+
     &.expanded {
       height: 280px;
     }
   }
-  
+
   .research-tab {
     padding: 12px;
-    
+
     .tab-icon {
       font-size: 1.8rem;
       margin-right: 12px;
     }
-    
+
     .tab-title {
       font-size: 1rem;
     }
   }
-  
+
   .content-inner {
     padding: 15px;
     height: 100%;
     display: flex;
     flex-direction: column;
   }
-  
+
   .content-header {
     .content-icon {
       font-size: 1.8rem;
       margin-right: 12px;
     }
-    
+
     .content-title {
       font-size: 1.2rem;
     }
   }
-  
+
   .content-body {
     flex: 1;
     overflow-y: auto;
-    
+
     .content-description {
       font-size: 0.95rem;
       line-height: 1.5;
       margin-bottom: 12px;
     }
-    
+
     .content-detail {
       font-size: 0.85rem;
       padding: 12px;

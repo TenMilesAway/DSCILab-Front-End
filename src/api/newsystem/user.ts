@@ -65,9 +65,13 @@ export interface LabUserProfileDTO {
 
 // 关键词搜索实验室用户（支持姓名/用户名/邮箱模糊匹配）
 export const searchLabUsersByKeywordApi = (keyword: string) => {
-  return http.request<ResponseData<LabUserProfileDTO[]>>("get", "/lab/users/crud/search", {
-    params: { keyword }
-  });
+  return http.request<ResponseData<LabUserProfileDTO[]>>(
+    "get",
+    "/lab/users/crud/search",
+    {
+      params: { keyword }
+    }
+  );
 };
 
 /**

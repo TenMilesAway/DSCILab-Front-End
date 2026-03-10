@@ -62,8 +62,8 @@ export function useHook() {
           row.identity === 1
             ? "学号/工号"
             : row.identity === 2
-              ? "工号"
-              : "学号";
+            ? "工号"
+            : "学号";
         return row.studentNumber ? (
           <span title={`${label}: ${row.studentNumber}`}>
             {row.studentNumber}
@@ -108,7 +108,8 @@ export function useHook() {
           5: "硕士研究生",
           6: "本科生"
         };
-        return row.academicStatus !== null && row.academicStatus !== undefined ? (
+        return row.academicStatus !== null &&
+          row.academicStatus !== undefined ? (
           <span>{statusMap[row.academicStatus] || "未知"}</span>
         ) : (
           "-"
@@ -205,7 +206,7 @@ export function useHook() {
       });
       return;
     }
-    
+
     await updateUserApi(userId, data).then(() => {
       message(`您修改了用户的数据`, {
         type: "success"
@@ -225,7 +226,7 @@ export function useHook() {
       });
       return;
     }
-    
+
     await deleteUserApi(row.id).then(() => {
       message(`您删除了用户${row.username}的这条数据`, { type: "success" });
       // 刷新列表
@@ -241,7 +242,7 @@ export function useHook() {
       });
       return;
     }
-    
+
     await updateUserPasswordApi(request).then(() => {
       message(`您修改了用户${row.username}的密码`, { type: "success" });
       // 刷新列表
@@ -311,7 +312,11 @@ export function useHook() {
             password: formData.password || null,
             gender: formData.gender || null,
             identity: formData.identity || null,
-            academicStatus: formData.academicStatus !== undefined && formData.academicStatus !== null ? formData.academicStatus : null,
+            academicStatus:
+              formData.academicStatus !== undefined &&
+              formData.academicStatus !== null
+                ? formData.academicStatus
+                : null,
             researchArea: formData.researchArea || null,
             phone: formData.phone || null,
             email: formData.email || null,
@@ -331,7 +336,11 @@ export function useHook() {
             englishName: formData.englishName || null,
             gender: formData.gender || null,
             identity: formData.identity || null,
-            academicStatus: formData.academicStatus !== undefined && formData.academicStatus !== null ? formData.academicStatus : null,
+            academicStatus:
+              formData.academicStatus !== undefined &&
+              formData.academicStatus !== null
+                ? formData.academicStatus
+                : null,
             status: formData.status,
             isActive: formData.isActive,
             phone: formData.phone || null,
@@ -348,7 +357,7 @@ export function useHook() {
 
         // 处理空值，将空字符串转换为null
         Object.keys(curData).forEach(key => {
-          if (curData[key] === '' || curData[key] === undefined) {
+          if (curData[key] === "" || curData[key] === undefined) {
             curData[key] = null;
           }
         });

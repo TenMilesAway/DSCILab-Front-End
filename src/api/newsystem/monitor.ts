@@ -111,7 +111,10 @@ export interface SystemInfo {
 
 /** 获取服务器信息 */
 export const getServerInfoApi = () => {
-  return http.request<ResponseData<ServerInfo>>("get", "/newmonitor/serverInfo");
+  return http.request<ResponseData<ServerInfo>>(
+    "get",
+    "/newmonitor/serverInfo"
+  );
 };
 
 /**

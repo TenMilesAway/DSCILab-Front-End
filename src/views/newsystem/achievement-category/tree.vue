@@ -16,10 +16,7 @@
       >
         新增类型
       </el-button>
-      <el-button
-        :icon="useRenderIcon(Refresh)"
-        @click="refreshTree"
-      >
+      <el-button :icon="useRenderIcon(Refresh)" @click="refreshTree">
         刷新
       </el-button>
     </div>
@@ -44,7 +41,9 @@
               <el-icon v-if="data.icon" class="node-icon">
                 <component :is="data.icon" />
               </el-icon>
-              <span class="node-label">{{ data.id === 1 ? '成果' : data.categoryName }}</span>
+              <span class="node-label">{{
+                data.id === 1 ? "成果" : data.categoryName
+              }}</span>
               <el-tag
                 v-if="!data.isActive"
                 type="danger"
@@ -61,9 +60,16 @@
               >
                 系统
               </el-tag>
-              <span class="sort-number" v-if="data.parentId !== null && data.parentId !== 0">{{ data.sortOrder }}</span>
+              <span
+                class="sort-number"
+                v-if="data.parentId !== null && data.parentId !== 0"
+                >{{ data.sortOrder }}</span
+              >
             </div>
-            <div class="node-actions" v-if="data.parentId !== null && data.parentId !== 0">
+            <div
+              class="node-actions"
+              v-if="data.parentId !== null && data.parentId !== 0"
+            >
               <el-button
                 link
                 type="info"
@@ -100,7 +106,7 @@
                 @click.stop="toggleStatus(data)"
                 :disabled="data.isSystem"
               >
-                {{ data.isActive ? '禁用' : '启用' }}
+                {{ data.isActive ? "禁用" : "启用" }}
               </el-button>
               <el-popconfirm
                 title="是否确认删除?"
@@ -138,7 +144,6 @@
         :rules="formRules"
         label-width="120px"
       >
-
         <el-form-item label="类型名称" prop="categoryName">
           <el-input
             v-model="formData.categoryName"
@@ -153,9 +158,12 @@
             maxlength="200"
           />
         </el-form-item>
-        <el-form-item 
-          v-if="dialogTitle.includes('二级') || (formData.parentId && formData.parentId > 0)"
-          label="父级类型" 
+        <el-form-item
+          v-if="
+            dialogTitle.includes('二级') ||
+            (formData.parentId && formData.parentId > 0)
+          "
+          label="父级类型"
           prop="parentId"
         >
           <el-select
@@ -198,7 +206,11 @@
       </el-form>
       <template #footer>
         <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" :loading="submitLoading" @click="handleSubmit">
+        <el-button
+          type="primary"
+          :loading="submitLoading"
+          @click="handleSubmit"
+        >
           确定
         </el-button>
       </template>
@@ -240,8 +252,8 @@ const expandedKeys = ref<number[]>([]);
 
 // 树形配置
 const treeProps = {
-  children: 'children',
-  label: 'categoryName'
+  children: "children",
+  label: "categoryName"
 };
 
 // 对话框状态
@@ -282,7 +294,13 @@ const formRules = {
   ],
   sortOrder: [
     { required: true, message: "请输入排序号", trigger: "blur" },
-    { type: "number", min: 0, max: 9999, message: "排序号范围 0-9999", trigger: "blur" }
+    {
+      type: "number",
+      min: 0,
+      max: 9999,
+      message: "排序号范围 0-9999",
+      trigger: "blur"
+    }
   ]
 };
 
@@ -305,13 +323,13 @@ const getTreeData = async () => {
 // 保存当前展开状态（简化版本）
 const saveExpandedState = () => {
   // expandedKeys已经通过事件监听实时维护，无需额外操作
-  console.log('保存展开状态:', expandedKeys.value);
+  console.log("保存展开状态:", expandedKeys.value);
 };
 
 // 恢复展开状态（简化版本）
 const restoreExpandedState = () => {
   // 由于使用了:default-expanded-keys绑定，数据更新后会自动恢复
-  console.log('展开状态将自动恢复:', expandedKeys.value);
+  console.log("展开状态将自动恢复:", expandedKeys.value);
 };
 
 // 处理节点展开事件
@@ -365,7 +383,7 @@ const resetFormData = () => {
 const openDialog = (title: string, row?: LabAchievementCategoryDTO) => {
   dialogTitle.value = title;
   dialogVisible.value = true;
-  
+
   if (row) {
     // 编辑模式
     currentEditId.value = row.id;
@@ -393,11 +411,11 @@ const openDialog = (title: string, row?: LabAchievementCategoryDTO) => {
 // 提交表单
 const handleSubmit = async () => {
   if (!dialogFormRef.value) return;
-  
+
   try {
     await dialogFormRef.value.validate();
     submitLoading.value = true;
-    
+
     if (currentEditId.value) {
       // 编辑
       const updateData: UpdateCategoryCommand = {
@@ -429,7 +447,7 @@ const handleSubmit = async () => {
       await createCategoryApi(createData);
       ElMessage.success("创建成功");
     }
-    
+
     dialogVisible.value = false;
     getTreeData();
   } catch (error) {
@@ -456,7 +474,7 @@ const handleDelete = async (row: LabAchievementCategoryDTO) => {
 const toggleStatus = async (row: LabAchievementCategoryDTO) => {
   try {
     await toggleCategoryStatusApi(row.id, !row.isActive);
-    ElMessage.success(`${!row.isActive ? '启用' : '禁用'}成功`);
+    ElMessage.success(`${!row.isActive ? "启用" : "禁用"}成功`);
     getTreeData();
   } catch (error) {
     console.error("状态切换失败:", error);
@@ -465,7 +483,9 @@ const toggleStatus = async (row: LabAchievementCategoryDTO) => {
 };
 
 // 获取同级别的所有节点
-const getSiblings = (targetNode: LabAchievementCategoryDTO): LabAchievementCategoryDTO[] => {
+const getSiblings = (
+  targetNode: LabAchievementCategoryDTO
+): LabAchievementCategoryDTO[] => {
   if (!targetNode.parentId) {
     // 一级类型，获取所有一级类型
     return treeData.value.filter(item => !item.parentId);
@@ -477,7 +497,10 @@ const getSiblings = (targetNode: LabAchievementCategoryDTO): LabAchievementCateg
 };
 
 // 根据ID查找节点
-const findNodeById = (nodes: LabAchievementCategoryDTO[], id: number): LabAchievementCategoryDTO | null => {
+const findNodeById = (
+  nodes: LabAchievementCategoryDTO[],
+  id: number
+): LabAchievementCategoryDTO | null => {
   for (const node of nodes) {
     if (node.id === id) {
       return node;
@@ -507,11 +530,11 @@ const canMoveDown = (node: LabAchievementCategoryDTO): boolean => {
 // 上移节点
 const moveUp = async (node: LabAchievementCategoryDTO) => {
   if (!canMoveUp(node)) return;
-  
+
   const siblings = getSiblings(node);
   const sortedSiblings = siblings.sort((a, b) => a.sortOrder - b.sortOrder);
   const currentIndex = sortedSiblings.indexOf(node);
-  
+
   if (currentIndex > 0) {
     const prevNode = sortedSiblings[currentIndex - 1];
     // 交换排序号
@@ -524,11 +547,11 @@ const moveUp = async (node: LabAchievementCategoryDTO) => {
 // 下移节点
 const moveDown = async (node: LabAchievementCategoryDTO) => {
   if (!canMoveDown(node)) return;
-  
+
   const siblings = getSiblings(node);
   const sortedSiblings = siblings.sort((a, b) => a.sortOrder - b.sortOrder);
   const currentIndex = sortedSiblings.indexOf(node);
-  
+
   if (currentIndex < sortedSiblings.length - 1) {
     const nextNode = sortedSiblings[currentIndex + 1];
     // 交换排序号
@@ -590,7 +613,7 @@ onMounted(() => {
   justify-content: space-between;
   width: 100%;
   padding: 4px 8px;
-  
+
   &:hover {
     .node-actions {
       opacity: 1;
@@ -632,28 +655,29 @@ onMounted(() => {
   gap: 4px;
   opacity: 0;
   transition: opacity 0.2s;
-  
+
   .el-button {
     padding: 4px 6px;
-    
+
     &.is-disabled {
       opacity: 0.3;
     }
-    
-    &[title="上移"], &[title="下移"] {
-        opacity: 1 !important;
-        font-size: 16px;
-        font-weight: bold;
-        color: var(--el-color-info);
-        
-        &:hover {
-          color: var(--el-color-info-dark-2);
-        }
-        
-        &.is-disabled {
-          opacity: 0.3 !important;
-        }
+
+    &[title="上移"],
+    &[title="下移"] {
+      opacity: 1 !important;
+      font-size: 16px;
+      font-weight: bold;
+      color: var(--el-color-info);
+
+      &:hover {
+        color: var(--el-color-info-dark-2);
       }
+
+      &.is-disabled {
+        opacity: 0.3 !important;
+      }
+    }
   }
 }
 </style>

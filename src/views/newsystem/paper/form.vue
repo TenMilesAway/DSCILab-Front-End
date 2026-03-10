@@ -4,9 +4,15 @@ import ReCol from "@/components/ReCol";
 import { formRules } from "./rule";
 import { ElButton, ElIcon } from "element-plus";
 import { Plus, Delete } from "@element-plus/icons-vue";
-import { getDictCategoryTreeApi, type LabAchievementCategoryDTO } from "@/api/newsystem/achievement-category";
+import {
+  getDictCategoryTreeApi,
+  type LabAchievementCategoryDTO
+} from "@/api/newsystem/achievement-category";
 import { getPublicProjectsApi } from "@/api/newsystem/project";
-import { searchLabUsersByKeywordApi, type LabUserProfileDTO } from "@/api/newsystem/user";
+import {
+  searchLabUsersByKeywordApi,
+  type LabUserProfileDTO
+} from "@/api/newsystem/user";
 
 interface FormAuthor {
   userId?: number | null; // 内部作者userId；外部作者为null
@@ -139,40 +145,46 @@ const loadCategoryTree = async () => {
       categoryTree.value = response.data;
       // 隐藏“项目”这一项，其余一级成果类型保持显示
       topLevelCategories.value = response.data.filter(
-        cat => cat.categoryName !== '项目' && (cat.categoryCode ? cat.categoryCode.toLowerCase() !== 'project' : true)
+        cat =>
+          cat.categoryName !== "项目" &&
+          (cat.categoryCode
+            ? cat.categoryCode.toLowerCase() !== "project"
+            : true)
       );
       const parent = categoryTree.value.find(c => c.id === defaultParentId);
       secondLevelCategories.value = parent?.children || [];
-      
+
       // 数据加载完成后，如果是编辑模式且有categoryId，需要初始化相关字段
       if (newFormInline.value.categoryId) {
         handleCategoryChange(newFormInline.value.categoryId);
       }
     }
   } catch (error) {
-    console.error('获取成果类型失败:', error);
+    console.error("获取成果类型失败:", error);
   }
 };
 
 // 处理成果类型变化
 const handleCategoryChange = (categoryId: number) => {
   if (!categoryId) {
-    newFormInline.value.achievementType = 'paper';
+    newFormInline.value.achievementType = "paper";
     return;
   }
 
   // 查找选中的类型及其父类型
   let selectedCategory: LabAchievementCategoryDTO | undefined;
   let parentCategory: LabAchievementCategoryDTO | undefined;
-  
+
   // 先查找是否为一级类型
   selectedCategory = categoryTree.value.find(cat => cat.id === categoryId);
-  
+
   if (!selectedCategory) {
     // 如果不是一级类型，查找是否为二级类型
     for (const topCategory of categoryTree.value) {
       if (topCategory.children) {
-        const foundChild = topCategory.children.find(child => child.id === categoryId);
+        const foundChild = topCategory.children.find(
+          child => child.id === categoryId
+        );
         if (foundChild) {
           selectedCategory = foundChild;
           parentCategory = topCategory;
@@ -181,26 +193,29 @@ const handleCategoryChange = (categoryId: number) => {
       }
     }
   }
-  
+
   if (selectedCategory) {
     // 确定根类型以设置achievementType
     const rootCategory = parentCategory || selectedCategory;
     const categoryName = rootCategory.categoryName;
-    
-    if (categoryName === '论文') {
-      newFormInline.value.achievementType = 'paper';
-    } else if (categoryName === '项目') {
-      newFormInline.value.achievementType = 'project';
+
+    if (categoryName === "论文") {
+      newFormInline.value.achievementType = "paper";
+    } else if (categoryName === "项目") {
+      newFormInline.value.achievementType = "project";
     } else {
-      newFormInline.value.achievementType = 'other';
+      newFormInline.value.achievementType = "other";
     }
   }
 };
 
 // 监听类型变化
-watch(() => newFormInline.value.categoryId, (newCategoryId) => {
-  handleCategoryChange(newCategoryId);
-});
+watch(
+  () => newFormInline.value.categoryId,
+  newCategoryId => {
+    handleCategoryChange(newCategoryId);
+  }
+);
 
 onMounted(() => {
   loadCategoryTree();
@@ -255,7 +270,17 @@ const moveAuthorDown = (index: number) => {
   }
 };
 
-async function fetchUserSuggest(query: string, cb: (results: Array<{ value: string; id: number; username?: string; englishName?: string | null }>) => void) {
+async function fetchUserSuggest(
+  query: string,
+  cb: (
+    results: Array<{
+      value: string;
+      id: number;
+      username?: string;
+      englishName?: string | null;
+    }>
+  ) => void
+) {
   const q = (query || "").trim();
   if (!q) {
     cb([]);
@@ -263,7 +288,7 @@ async function fetchUserSuggest(query: string, cb: (results: Array<{ value: stri
   }
   try {
     const res = await searchLabUsersByKeywordApi(q);
-    const list: LabUserProfileDTO[] = res.code === 0 ? (res.data || []) : [];
+    const list: LabUserProfileDTO[] = res.code === 0 ? res.data || [] : [];
     cb(
       list.map(u => ({
         value: u.realName,
@@ -351,9 +376,7 @@ defineExpose({ getFormRuleRef });
                   <span v-if="newFormInline.achievementType === 'project'">
                     {{ index === 0 ? "负责人" : "参与人" }}
                   </span>
-                  <span v-else>
-                    第{{ index + 1 }}作者
-                  </span>
+                  <span v-else> 第{{ index + 1 }}作者 </span>
                 </span>
                 <div class="author-actions">
                   <el-button
@@ -385,9 +408,7 @@ defineExpose({ getFormRuleRef });
               <div class="author-fields">
                 <el-row :gutter="16">
                   <el-col :span="8">
-                    <el-form-item
-                      :prop="`authors.${index}.name`"
-                    >
+                    <el-form-item :prop="`authors.${index}.name`">
                       <el-autocomplete
                         v-model="author.name"
                         :fetch-suggestions="fetchUserSuggest"
@@ -399,13 +420,14 @@ defineExpose({ getFormRuleRef });
                       />
                     </el-form-item>
                   </el-col>
-
                 </el-row>
                 <el-row
                   :gutter="16"
-                  v-if="newFormInline.achievementType === 'paper' || newFormInline.achievementType === 'other'"
+                  v-if="
+                    newFormInline.achievementType === 'paper' ||
+                    newFormInline.achievementType === 'other'
+                  "
                 >
-
                   <el-col :span="8">
                     <el-form-item>
                       <el-checkbox v-model="author.isCorresponding">
@@ -442,16 +464,20 @@ defineExpose({ getFormRuleRef });
 
       <re-col
         :value="12"
-        v-if="newFormInline.achievementType === 'paper' || newFormInline.achievementType === 'other'"
+        v-if="
+          newFormInline.achievementType === 'paper' ||
+          newFormInline.achievementType === 'other'
+        "
       >
-        <el-form-item
-          label="机构名称"
-          prop="publisher"
-        >
+        <el-form-item label="机构名称" prop="publisher">
           <el-input
             v-model="newFormInline.publisher"
             clearable
-            :placeholder="newFormInline.achievementType === 'paper' ? '请输入例如期刊或会议名称' : '请输入相关机构名称'"
+            :placeholder="
+              newFormInline.achievementType === 'paper'
+                ? '请输入例如期刊或会议名称'
+                : '请输入相关机构名称'
+            "
           />
         </el-form-item>
       </re-col>
@@ -459,12 +485,21 @@ defineExpose({ getFormRuleRef });
       <re-col :value="12">
         <el-form-item
           :label="
-            newFormInline.achievementType === 'project' ? '开始日期' : '发表时间'
+            newFormInline.achievementType === 'project'
+              ? '开始日期'
+              : '发表时间'
           "
-          :prop="newFormInline.achievementType === 'project' ? 'projectStartDate' : 'publishDate'"
+          :prop="
+            newFormInline.achievementType === 'project'
+              ? 'projectStartDate'
+              : 'publishDate'
+          "
         >
           <el-date-picker
-            v-if="newFormInline.achievementType === 'paper' || newFormInline.achievementType === 'other'"
+            v-if="
+              newFormInline.achievementType === 'paper' ||
+              newFormInline.achievementType === 'other'
+            "
             v-model="newFormInline.publishDate"
             type="date"
             placeholder="请选择日期"
@@ -510,10 +545,7 @@ defineExpose({ getFormRuleRef });
       </re-col>
 
       <re-col :value="24">
-        <el-form-item
-          label="编号"
-          prop="doi"
-        >
+        <el-form-item label="编号" prop="doi">
           <el-input
             v-model="newFormInline.doi"
             clearable
@@ -574,7 +606,6 @@ defineExpose({ getFormRuleRef });
           </el-select>
         </el-form-item>
       </re-col>
-
     </el-row>
   </el-form>
 </template>

@@ -6,6 +6,8 @@ export interface DictItem {
 }
 
 export const getProjectTypesDictApi = () => {
-  return http.request<ResponseData<DictItem[]>>("get", "/lab/dicts/project-types");
+  return http.request<ResponseData<DictItem[]>>(
+    "get",
+    "/lab/dicts/project-types"
+  );
 };
-

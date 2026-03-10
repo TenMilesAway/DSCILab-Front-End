@@ -8,19 +8,11 @@ import { useNav } from "@/layout/hooks/useNav";
 import { usePermissionStoreHook } from "@/store/modules/permission";
 import LogoutCircleRLine from "@iconify-icons/ri/logout-circle-r-line";
 import Setting from "@iconify-icons/ri/settings-3-line";
+import User3Line from "@iconify-icons/ri/user-3-line";
 
 const menuRef = ref();
 
-const {
-  route,
-  title,
-  logout,
-  backTopMenu,
-  onPanel,
-  username,
-  userAvatar,
-  avatarsStyle
-} = useNav();
+const { route, title, logout, backTopMenu, onPanel, username } = useNav();
 
 const defaultActive = computed(() =>
   !isAllEmpty(route.meta?.activePath) ? route.meta.activePath : route.path
@@ -62,7 +54,10 @@ nextTick(() => {
       <!-- 退出登录 -->
       <el-dropdown trigger="click">
         <span class="el-dropdown-link navbar-bg-hover">
-          <img :src="userAvatar" :style="avatarsStyle" />
+          <IconifyIconOffline
+            :icon="User3Line"
+            style="margin-right: 6px; font-size: 18px"
+          />
           <p v-if="username" class="dark:text-white">{{ username }}</p>
         </span>
         <template #dropdown>

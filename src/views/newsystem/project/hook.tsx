@@ -7,7 +7,10 @@ import { useRenderIcon } from "@/components/ReIcon/src/hooks";
 import Delete from "@iconify-icons/ep/delete";
 import EditPen from "@iconify-icons/ep/edit-pen";
 import { useUserStoreHook } from "@/store/modules/user";
-import { getDictCategoryTreeApi, type LabAchievementCategoryDTO } from "@/api/newsystem/achievement-category";
+import {
+  getDictCategoryTreeApi,
+  type LabAchievementCategoryDTO
+} from "@/api/newsystem/achievement-category";
 
 import {
   getProjectListApi,
@@ -77,7 +80,7 @@ export function useHook() {
         // 仅建立类型名称映射用于展示；不再设置旧筛选字段
       }
     } catch (error) {
-      console.error('获取项目类型映射失败:', error);
+      console.error("获取项目类型映射失败:", error);
     }
   };
 
@@ -93,7 +96,7 @@ export function useHook() {
       relatedAchievements.value = res.data.relatedPapers || [];
       isAchievementDialogOpen.value = true;
     } catch (error) {
-      console.error('获取项目关联成果失败:', error);
+      console.error("获取项目关联成果失败:", error);
     } finally {
       achievementLoading.value = false;
     }
@@ -170,8 +173,9 @@ export function useHook() {
 
         return (
           <div
-            style={`display: flex; align-items: center; ${!isTeacher ? "justify-content: center;" : ""
-              }`}
+            style={`display: flex; align-items: center; ${
+              !isTeacher ? "justify-content: center;" : ""
+            }`}
           >
             <el-button
               link
@@ -243,15 +247,13 @@ export function useHook() {
   }
 
   async function handleUpdate({ id, data }, done) {
-    await updateProjectApi(id, data as UpdateProjectRequest).then(
-      () => {
-        message(`您修改了项目《${data.title}》`, {
-          type: "success"
-        });
-        done();
-        getList();
-      }
-    );
+    await updateProjectApi(id, data as UpdateProjectRequest).then(() => {
+      message(`您修改了项目《${data.title}》`, {
+        type: "success"
+      });
+      done();
+      getList();
+    });
   }
 
   async function handleDelete(row) {
@@ -292,24 +294,24 @@ export function useHook() {
     const authors =
       row?.authors?.length > 0
         ? row.authors.map((author, index) => ({
-          userId: author.userId || null,
-          name: author.name,
-          authorOrder: index + 1,
-          isCorresponding: author.isCorresponding || false,
-          // 修复：项目负责人回显时应使用 isCorresponding 字段（在项目中代表负责人）
-          isLeader: author.isCorresponding === true,
-          visible: author.visible !== false
-        }))
+            userId: author.userId || null,
+            name: author.name,
+            authorOrder: index + 1,
+            isCorresponding: author.isCorresponding || false,
+            // 修复：项目负责人回显时应使用 isCorresponding 字段（在项目中代表负责人）
+            isLeader: author.isCorresponding === true,
+            visible: author.visible !== false
+          }))
         : [
-          {
-            userId: null,
-            name: "",
-            authorOrder: 1,
-            isCorresponding: true,
-            isLeader: false,
-            visible: true
-          }
-        ];
+            {
+              userId: null,
+              name: "",
+              authorOrder: 1,
+              isCorresponding: true,
+              isLeader: false,
+              visible: true
+            }
+          ];
 
     addDialog({
       title: `${title}项目`,
@@ -353,16 +355,19 @@ export function useHook() {
             authorOrder: index + 1,
             userId: a.userId ?? null,
             // 修复：提交时将 isLeader 映射为 isCorresponding
-            isCorresponding: formData.achievementType === 'project' ? (a.isLeader || false) : (a.isCorresponding || false),
+            isCorresponding:
+              formData.achievementType === "project"
+                ? a.isLeader || false
+                : a.isCorresponding || false,
             visible: a.visible !== false
           }));
 
         const funding =
           typeof formData.fundingAmount === "string"
-            ? (formData.fundingAmount.trim() === ""
+            ? formData.fundingAmount.trim() === ""
               ? null
-              : Number(formData.fundingAmount))
-            : (formData.fundingAmount ?? null);
+              : Number(formData.fundingAmount)
+            : formData.fundingAmount ?? null;
 
         const curData: CreateProjectRequest | UpdateProjectRequest = {
           title: formData.title,
@@ -379,7 +384,7 @@ export function useHook() {
 
         // 处理空值，将空字符串转换为null
         Object.keys(curData).forEach(key => {
-          if (curData[key] === '' || curData[key] === undefined) {
+          if (curData[key] === "" || curData[key] === undefined) {
             curData[key] = null;
           }
         });

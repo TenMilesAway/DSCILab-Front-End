@@ -40,10 +40,7 @@ export interface ApiResponse {
  * @returns Promise<ApiResponse>
  */
 export const getMembersListApi = () => {
-  return http.request<ApiResponse>(
-    "get",
-    "/open/users"
-  );
+  return http.request<ApiResponse>("get", "/open/users");
 };
 
 /**
@@ -52,8 +49,5 @@ export const getMembersListApi = () => {
  * @returns Promise<ResponseData<ApiUser>>
  */
 export const getMemberDetailApi = (id: number) => {
-  return http.request<ResponseData<ApiUser>>(
-    "get",
-    `/open/users/${id}`
-  );
+  return http.request<ResponseData<ApiUser>>("get", `/open/users/${id}`);
 };
