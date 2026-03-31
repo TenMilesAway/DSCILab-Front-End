@@ -6,6 +6,7 @@ import {
   LabBanner,
   LabIntroCard,
   ResearchSection,
+  GraduatesSection,
   BlankPage,
   MembersPage,
   AchievementsPage,
@@ -59,7 +60,13 @@ const handleSelect = (key: string) => {
       break;
     case "2": // 成员
       currentPage.value = "members";
+      showMemberDetail.value = false;
       router.push("/welcome/members");
+      break;
+    case "5": // 毕业去向（直接进入成员页并选中已毕业学生）
+      currentPage.value = "members";
+      showMemberDetail.value = false;
+      router.push({ path: "/welcome/members", query: { category: "graduates" } });
       break;
     case "3": // 成果
       currentPage.value = "achievements";
@@ -69,7 +76,7 @@ const handleSelect = (key: string) => {
       currentPage.value = "projects";
       router.push("/welcome/projects");
       break;
-    case "5": // 活动
+    case "6": // 活动（保留：当前顶部导航未展示）
       currentPage.value = "activities";
       break;
 
@@ -95,7 +102,7 @@ const setPageFromRoute = () => {
   } else if (path === "/welcome/members") {
     showMemberDetail.value = false;
     currentPage.value = "members";
-    activeIndex.value = "2";
+    activeIndex.value = route.query.category === "graduates" ? "5" : "2";
   } else if (path === "/welcome/achievements") {
     showMemberDetail.value = false;
     currentPage.value = "achievements";
@@ -236,7 +243,7 @@ const getCurrentPageInfo = () => {
 
 // 监听路由变化
 watch(
-  () => route.path,
+  () => route.fullPath,
   () => {
     setPageFromRoute();
   },
@@ -304,6 +311,9 @@ onMounted(() => {
 
             <!-- 研究方向组件 -->
             <ResearchSection />
+
+            <!-- 毕业去向组件 -->
+            <GraduatesSection />
           </template>
 
           <!-- 成员页面 -->

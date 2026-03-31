@@ -138,6 +138,8 @@ router.beforeEach((to: ToRouteType, _from, next) => {
   function toCorrectRoute() {
     /** 新增判断是否存在登录信息 */
     const isInWhiteList = whiteList.some(path => {
+      // 支持带 query/params 的白名单访问（例如 /welcome/members?category=graduates）
+      if (path === to.path) return true;
       if (path === to.fullPath) return true;
       // 支持带参数的路径匹配
       if (

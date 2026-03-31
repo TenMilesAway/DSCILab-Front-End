@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref, computed, nextTick, onMounted } from "vue";
-import { useRouter } from "vue-router";
+import { ref, computed, nextTick, onMounted, watch } from "vue";
+import { useRouter, useRoute } from "vue-router";
 import { Search } from "@element-plus/icons-vue";
 import MemberInfo from "./MemberInfo.vue";
 import { ElMessage } from "element-plus";
@@ -21,6 +21,7 @@ defineOptions({
 
 // 路由实例
 const router = useRouter();
+const route = useRoute();
 
 interface Member {
   id: number;
@@ -64,6 +65,15 @@ const props = withDefaults(defineProps<Props>(), {
 
 const activeCategory = ref<string>("teachers"); // 默认选中教师
 const searchKeyword = ref<string>(""); // 搜索关键词
+
+// 支持通过路由 query 指定默认分类，例如：
+// /welcome/members?category=graduates
+const applyCategoryFromRoute = () => {
+  const category = route.query.category;
+  activeCategory.value = category === "graduates" ? "graduates" : "teachers";
+};
+
+watch(() => route.query.category, applyCategoryFromRoute, { immediate: true });
 
 // 获取实际使用的成员数据
 // API获取的成员数据

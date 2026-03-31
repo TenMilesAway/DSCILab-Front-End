@@ -2,6 +2,7 @@ import LabNavbar from "../../views/lab/components/navbar.vue";
 import LabBanner from "../../views/lab/components/banner.vue";
 import LabIntroCard from "../../views/lab/components/intro.vue";
 import ResearchSection from "../../views/lab/components/research.vue";
+import GraduatesSection from "../../views/lab/components/GraduatesSection.vue";
 import BlankPage from "../../views/lab/components/BlankPage.vue";
 import MembersPage from "../../views/lab/components/MembersPage.vue";
 import AchievementsPage from "../../views/lab/components/AchievementsPage.vue";
@@ -14,6 +15,7 @@ export {
   LabBanner,
   LabIntroCard,
   ResearchSection,
+  GraduatesSection,
   BlankPage,
   MembersPage,
   AchievementsPage,
@@ -27,6 +29,7 @@ export default {
   LabBanner,
   LabIntroCard,
   ResearchSection,
+  GraduatesSection,
   BlankPage,
   MembersPage,
   AchievementsPage,

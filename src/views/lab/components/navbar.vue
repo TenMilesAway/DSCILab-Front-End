@@ -73,6 +73,7 @@ onUnmounted(() => {
       <el-menu-item index="2">成员列表</el-menu-item>
       <el-menu-item index="3">实验室成果</el-menu-item>
       <el-menu-item index="4">实验室项目</el-menu-item>
+      <el-menu-item index="5">毕业去向</el-menu-item>
       <!-- <el-menu-item index="5">活动</el-menu-item> -->
     </el-menu>
 
@@ -115,6 +116,13 @@ onUnmounted(() => {
           @click="handleSelect('4')"
         >
           项目
+        </div>
+        <div
+          class="mobile-menu-item"
+          :class="{ active: activeIndex === '5' }"
+          @click="handleSelect('5')"
+        >
+          毕业去向
         </div>
         <!-- <div class="mobile-menu-item" 
              :class="{ 'active': activeIndex === '5' }"
