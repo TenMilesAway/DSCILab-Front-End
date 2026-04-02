@@ -259,6 +259,14 @@ export interface UserProfile {
   updateTime: string;
 }
 
+export interface UploadFileDTO {
+  id?: number;
+  fileName?: string;
+  originalFileName?: string;
+  url?: string;
+  photo?: string;
+}
+
 /** 获取用户列表 */
 export const getUserListApi = (params?: UserListQuery) => {
   return http.request<ResponseData<{ total: number; rows: UserListItem[] }>>(
@@ -311,10 +319,26 @@ export const exportUserExcelApi = (params: UserListQuery, fileName: string) => {
 };
 
 /** 用户头像上传 */
-export const uploadUserAvatarApi = data => {
+export const uploadUserAvatarApi = (data: FormData) => {
   return http.request<ResponseData<void>>(
     "post",
     "/lab/users/crud/profile/photo",
+    {
+      data
+    },
+    {
+      headers: {
+        "Content-Type": "multipart/form-data"
+      }
+    }
+  );
+};
+
+/** 管理员为指定用户上传头像 */
+export const uploadUserPhotoApi = (userId: number, data: FormData) => {
+  return http.request<ResponseData<UploadFileDTO>>(
+    "post",
+    `/lab/users/crud/${userId}/photo`,
     {
       data
     },

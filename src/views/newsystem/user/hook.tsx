@@ -10,11 +10,13 @@ import {
   updateUserPasswordApi,
   UserListItem,
   CreateUserRequest,
-  UpdateUserRequest
+  UpdateUserRequest,
+  uploadUserPhotoApi
 } from "@/api/newsystem/user";
 import editForm from "./form.vue";
 import passwordForm from "./passwordForm.vue";
 import uploadForm from "./uploadForm.vue";
+import avatarUploadForm from "./avatarUploadForm.vue";
 import { type PaginationProps } from "@pureadmin/table";
 import { reactive, ref, onMounted, toRaw, h } from "vue";
 import { addDialog } from "@/components/ReDialog";
@@ -62,8 +64,8 @@ export function useHook() {
           row.identity === 1
             ? "学号/工号"
             : row.identity === 2
-            ? "工号"
-            : "学号";
+              ? "工号"
+              : "学号";
         return row.studentNumber ? (
           <span title={`${label}: ${row.studentNumber}`}>
             {row.studentNumber}
@@ -156,7 +158,7 @@ export function useHook() {
     {
       label: "操作",
       fixed: "right",
-      width: 240,
+      width: 320,
       slot: "operation"
     }
   ];
@@ -251,6 +253,23 @@ export function useHook() {
     });
   }
 
+  async function handleUploadPhoto(row, data: FormData, done) {
+    if (row.identity === 1) {
+      message(`禁止修改管理员用户头像`, {
+        type: "error"
+      });
+      return;
+    }
+
+    await uploadUserPhotoApi(row.id, data).then(() => {
+      message(`您修改了用户${row.username}的头像`, {
+        type: "success"
+      });
+      done();
+      getList();
+    });
+  }
+
   async function onSearch() {
     // 点击搜索的时候 需要重置分页
     pagination.currentPage = 1;
@@ -314,7 +333,7 @@ export function useHook() {
             identity: formData.identity || null,
             academicStatus:
               formData.academicStatus !== undefined &&
-              formData.academicStatus !== null
+                formData.academicStatus !== null
                 ? formData.academicStatus
                 : null,
             researchArea: formData.researchArea || null,
@@ -338,7 +357,7 @@ export function useHook() {
             identity: formData.identity || null,
             academicStatus:
               formData.academicStatus !== undefined &&
-              formData.academicStatus !== null
+                formData.academicStatus !== null
                 ? formData.academicStatus
                 : null,
             status: formData.status,
@@ -415,6 +434,30 @@ export function useHook() {
     });
   }
 
+  async function openAvatarUploadDialog(row: UserListItem) {
+    const avatarUploadFormRef = ref();
+    addDialog({
+      title: `修改头像`,
+      props: {
+        userName: row.realName || row.username
+      },
+      width: "30%",
+      draggable: true,
+      fullscreenIcon: true,
+      closeOnClickModal: false,
+      contentRenderer: ({ options }) =>
+        h(avatarUploadForm, {
+          ref: avatarUploadFormRef,
+          ...options.props
+        }),
+      beforeSure: done => {
+        const formData = avatarUploadFormRef.value.submit();
+        if (!formData) return;
+        handleUploadPhoto(row, formData, done);
+      }
+    });
+  }
+
   async function openUploadDialog() {
     const uploadFormRef = ref();
     addDialog({
@@ -473,6 +516,7 @@ export function useHook() {
     getList,
     handleDelete,
     openResetPasswordDialog,
+    openAvatarUploadDialog,
     openUploadDialog
   };
 }

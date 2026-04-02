@@ -786,15 +786,15 @@ const sortedProjects = computed(() => {
 
   return [...visibleProjects].sort((a, b) => {
     // 1. 优先按项目类型排序
-    const categoryA = projectCategories.value.find(c => c.id === a.categoryId);
-    const categoryB = projectCategories.value.find(c => c.id === b.categoryId);
+    // const categoryA = projectCategories.value.find(c => c.id === a.categoryId);
+    // const categoryB = projectCategories.value.find(c => c.id === b.categoryId);
     // 使用 sortOrder 排序，如果没有则排在最后
-    const orderA = categoryA?.sortOrder ?? 999;
-    const orderB = categoryB?.sortOrder ?? 999;
+    // const orderA = categoryA?.sortOrder ?? 999;
+    // const orderB = categoryB?.sortOrder ?? 999;
 
-    if (orderA !== orderB) {
-      return orderA - orderB;
-    }
+    // if (orderA !== orderB) {
+    //     return orderA - orderB;
+    // }
 
     // 2. 类型相同则按项目开始时间排序
     const aDate = a.projectStartDate
@@ -829,20 +829,20 @@ const sortedAchievements = computed(() => {
   return [...visibleAchievements].sort((a, b) => {
     // 1. 优先按成果类型排序
     // 使用 achievementCategories 数组中的顺序作为排序依据
-    const indexA = achievementCategories.value.findIndex(
-      c => c.id === a.categoryId
-    );
-    const indexB = achievementCategories.value.findIndex(
-      c => c.id === b.categoryId
-    );
+    // const indexA = achievementCategories.value.findIndex(
+    //   c => c.id === a.categoryId
+    // );
+    // const indexB = achievementCategories.value.findIndex(
+    //   c => c.id === b.categoryId
+    // );
 
     // 如果找不到分类，放到最后
-    const orderA = indexA === -1 ? 999 : indexA;
-    const orderB = indexB === -1 ? 999 : indexB;
+    // const orderA = indexA === -1 ? 999 : indexA;
+    // const orderB = indexB === -1 ? 999 : indexB;
 
-    if (orderA !== orderB) {
-      return orderA - orderB;
-    }
+    // if (orderA !== orderB) {
+    //   return orderA - orderB;
+    // }
 
     // 2. 类型相同则按发表时间排序
     const aDate = a.publishDate ? new Date(a.publishDate).getTime() : 0;
