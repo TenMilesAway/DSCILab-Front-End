@@ -152,15 +152,14 @@ export function useHook() {
       width: 250,
       fixed: "right",
       cellRenderer: scope => {
-        const currentUser = useUserStoreHook().currentUserInfo;
-        // 根据调试信息，currentUser对象中identity字段在userInfo中
-        const isTeacher = currentUser?.userInfo?.identity === 2;
+        const currentUser = useUserStoreHook().currentUserInfo as any;
+        const identity = currentUser?.identity ?? currentUser?.userInfo?.identity;
+        const isTeacher = identity === 2;
 
         return (
           <div
-            style={`display: flex; align-items: center; ${
-              !isTeacher ? "justify-content: center;" : ""
-            }`}
+            style={`display: flex; align-items: center; ${!isTeacher ? "justify-content: center;" : ""
+              }`}
           >
             <el-button
               link
@@ -242,7 +241,7 @@ export function useHook() {
 
   async function onVisibilityChange({ row }) {
     try {
-      await toggleMyAchievementVisibilityApi(row.id, row.myVisibility);
+      await toggleMyAchievementVisibilityApi(row.id, row.myVisibility, "paper");
       message(
         `成果《${row.title}》的显示状态已${row.myVisibility ? "开启" : "关闭"}`,
         {
@@ -270,21 +269,21 @@ export function useHook() {
     const authors =
       row?.authors?.length > 0
         ? row.authors.map((author, index) => ({
-            userId: author.userId || null,
-            name: author.name,
-            authorOrder: index + 1,
-            isCorresponding: author.isCorresponding || false,
-            visible: author.visible !== false
-          }))
+          userId: author.userId || null,
+          name: author.name,
+          authorOrder: index + 1,
+          isCorresponding: author.isCorresponding || false,
+          visible: author.visible !== false
+        }))
         : [
-            {
-              userId: null,
-              name: "",
-              authorOrder: 1,
-              isCorresponding: false,
-              visible: true
-            }
-          ];
+          {
+            userId: null,
+            name: "",
+            authorOrder: 1,
+            isCorresponding: false,
+            visible: true
+          }
+        ];
 
     addDialog({
       title: `${title}成果`,
@@ -413,7 +412,7 @@ export function useHook() {
           authors: authorsData,
           projectIds:
             formData.achievementType === "paper" &&
-            Array.isArray(formData.projectIds)
+              Array.isArray(formData.projectIds)
               ? formData.projectIds
               : null
         };
@@ -459,12 +458,30 @@ export function useHook() {
     }
     const result = await getAchievementListApi(params);
     const data = result.data;
+    const currentUser = useUserStoreHook().currentUserInfo as any;
+    const currentUserId = Number(
+      currentUser?.id ??
+      currentUser?.userId ??
+      currentUser?.userInfo?.id ??
+      currentUser?.userInfo?.userId
+    );
 
-    // 为每个成果初始化myVisibility字段，默认为true（显示）
-    dataList.value = data.rows.map(item => ({
-      ...item,
-      myVisibility: item.myVisibility !== undefined ? item.myVisibility : true
-    }));
+    // 为每个成果初始化myVisibility字段：优先后端返回值，其次回退为当前用户作者记录的visible
+    dataList.value = data.rows.map(item => {
+      const currentAuthor = item.authors?.find(
+        author =>
+          !Number.isNaN(currentUserId) && Number(author.userId) === currentUserId
+      );
+      const singleAuthor = item.authors?.length === 1 ? item.authors[0] : undefined;
+
+      return {
+        ...item,
+        myVisibility:
+          item.myVisibility !== undefined
+            ? item.myVisibility
+            : currentAuthor?.visible ?? singleAuthor?.visible ?? true
+      };
+    });
     pagination.total = data.total;
 
     setTimeout(() => {

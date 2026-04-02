@@ -167,15 +167,14 @@ export function useHook() {
       width: 250,
       fixed: "right",
       cellRenderer: scope => {
-        const currentUser = useUserStoreHook().currentUserInfo;
-        // 根据调试信息，currentUser对象中identity字段在userInfo中
-        const isTeacher = currentUser?.userInfo?.identity === 2;
+        const currentUser = useUserStoreHook().currentUserInfo as any;
+        const identity = currentUser?.identity ?? currentUser?.userInfo?.identity;
+        const isTeacher = identity === 2;
 
         return (
           <div
-            style={`display: flex; align-items: center; ${
-              !isTeacher ? "justify-content: center;" : ""
-            }`}
+            style={`display: flex; align-items: center; ${!isTeacher ? "justify-content: center;" : ""
+              }`}
           >
             <el-button
               link
@@ -265,7 +264,7 @@ export function useHook() {
 
   async function onVisibilityChange({ row }) {
     try {
-      await toggleMyProjectVisibilityApi(row.id, row.myVisibility);
+      await toggleMyProjectVisibilityApi(row.id, row.myVisibility, "project");
       message(
         `项目《${row.title}》的显示状态已${row.myVisibility ? "开启" : "关闭"}`,
         {
@@ -294,24 +293,24 @@ export function useHook() {
     const authors =
       row?.authors?.length > 0
         ? row.authors.map((author, index) => ({
-            userId: author.userId || null,
-            name: author.name,
-            authorOrder: index + 1,
-            isCorresponding: author.isCorresponding || false,
-            // 修复：项目负责人回显时应使用 isCorresponding 字段（在项目中代表负责人）
-            isLeader: author.isCorresponding === true,
-            visible: author.visible !== false
-          }))
+          userId: author.userId || null,
+          name: author.name,
+          authorOrder: index + 1,
+          isCorresponding: author.isCorresponding || false,
+          // 修复：项目负责人回显时应使用 isCorresponding 字段（在项目中代表负责人）
+          isLeader: author.isCorresponding === true,
+          visible: author.visible !== false
+        }))
         : [
-            {
-              userId: null,
-              name: "",
-              authorOrder: 1,
-              isCorresponding: true,
-              isLeader: false,
-              visible: true
-            }
-          ];
+          {
+            userId: null,
+            name: "",
+            authorOrder: 1,
+            isCorresponding: true,
+            isLeader: false,
+            visible: true
+          }
+        ];
 
     addDialog({
       title: `${title}项目`,
@@ -415,12 +414,29 @@ export function useHook() {
     // 统一使用lab/projects接口
     const result = await getProjectListApi({ ...searchFormParams });
     const data = result.data;
+    const currentUser = useUserStoreHook().currentUserInfo as any;
+    const currentUserId = Number(
+      currentUser?.id ??
+      currentUser?.userId ??
+      currentUser?.userInfo?.id ??
+      currentUser?.userInfo?.userId
+    );
 
-    // 为每个项目初始化myVisibility字段，默认为true（显示）
-    dataList.value = data.rows.map(item => ({
-      ...item,
-      myVisibility: item.myVisibility !== undefined ? item.myVisibility : true
-    }));
+    // 为每个项目初始化myVisibility字段：优先后端返回值，其次回退为当前用户作者记录的visible
+    dataList.value = data.rows.map(item => {
+      const currentAuthor = item.authors?.find(
+        a => !Number.isNaN(currentUserId) && Number(a.userId) === currentUserId
+      );
+      const singleAuthor = item.authors?.length === 1 ? item.authors[0] : undefined;
+
+      return {
+        ...item,
+        myVisibility:
+          item.myVisibility !== undefined
+            ? item.myVisibility
+            : currentAuthor?.visible ?? singleAuthor?.visible ?? true
+      };
+    });
     pagination.total = data.total;
 
     setTimeout(() => {

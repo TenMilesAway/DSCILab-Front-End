@@ -417,12 +417,13 @@ export const getMyProjectsApi = (params?: MyProjectQuery) => {
  */
 export const toggleMyProjectVisibilityApi = (
   projectId: number,
-  visible: boolean
+  visible: boolean,
+  type: "paper" | "project" = "project"
 ) => {
   return http.request<void>(
     "put",
     `/lab/my-achievements/${projectId}/visibility`,
-    { params: { visible } }
+    { params: { visible, type } }
   );
 };
 

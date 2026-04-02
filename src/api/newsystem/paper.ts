@@ -420,12 +420,13 @@ export const getMyAchievementsApi = (params?: MyAchievementQuery) => {
  */
 export const toggleMyAchievementVisibilityApi = (
   achievementId: number,
-  visible: boolean
+  visible: boolean,
+  type: "paper" | "project" = "paper"
 ) => {
   return http.request<void>(
     "put",
     `/lab/my-achievements/${achievementId}/visibility`,
-    { params: { visible } }
+    { params: { visible, type } }
   );
 };
 

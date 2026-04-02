@@ -719,6 +719,23 @@ const fetchProjects = async () => {
 
 const avatarImgRef = ref<HTMLImageElement | null>(null);
 
+// 在公开列表中定位当前成员作者记录：优先按 userId 匹配，失败时回退按姓名匹配
+const findCurrentMemberAuthor = (
+  authors: Array<{ userId?: number; name?: string; visible?: boolean }> | undefined
+) => {
+  if (!authors || !props.member) return undefined;
+
+  const byUserId = authors.find(author => {
+    if (author?.userId === undefined || author?.userId === null) return false;
+    return Number(author.userId) === Number(props.member?.id);
+  });
+  if (byUserId) return byUserId;
+
+  const memberName = (props.member?.name || "").trim();
+  if (!memberName) return undefined;
+  return authors.find(author => (author?.name || "").trim() === memberName);
+};
+
 // 监听member变化，重置头像加载状态和动画状态，并获取成果和项目数据
 watch(
   () => props.member,
@@ -775,13 +792,10 @@ const sortedProjects = computed(() => {
   const visibleProjects = internalProjects.value.filter(project => {
     if (!project.authors || !props.member) return false;
 
-    // 查找当前成员在作者列表中的记录，使用name匹配 (Public API doesn't return userId or visible)
-    const currentMemberAuthor = project.authors.find(
-      author => author.name === props.member?.name
-    );
+    const currentMemberAuthor = findCurrentMemberAuthor(project.authors as any);
 
-    // 对于公开接口返回的数据，只要是作者就认为是可见的
-    return !!currentMemberAuthor;
+    // 默认可见，仅当明确 visible=false 时隐藏
+    return !!currentMemberAuthor && currentMemberAuthor.visible !== false;
   });
 
   return [...visibleProjects].sort((a, b) => {
@@ -817,13 +831,12 @@ const sortedAchievements = computed(() => {
   const visibleAchievements = internalAchievements.value.filter(achievement => {
     if (!achievement.authors || !props.member) return false;
 
-    // 查找当前成员在作者列表中的记录，使用id匹配而不是name
-    const currentMemberAuthor = achievement.authors.find(
-      author => author.userId === props.member.id
+    const currentMemberAuthor = findCurrentMemberAuthor(
+      achievement.authors as any
     );
 
-    // 如果找到当前成员且visible为true，则显示该成果
-    return currentMemberAuthor && currentMemberAuthor.visible;
+    // 默认可见，仅当明确 visible=false 时隐藏
+    return !!currentMemberAuthor && currentMemberAuthor.visible !== false;
   });
 
   return [...visibleAchievements].sort((a, b) => {

@@ -115,7 +115,7 @@ onMounted(() => {
     <PureTableBar
       title="项目管理"
       :columns="columns"
-      :showDensity="false"
+      :showDensity="true"
       :showColumnSetting="false"
       @refresh="onSearch"
     >
@@ -128,18 +128,18 @@ onMounted(() => {
           新增项目
         </el-button>
       </template>
-      <template v-slot="{ dynamicColumns }">
+      <template v-slot="{ size, dynamicColumns }">
         <pure-table
           border
           adaptive
           align-whole="center"
           table-layout="auto"
           :loading="pageLoading"
-          size="default"
+          :size="size"
           :data="dataList"
           :columns="dynamicColumns"
           :pagination="pagination"
-          :paginationSmall="false"
+          :paginationSmall="size === 'small'"
           :header-cell-style="{
             background: 'var(--el-table-row-hover-bg-color)',
             color: 'var(--el-text-color-primary)'

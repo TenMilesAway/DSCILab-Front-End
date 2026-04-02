@@ -32,12 +32,14 @@ export interface ApiAchievement {
   doi?: string | null;
   fundingAmount?: number | null;
   authors?: Array<{
+    userId?: number | null;
     name: string;
     nameEn?: string | null;
     affiliation?: string | null;
     authorOrder: number;
     isCorresponding: boolean;
     role?: string | null;
+    visible?: boolean;
   }>; // 仅详情接口返回
   extra?: string | object | null;
   createTime?: string;
