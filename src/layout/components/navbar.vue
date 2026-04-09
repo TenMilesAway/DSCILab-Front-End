@@ -7,6 +7,7 @@ import Breadcrumb from "./sidebar/breadCrumb.vue";
 import topCollapse from "./sidebar/topCollapse.vue";
 import LogoutCircleRLine from "@iconify-icons/ri/logout-circle-r-line";
 import Setting from "@iconify-icons/ri/settings-3-line";
+import User3Line from "@iconify-icons/ri/user-3-line";
 
 const {
   layout,
@@ -16,8 +17,6 @@ const {
   onPanel,
   pureApp,
   username,
-  userAvatar,
-  avatarsStyle,
   toggleSideBar
 } = useNav();
 </script>
@@ -48,7 +47,10 @@ const {
       <!-- 退出登录 -->
       <el-dropdown trigger="click">
         <span class="el-dropdown-link navbar-bg-hover select-none">
-          <img :src="userAvatar" :style="avatarsStyle" />
+          <IconifyIconOffline
+            :icon="User3Line"
+            style="margin-right: 6px; font-size: 18px"
+          />
           <p v-if="username" class="dark:text-white">{{ username }}</p>
         </span>
         <template #dropdown>

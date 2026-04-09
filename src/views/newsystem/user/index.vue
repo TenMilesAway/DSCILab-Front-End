@@ -6,6 +6,7 @@ import { useRenderIcon } from "@/components/ReIcon/src/hooks";
 import { useUserStoreHook } from "@/store/modules/user";
 
 import Password from "@iconify-icons/ri/lock-password-line";
+import Image from "@iconify-icons/ep/picture";
 
 import Delete from "@iconify-icons/ep/delete";
 import EditPen from "@iconify-icons/ep/edit-pen";
@@ -30,6 +31,7 @@ const {
   resetForm,
 
   openResetPasswordDialog,
+  openAvatarUploadDialog,
   handleDelete,
   openDialog,
   getList
@@ -163,8 +165,19 @@ const isAdminUser = (row: any) => {
             >
               修改
             </el-button>
-            <el-popconfirm 
-              title="是否确认删除?" 
+            <el-button
+              class="reset-margin"
+              link
+              type="primary"
+              size="default"
+              :icon="useRenderIcon(Image)"
+              @click="openAvatarUploadDialog(row)"
+              :disabled="isAdminUser(row)"
+            >
+              头像
+            </el-button>
+            <el-popconfirm
+              title="是否确认删除?"
               @confirm="handleDelete(row)"
               :disabled="isAdminUser(row)"
             >

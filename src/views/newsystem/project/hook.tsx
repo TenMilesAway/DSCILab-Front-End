@@ -7,7 +7,10 @@ import { useRenderIcon } from "@/components/ReIcon/src/hooks";
 import Delete from "@iconify-icons/ep/delete";
 import EditPen from "@iconify-icons/ep/edit-pen";
 import { useUserStoreHook } from "@/store/modules/user";
-import { getDictCategoryTreeApi, type LabAchievementCategoryDTO } from "@/api/newsystem/achievement-category";
+import {
+  getDictCategoryTreeApi,
+  type LabAchievementCategoryDTO
+} from "@/api/newsystem/achievement-category";
 
 import {
   getProjectListApi,
@@ -77,7 +80,7 @@ export function useHook() {
         // 仅建立类型名称映射用于展示；不再设置旧筛选字段
       }
     } catch (error) {
-      console.error('获取项目类型映射失败:', error);
+      console.error("获取项目类型映射失败:", error);
     }
   };
 
@@ -93,7 +96,7 @@ export function useHook() {
       relatedAchievements.value = res.data.relatedPapers || [];
       isAchievementDialogOpen.value = true;
     } catch (error) {
-      console.error('获取项目关联成果失败:', error);
+      console.error("获取项目关联成果失败:", error);
     } finally {
       achievementLoading.value = false;
     }
@@ -164,9 +167,9 @@ export function useHook() {
       width: 250,
       fixed: "right",
       cellRenderer: scope => {
-        const currentUser = useUserStoreHook().currentUserInfo;
-        // 根据调试信息，currentUser对象中identity字段在userInfo中
-        const isTeacher = currentUser?.userInfo?.identity === 2;
+        const currentUser = useUserStoreHook().currentUserInfo as any;
+        const identity = currentUser?.identity ?? currentUser?.userInfo?.identity;
+        const isTeacher = identity === 2;
 
         return (
           <div
@@ -243,15 +246,13 @@ export function useHook() {
   }
 
   async function handleUpdate({ id, data }, done) {
-    await updateProjectApi(id, data as UpdateProjectRequest).then(
-      () => {
-        message(`您修改了项目《${data.title}》`, {
-          type: "success"
-        });
-        done();
-        getList();
-      }
-    );
+    await updateProjectApi(id, data as UpdateProjectRequest).then(() => {
+      message(`您修改了项目《${data.title}》`, {
+        type: "success"
+      });
+      done();
+      getList();
+    });
   }
 
   async function handleDelete(row) {
@@ -263,7 +264,7 @@ export function useHook() {
 
   async function onVisibilityChange({ row }) {
     try {
-      await toggleMyProjectVisibilityApi(row.id, row.myVisibility);
+      await toggleMyProjectVisibilityApi(row.id, row.myVisibility, "project");
       message(
         `项目《${row.title}》的显示状态已${row.myVisibility ? "开启" : "关闭"}`,
         {
@@ -353,16 +354,19 @@ export function useHook() {
             authorOrder: index + 1,
             userId: a.userId ?? null,
             // 修复：提交时将 isLeader 映射为 isCorresponding
-            isCorresponding: formData.achievementType === 'project' ? (a.isLeader || false) : (a.isCorresponding || false),
+            isCorresponding:
+              formData.achievementType === "project"
+                ? a.isLeader || false
+                : a.isCorresponding || false,
             visible: a.visible !== false
           }));
 
         const funding =
           typeof formData.fundingAmount === "string"
-            ? (formData.fundingAmount.trim() === ""
+            ? formData.fundingAmount.trim() === ""
               ? null
-              : Number(formData.fundingAmount))
-            : (formData.fundingAmount ?? null);
+              : Number(formData.fundingAmount)
+            : formData.fundingAmount ?? null;
 
         const curData: CreateProjectRequest | UpdateProjectRequest = {
           title: formData.title,
@@ -379,7 +383,7 @@ export function useHook() {
 
         // 处理空值，将空字符串转换为null
         Object.keys(curData).forEach(key => {
-          if (curData[key] === '' || curData[key] === undefined) {
+          if (curData[key] === "" || curData[key] === undefined) {
             curData[key] = null;
           }
         });
@@ -410,12 +414,29 @@ export function useHook() {
     // 统一使用lab/projects接口
     const result = await getProjectListApi({ ...searchFormParams });
     const data = result.data;
+    const currentUser = useUserStoreHook().currentUserInfo as any;
+    const currentUserId = Number(
+      currentUser?.id ??
+      currentUser?.userId ??
+      currentUser?.userInfo?.id ??
+      currentUser?.userInfo?.userId
+    );
 
-    // 为每个项目初始化myVisibility字段，默认为true（显示）
-    dataList.value = data.rows.map(item => ({
-      ...item,
-      myVisibility: item.myVisibility !== undefined ? item.myVisibility : true
-    }));
+    // 为每个项目初始化myVisibility字段：优先后端返回值，其次回退为当前用户作者记录的visible
+    dataList.value = data.rows.map(item => {
+      const currentAuthor = item.authors?.find(
+        a => !Number.isNaN(currentUserId) && Number(a.userId) === currentUserId
+      );
+      const singleAuthor = item.authors?.length === 1 ? item.authors[0] : undefined;
+
+      return {
+        ...item,
+        myVisibility:
+          item.myVisibility !== undefined
+            ? item.myVisibility
+            : currentAuthor?.visible ?? singleAuthor?.visible ?? true
+      };
+    });
     pagination.total = data.total;
 
     setTimeout(() => {

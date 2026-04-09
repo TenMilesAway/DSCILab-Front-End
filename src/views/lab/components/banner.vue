@@ -9,8 +9,8 @@ interface Props {
 }
 
 withDefaults(defineProps<Props>(), {
-  title: '数据科学与情报分析实验室',
-  subtitle: 'Data Science & Intelligence Analysis, DSCI'
+  title: "数据科学与情报分析实验室",
+  subtitle: "Data Science & Intelligence Analysis, DSCI"
 });
 </script>
 
@@ -24,7 +24,7 @@ withDefaults(defineProps<Props>(), {
 <style scoped lang="scss">
 .lab-banner {
   height: 450px;
-  background: url('@/assets/lab/default.jpg') center/cover no-repeat;
+  background: url("@/assets/lab/default.jpg") center/cover no-repeat;
   color: #ffffff;
   display: flex;
   flex-direction: column;
@@ -38,7 +38,7 @@ withDefaults(defineProps<Props>(), {
 }
 
 .lab-banner::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
@@ -73,11 +73,11 @@ withDefaults(defineProps<Props>(), {
   .lab-banner {
     height: 300px;
   }
-  
+
   .lab-banner-title {
     font-size: 2rem;
   }
-  
+
   .lab-banner-subtitle {
     font-size: 1.2rem;
   }
@@ -87,7 +87,7 @@ withDefaults(defineProps<Props>(), {
   .lab-banner {
     height: 250px;
   }
-  
+
   .lab-banner-title {
     font-size: 1.8rem;
   }

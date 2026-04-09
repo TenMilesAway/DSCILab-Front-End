@@ -103,7 +103,8 @@ export default [
       {
         path: "/newsystem/achievement-category/index",
         name: "NewSystemAchievementCategory",
-        component: () => import("@/views/newsystem/achievement-category/index.vue"),
+        component: () =>
+          import("@/views/newsystem/achievement-category/index.vue"),
         meta: {
           title: "项目/成果类型管理",
           showLink: true,

@@ -12,5 +12,4 @@ export default {
     rank: 0
   },
   children: []
-
 } as RouteConfigsTable;

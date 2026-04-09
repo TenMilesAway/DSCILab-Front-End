@@ -1,12 +1,23 @@
 <script setup lang="ts">
-import { ref, nextTick, watch, onMounted } from 'vue';
-import { useRouter, useRoute } from 'vue-router';
-import { LabNavbar, LabBanner, LabIntroCard, ResearchSection, BlankPage, MembersPage, AchievementsPage, ProjectsPage, ActivityPage }from '@/components/Lab';
-import MemberInfo from './components/MemberInfo.vue';
-import { getMemberDetailApi } from '@/api/lab/members';
-import { getAchievementsListApi } from '@/api/lab/achievements';
-import { getProjectsListApi } from '@/api/lab/projects';
-import { ElMessage } from 'element-plus';
+import { ref, nextTick, watch, onMounted } from "vue";
+import { useRouter, useRoute } from "vue-router";
+import {
+  LabNavbar,
+  LabBanner,
+  LabIntroCard,
+  ResearchSection,
+  GraduatesSection,
+  BlankPage,
+  MembersPage,
+  AchievementsPage,
+  ProjectsPage,
+  ActivityPage
+} from "@/components/Lab";
+import MemberInfo from "./components/MemberInfo.vue";
+import { getMemberDetailApi } from "@/api/lab/members";
+import { getAchievementsListApi } from "@/api/lab/achievements";
+import { getProjectsListApi } from "@/api/lab/projects";
+import { ElMessage } from "element-plus";
 
 defineOptions({
   name: "LabHomepage"
@@ -17,9 +28,9 @@ const router = useRouter();
 const route = useRoute();
 
 // 当前激活的菜单项
-const activeIndex = ref('1');
+const activeIndex = ref("1");
 // 当前显示的页面
-const currentPage = ref('home');
+const currentPage = ref("home");
 
 // 成员详情相关状态
 const showMemberDetail = ref(false);
@@ -30,45 +41,50 @@ const selectedMemberProjects = ref([]);
 
 // 页面标题映射
 const pageTitles: Record<string, { title: string; subtitle: string }> = {
-  'home': { title: '首页', subtitle: '实验室主页' },
-  'members': { title: '成员', subtitle: '团队成员介绍' },
-  'achievements': { title: '成果', subtitle: '学术成果展示' },
-  'projects': { title: '项目', subtitle: '研究项目展示' },
-  'activities': { title: '活动', subtitle: '学术活动与会议' },
-
+  home: { title: "首页", subtitle: "实验室主页" },
+  members: { title: "成员", subtitle: "团队成员介绍" },
+  achievements: { title: "成果", subtitle: "学术成果展示" },
+  projects: { title: "项目", subtitle: "研究项目展示" },
+  activities: { title: "活动", subtitle: "学术活动与会议" }
 };
 
 // 处理菜单选择事件
 const handleSelect = (key: string) => {
   activeIndex.value = key;
-  
+
   // 根据菜单项切换显示的内容并更新路由
-  switch(key) {
-    case '1': // 首页
-      currentPage.value = 'home';
-      router.push('/welcome');
+  switch (key) {
+    case "1": // 首页
+      currentPage.value = "home";
+      router.push("/welcome");
       break;
-    case '2': // 成员
-      currentPage.value = 'members';
-      router.push('/welcome/members');
+    case "2": // 成员
+      currentPage.value = "members";
+      showMemberDetail.value = false;
+      router.push("/welcome/members");
       break;
-    case '3': // 成果
-      currentPage.value = 'achievements';
-      router.push('/welcome/achievements');
+    case "5": // 毕业去向（直接进入成员页并选中已毕业学生）
+      currentPage.value = "members";
+      showMemberDetail.value = false;
+      router.push({ path: "/welcome/members", query: { category: "graduates" } });
       break;
-    case '4': // 项目
-      currentPage.value = 'projects';
-      router.push('/welcome/projects');
+    case "3": // 成果
+      currentPage.value = "achievements";
+      router.push("/welcome/achievements");
       break;
-    case '5': // 活动
-      currentPage.value = 'activities';
+    case "4": // 项目
+      currentPage.value = "projects";
+      router.push("/welcome/projects");
+      break;
+    case "6": // 活动（保留：当前顶部导航未展示）
+      currentPage.value = "activities";
       break;
 
     default:
-      currentPage.value = 'home';
-      router.push('/welcome');
+      currentPage.value = "home";
+      router.push("/welcome");
   }
-  
+
   // 页面切换后重置滚动位置到顶部
   nextTick(() => {
     window.scrollTo({ top: 0 });
@@ -78,32 +94,32 @@ const handleSelect = (key: string) => {
 // 根据路由路径设置当前页面
 const setPageFromRoute = () => {
   const path = route.path;
-  
-  if (path === '/welcome' || path === '/welcome/') {
+
+  if (path === "/welcome" || path === "/welcome/") {
     showMemberDetail.value = false;
-    currentPage.value = 'home';
-    activeIndex.value = '1';
-  } else if (path === '/welcome/members') {
+    currentPage.value = "home";
+    activeIndex.value = "1";
+  } else if (path === "/welcome/members") {
     showMemberDetail.value = false;
-    currentPage.value = 'members';
-    activeIndex.value = '2';
-  } else if (path === '/welcome/achievements') {
+    currentPage.value = "members";
+    activeIndex.value = route.query.category === "graduates" ? "5" : "2";
+  } else if (path === "/welcome/achievements") {
     showMemberDetail.value = false;
-    currentPage.value = 'achievements';
-    activeIndex.value = '3';
-  } else if (path === '/welcome/projects') {
+    currentPage.value = "achievements";
+    activeIndex.value = "3";
+  } else if (path === "/welcome/projects") {
     showMemberDetail.value = false;
-    currentPage.value = 'projects';
-    activeIndex.value = '4';
-  } else if (path.startsWith('/welcome/member/')) {
+    currentPage.value = "projects";
+    activeIndex.value = "4";
+  } else if (path.startsWith("/welcome/member/")) {
     const memberId = route.params.id;
     if (memberId) {
       loadMemberDetail(memberId as string);
     }
   } else {
     showMemberDetail.value = false;
-    currentPage.value = 'home';
-    activeIndex.value = '1';
+    currentPage.value = "home";
+    activeIndex.value = "1";
   }
 };
 
@@ -112,7 +128,7 @@ const loadMemberDetail = async (memberId: string) => {
   try {
     memberDetailLoading.value = true;
     showMemberDetail.value = true;
-    
+
     // 获取成员详情
     const memberResponse = await getMemberDetailApi(Number(memberId));
     if (memberResponse.code === 0) {
@@ -134,58 +150,70 @@ const loadMemberDetail = async (memberId: string) => {
         identity: memberResponse.data.identity?.toString(),
         academicStatus: memberResponse.data.academicStatus
       };
-      
+
       // 获取成果和项目数据
       const [achievementsResponse, projectsResponse] = await Promise.all([
         getAchievementsListApi(),
         getProjectsListApi()
       ]);
-      
-      if (achievementsResponse.code === 0 && Array.isArray(achievementsResponse.data)) {
+
+      if (
+        achievementsResponse.code === 0 &&
+        Array.isArray(achievementsResponse.data)
+      ) {
         selectedMemberAchievements.value = achievementsResponse.data
           .filter(achievement => {
             if (achievement.authors && Array.isArray(achievement.authors)) {
-              return achievement.authors.some(author => 
-                author.name && author.name.includes(memberResponse.data.realName)
+              return achievement.authors.some(
+                author =>
+                  author.name &&
+                  author.name.includes(memberResponse.data.realName)
               );
             }
             return false;
           })
-          .filter(achievement => achievement.status === undefined || achievement.status === 1);
+          .filter(
+            achievement =>
+              achievement.status === undefined || achievement.status === 1
+          );
       } else {
         selectedMemberAchievements.value = [];
       }
-      
+
       if (projectsResponse.code === 0 && Array.isArray(projectsResponse.data)) {
         selectedMemberProjects.value = projectsResponse.data
           .filter(project => {
             if (project.authors && Array.isArray(project.authors)) {
-              return project.authors.some(author => 
-                author.name && author.name.includes(memberResponse.data.realName)
+              return project.authors.some(
+                author =>
+                  author.name &&
+                  author.name.includes(memberResponse.data.realName)
               );
             }
             return false;
           })
-          .filter(project => project.status === undefined || project.status === 1);
+          .filter(
+            project => project.status === undefined || project.status === 1
+          );
       } else {
         selectedMemberProjects.value = [];
       }
-      
+
       // 成功加载后确保显示成员详情
       showMemberDetail.value = true;
     } else {
-      console.error('获取成员详情失败:', memberResponse.msg);
-      ElMessage.error('获取成员详情失败：' + memberResponse.msg);
+      console.error("获取成员详情失败:", memberResponse.msg);
+      ElMessage.error("获取成员详情失败：" + memberResponse.msg);
       showMemberDetail.value = false;
       selectedMember.value = null;
-      router.push('/welcome/members');
+      router.push("/welcome/members");
     }
   } catch (error) {
-    console.error('获取成员详情失败:', error);
-    ElMessage.error('获取成员详情失败，请稍后重试');
+    console.error("获取成员详情失败:", error);
+    ElMessage.error("获取成员详情失败，请稍后重试");
     showMemberDetail.value = false;
     selectedMember.value = null;
-    router.push('/welcome/members');
+    router.push("/welcome/members");
   } finally {
     memberDetailLoading.value = false;
   }
@@ -195,14 +223,14 @@ const loadMemberDetail = async (memberId: string) => {
 const backToMembers = () => {
   // 添加页面切换的过渡效果
   showMemberDetail.value = false;
-  
+
   // 延迟路由跳转，让过渡动画先开始
   setTimeout(() => {
-    router.push('/welcome/members');
+    router.push("/welcome/members");
     // 路由的scrollBehavior已经处理了平滑滚动，这里添加延迟确保更好的用户体验
     nextTick(() => {
       setTimeout(() => {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        window.scrollTo({ top: 0, behavior: "smooth" });
       }, 100);
     });
   }, 50);
@@ -210,12 +238,12 @@ const backToMembers = () => {
 
 // 获取当前页面信息
 const getCurrentPageInfo = () => {
-  return pageTitles[currentPage.value] || pageTitles['home'];
+  return pageTitles[currentPage.value] || pageTitles["home"];
 };
 
 // 监听路由变化
 watch(
-  () => route.path,
+  () => route.fullPath,
   () => {
     setPageFromRoute();
   },
@@ -236,12 +264,15 @@ onMounted(() => {
 <template>
   <div class="lab-container">
     <!-- 成员详情加载状态 -->
-    <div v-if="showMemberDetail && memberDetailLoading" class="detail-loading-overlay">
+    <div
+      v-if="showMemberDetail && memberDetailLoading"
+      class="detail-loading-overlay"
+    >
       <div class="detail-loading-container">
         <div class="loading-spinner-detail">
-          <div class="spinner-ring"></div>
-          <div class="spinner-ring"></div>
-          <div class="spinner-ring"></div>
+          <div class="spinner-ring" />
+          <div class="spinner-ring" />
+          <div class="spinner-ring" />
         </div>
       </div>
     </div>
@@ -274,39 +305,42 @@ onMounted(() => {
           <template v-if="currentPage === 'home'">
             <!-- 横幅组件 -->
             <LabBanner />
-            
+
             <!-- 实验室简介卡片组件 -->
             <LabIntroCard />
-            
+
             <!-- 研究方向组件 -->
             <ResearchSection />
+
+            <!-- 毕业去向组件 -->
+            <GraduatesSection />
           </template>
-          
+
           <!-- 成员页面 -->
           <template v-else-if="currentPage === 'members'">
             <MembersPage />
           </template>
-          
+
           <!-- 成果页面 -->
           <template v-else-if="currentPage === 'achievements'">
             <AchievementsPage />
           </template>
-          
+
           <!-- 项目页面 -->
           <template v-else-if="currentPage === 'projects'">
             <ProjectsPage />
           </template>
-          
+
           <!-- 活动页面 -->
           <template v-else-if="currentPage === 'activities'">
             <ActivityPage />
           </template>
-          
+
           <!-- 其他页面使用空白组件 -->
           <template v-else>
-            <BlankPage 
-              :title="getCurrentPageInfo().title" 
-              :subtitle="getCurrentPageInfo().subtitle" 
+            <BlankPage
+              :title="getCurrentPageInfo().title"
+              :subtitle="getCurrentPageInfo().subtitle"
             />
           </template>
         </div>
@@ -336,7 +370,12 @@ onMounted(() => {
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(168, 85, 247, 0.1), rgba(236, 72, 153, 0.1));
+  background: linear-gradient(
+    135deg,
+    rgba(99, 102, 241, 0.1),
+    rgba(168, 85, 247, 0.1),
+    rgba(236, 72, 153, 0.1)
+  );
   backdrop-filter: blur(12px);
   display: flex;
   justify-content: center;
@@ -346,11 +385,11 @@ onMounted(() => {
 }
 
 @keyframes fadeIn {
-  from { 
+  from {
     opacity: 0;
     transform: scale(0.95);
   }
-  to { 
+  to {
     opacity: 1;
     transform: scale(1);
   }
@@ -416,7 +455,7 @@ onMounted(() => {
 
 /* 中心脉冲点 */
 .loading-spinner-detail::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 50%;
   left: 50%;
@@ -431,7 +470,7 @@ onMounted(() => {
 
 /* 外围装饰点 */
 .loading-spinner-detail::after {
-  content: '';
+  content: "";
   position: absolute;
   top: 50%;
   left: 50%;
@@ -444,17 +483,22 @@ onMounted(() => {
 }
 
 @keyframes rotate {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 @keyframes pulse {
-  0%, 100% { 
+  0%,
+  100% {
     transform: translate(-50%, -50%) scale(1);
     opacity: 1;
     box-shadow: 0 0 20px rgba(99, 102, 241, 0.6);
   }
-  50% { 
+  50% {
     transform: translate(-50%, -50%) scale(1.3);
     opacity: 0.8;
     box-shadow: 0 0 30px rgba(139, 92, 246, 0.8);
@@ -474,19 +518,30 @@ onMounted(() => {
 }
 
 .loading-text-detail::after {
-  content: '';
+  content: "";
   position: absolute;
   bottom: -2px;
   left: 0;
   width: 100%;
   height: 2px;
-  background: linear-gradient(90deg, transparent, #6366f1, #8b5cf6, #ec4899, transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    #6366f1,
+    #8b5cf6,
+    #ec4899,
+    transparent
+  );
   animation: shimmer 2s ease-in-out infinite;
 }
 
 @keyframes shimmer {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
 }
 
 .loading-char {
@@ -495,20 +550,44 @@ onMounted(() => {
   transition: all 0.3s ease;
 }
 
-.loading-char:nth-child(1) { animation-delay: 0s; }
-.loading-char:nth-child(2) { animation-delay: 0.1s; }
-.loading-char:nth-child(3) { animation-delay: 0.2s; }
-.loading-char:nth-child(4) { animation-delay: 0.3s; }
-.loading-char:nth-child(5) { animation-delay: 0.4s; }
-.loading-char:nth-child(6) { animation-delay: 0.5s; }
-.loading-char:nth-child(7) { animation-delay: 0.6s; }
-.loading-char:nth-child(8) { animation-delay: 0.7s; }
-.loading-char:nth-child(9) { animation-delay: 0.8s; }
-.loading-char:nth-child(10) { animation-delay: 0.9s; }
-.loading-char:nth-child(11) { animation-delay: 1s; }
+.loading-char:nth-child(1) {
+  animation-delay: 0s;
+}
+.loading-char:nth-child(2) {
+  animation-delay: 0.1s;
+}
+.loading-char:nth-child(3) {
+  animation-delay: 0.2s;
+}
+.loading-char:nth-child(4) {
+  animation-delay: 0.3s;
+}
+.loading-char:nth-child(5) {
+  animation-delay: 0.4s;
+}
+.loading-char:nth-child(6) {
+  animation-delay: 0.5s;
+}
+.loading-char:nth-child(7) {
+  animation-delay: 0.6s;
+}
+.loading-char:nth-child(8) {
+  animation-delay: 0.7s;
+}
+.loading-char:nth-child(9) {
+  animation-delay: 0.8s;
+}
+.loading-char:nth-child(10) {
+  animation-delay: 0.9s;
+}
+.loading-char:nth-child(11) {
+  animation-delay: 1s;
+}
 
 @keyframes textWave {
-  0%, 60%, 100% {
+  0%,
+  60%,
+  100% {
     transform: translateY(0) scale(1);
     filter: brightness(1);
   }

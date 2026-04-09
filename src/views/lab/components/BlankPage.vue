@@ -9,8 +9,8 @@ interface Props {
 }
 
 withDefaults(defineProps<Props>(), {
-  title: '页面标题',
-  subtitle: '这是一个空白页面组件'
+  title: "页面标题",
+  subtitle: "这是一个空白页面组件"
 });
 </script>
 
@@ -47,7 +47,7 @@ withDefaults(defineProps<Props>(), {
   border: 1px solid rgba(226, 232, 240, 0.3);
   max-width: 500px;
   transition: all 0.3s ease;
-  
+
   &:hover {
     transform: translateY(-5px);
     box-shadow: 0 16px 48px rgba(148, 163, 184, 0.25);
@@ -78,7 +78,7 @@ p {
 .blank-description {
   padding-top: 20px;
   border-top: 1px solid rgba(226, 232, 240, 0.5);
-  
+
   p {
     font-size: 1rem;
     color: #94a3b8;
@@ -92,19 +92,19 @@ p {
   .blank-page {
     padding: 20px 15px;
   }
-  
+
   .blank-content {
     padding: 40px 30px;
     margin: 0 10px;
-    
+
     h2 {
       font-size: 1.8rem;
     }
-    
+
     p {
       font-size: 1rem;
     }
-    
+
     .blank-icon {
       font-size: 3rem;
     }

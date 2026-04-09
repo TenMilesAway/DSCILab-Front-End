@@ -10,11 +10,13 @@ import {
   updateUserPasswordApi,
   UserListItem,
   CreateUserRequest,
-  UpdateUserRequest
+  UpdateUserRequest,
+  uploadUserPhotoApi
 } from "@/api/newsystem/user";
 import editForm from "./form.vue";
 import passwordForm from "./passwordForm.vue";
 import uploadForm from "./uploadForm.vue";
+import avatarUploadForm from "./avatarUploadForm.vue";
 import { type PaginationProps } from "@pureadmin/table";
 import { reactive, ref, onMounted, toRaw, h } from "vue";
 import { addDialog } from "@/components/ReDialog";
@@ -108,7 +110,8 @@ export function useHook() {
           5: "硕士研究生",
           6: "本科生"
         };
-        return row.academicStatus !== null && row.academicStatus !== undefined ? (
+        return row.academicStatus !== null &&
+          row.academicStatus !== undefined ? (
           <span>{statusMap[row.academicStatus] || "未知"}</span>
         ) : (
           "-"
@@ -155,7 +158,7 @@ export function useHook() {
     {
       label: "操作",
       fixed: "right",
-      width: 240,
+      width: 320,
       slot: "operation"
     }
   ];
@@ -205,7 +208,7 @@ export function useHook() {
       });
       return;
     }
-    
+
     await updateUserApi(userId, data).then(() => {
       message(`您修改了用户的数据`, {
         type: "success"
@@ -225,7 +228,7 @@ export function useHook() {
       });
       return;
     }
-    
+
     await deleteUserApi(row.id).then(() => {
       message(`您删除了用户${row.username}的这条数据`, { type: "success" });
       // 刷新列表
@@ -241,10 +244,27 @@ export function useHook() {
       });
       return;
     }
-    
+
     await updateUserPasswordApi(request).then(() => {
       message(`您修改了用户${row.username}的密码`, { type: "success" });
       // 刷新列表
+      done();
+      getList();
+    });
+  }
+
+  async function handleUploadPhoto(row, data: FormData, done) {
+    if (row.identity === 1) {
+      message(`禁止修改管理员用户头像`, {
+        type: "error"
+      });
+      return;
+    }
+
+    await uploadUserPhotoApi(row.id, data).then(() => {
+      message(`您修改了用户${row.username}的头像`, {
+        type: "success"
+      });
       done();
       getList();
     });
@@ -311,7 +331,11 @@ export function useHook() {
             password: formData.password || null,
             gender: formData.gender || null,
             identity: formData.identity || null,
-            academicStatus: formData.academicStatus !== undefined && formData.academicStatus !== null ? formData.academicStatus : null,
+            academicStatus:
+              formData.academicStatus !== undefined &&
+                formData.academicStatus !== null
+                ? formData.academicStatus
+                : null,
             researchArea: formData.researchArea || null,
             phone: formData.phone || null,
             email: formData.email || null,
@@ -331,7 +355,11 @@ export function useHook() {
             englishName: formData.englishName || null,
             gender: formData.gender || null,
             identity: formData.identity || null,
-            academicStatus: formData.academicStatus !== undefined && formData.academicStatus !== null ? formData.academicStatus : null,
+            academicStatus:
+              formData.academicStatus !== undefined &&
+                formData.academicStatus !== null
+                ? formData.academicStatus
+                : null,
             status: formData.status,
             isActive: formData.isActive,
             phone: formData.phone || null,
@@ -348,7 +376,7 @@ export function useHook() {
 
         // 处理空值，将空字符串转换为null
         Object.keys(curData).forEach(key => {
-          if (curData[key] === '' || curData[key] === undefined) {
+          if (curData[key] === "" || curData[key] === undefined) {
             curData[key] = null;
           }
         });
@@ -402,6 +430,30 @@ export function useHook() {
             handleResetPassword(row, curData, done);
           }
         });
+      }
+    });
+  }
+
+  async function openAvatarUploadDialog(row: UserListItem) {
+    const avatarUploadFormRef = ref();
+    addDialog({
+      title: `修改头像`,
+      props: {
+        userName: row.realName || row.username
+      },
+      width: "30%",
+      draggable: true,
+      fullscreenIcon: true,
+      closeOnClickModal: false,
+      contentRenderer: ({ options }) =>
+        h(avatarUploadForm, {
+          ref: avatarUploadFormRef,
+          ...options.props
+        }),
+      beforeSure: done => {
+        const formData = avatarUploadFormRef.value.submit();
+        if (!formData) return;
+        handleUploadPhoto(row, formData, done);
       }
     });
   }
@@ -464,6 +516,7 @@ export function useHook() {
     getList,
     handleDelete,
     openResetPasswordDialog,
+    openAvatarUploadDialog,
     openUploadDialog
   };
 }

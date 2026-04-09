@@ -3,7 +3,10 @@ import { ref, onMounted } from "vue";
 import { useHook } from "./hook";
 import { PureTableBar } from "@/components/RePureTableBar";
 import { useRenderIcon } from "@/components/ReIcon/src/hooks";
-import { getDictCategoryTreeApi, type LabAchievementCategoryDTO } from "@/api/newsystem/achievement-category";
+import {
+  getDictCategoryTreeApi,
+  type LabAchievementCategoryDTO
+} from "@/api/newsystem/achievement-category";
 
 import Delete from "@iconify-icons/ep/delete";
 import EditPen from "@iconify-icons/ep/edit-pen";
@@ -44,16 +47,16 @@ const loadCategoryTree = async () => {
     if (response.code === 0) {
       categoryTree.value = response.data;
       topLevelCategories.value = response.data; // 一级项目类型
-      
+
       // 按ID筛选，一级默认是2（项目）
       const paperRoot = categoryTree.value.find(cat => cat.id === 1);
       const projectRoot = categoryTree.value.find(cat => cat.id === 2);
-      
+
       paperCategories.value = paperRoot?.children || [];
       projectCategories.value = projectRoot?.children || [];
     }
   } catch (error) {
-    console.error('获取项目类型失败:', error);
+    console.error("获取项目类型失败:", error);
   }
 };
 
@@ -112,7 +115,7 @@ onMounted(() => {
     <PureTableBar
       title="项目管理"
       :columns="columns"
-      :showDensity="false"
+      :showDensity="true"
       :showColumnSetting="false"
       @refresh="onSearch"
     >
@@ -125,26 +128,25 @@ onMounted(() => {
           新增项目
         </el-button>
       </template>
-      <template v-slot="{ dynamicColumns }">
+      <template v-slot="{ size, dynamicColumns }">
         <pure-table
           border
           adaptive
           align-whole="center"
           table-layout="auto"
           :loading="pageLoading"
-          size="default"
+          :size="size"
           :data="dataList"
           :columns="dynamicColumns"
           :pagination="pagination"
-          :paginationSmall="false"
+          :paginationSmall="size === 'small'"
           :header-cell-style="{
             background: 'var(--el-table-row-hover-bg-color)',
             color: 'var(--el-text-color-primary)'
           }"
           @page-size-change="getList"
           @page-current-change="getList"
-        >
-        </pure-table>
+        />
       </template>
     </PureTableBar>
 
@@ -159,11 +161,21 @@ onMounted(() => {
         <el-table-column prop="title" label="成果名称" show-overflow-tooltip />
         <el-table-column label="作者" show-overflow-tooltip>
           <template #default="scope">
-            {{ scope.row.authors?.map((a: any) => a.name).join(', ') || '-' }}
+            {{ scope.row.authors?.map((a: any) => a.name).join(", ") || "-" }}
           </template>
         </el-table-column>
-        <el-table-column prop="categoryName" label="类型" width="120" align="center" />
-        <el-table-column prop="publishDate" label="时间" width="120" align="center" />
+        <el-table-column
+          prop="categoryName"
+          label="类型"
+          width="120"
+          align="center"
+        />
+        <el-table-column
+          prop="publishDate"
+          label="时间"
+          width="120"
+          align="center"
+        />
       </el-table>
       <template #footer>
         <div class="dialog-footer">

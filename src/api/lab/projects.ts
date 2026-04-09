@@ -4,10 +4,15 @@ import { http } from "@/utils/http";
  * 项目作者信息
  */
 export interface LabProjectAuthorDTO {
+  userId?: number | null;
   name: string;
+  nameEn?: string;
+  email?: string;
   organization?: string;
+  affiliation?: string;
   isCorresponding?: boolean;
   authorOrder?: number;
+  visible?: boolean;
 }
 
 /**

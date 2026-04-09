@@ -7,7 +7,10 @@ import { useRenderIcon } from "@/components/ReIcon/src/hooks";
 import Delete from "@iconify-icons/ep/delete";
 import EditPen from "@iconify-icons/ep/edit-pen";
 import { useUserStoreHook } from "@/store/modules/user";
-import { getDictCategoryTreeApi, type LabAchievementCategoryDTO } from "@/api/newsystem/achievement-category";
+import {
+  getDictCategoryTreeApi,
+  type LabAchievementCategoryDTO
+} from "@/api/newsystem/achievement-category";
 
 import {
   getAchievementListApi,
@@ -75,7 +78,7 @@ export function useHook() {
         categoryMap.value = map;
       }
     } catch (error) {
-      console.error('获取成果类型映射失败:', error);
+      console.error("获取成果类型映射失败:", error);
     }
   };
 
@@ -149,9 +152,9 @@ export function useHook() {
       width: 250,
       fixed: "right",
       cellRenderer: scope => {
-        const currentUser = useUserStoreHook().currentUserInfo;
-        // 根据调试信息，currentUser对象中identity字段在userInfo中
-        const isTeacher = currentUser?.userInfo?.identity === 2;
+        const currentUser = useUserStoreHook().currentUserInfo as any;
+        const identity = currentUser?.identity ?? currentUser?.userInfo?.identity;
+        const isTeacher = identity === 2;
 
         return (
           <div
@@ -238,7 +241,7 @@ export function useHook() {
 
   async function onVisibilityChange({ row }) {
     try {
-      await toggleMyAchievementVisibilityApi(row.id, row.myVisibility);
+      await toggleMyAchievementVisibilityApi(row.id, row.myVisibility, "paper");
       message(
         `成果《${row.title}》的显示状态已${row.myVisibility ? "开启" : "关闭"}`,
         {
@@ -299,7 +302,8 @@ export function useHook() {
             // 对非项目类型，直接使用完整的发布时间字符串（YYYY-MM-DD）
             const isProject = (() => {
               if (row?.categoryId && categoryMap.value.has(row.categoryId)) {
-                const categoryName = categoryMap.value.get(row.categoryId) || "";
+                const categoryName =
+                  categoryMap.value.get(row.categoryId) || "";
                 return categoryName.includes("项目");
               }
               return row?.type === 2;
@@ -388,7 +392,9 @@ export function useHook() {
           categoryId: formData.categoryId || null,
           publisher: formData.publisher || null,
           publishDate:
-            formData.achievementType !== "project" ? formData.publishDate || null : null,
+            formData.achievementType !== "project"
+              ? formData.publishDate || null
+              : null,
           projectStartDate:
             formData.achievementType === "project"
               ? formData.projectStartDate || null
@@ -405,14 +411,15 @@ export function useHook() {
           published: formData.published,
           authors: authorsData,
           projectIds:
-            formData.achievementType === "paper" && Array.isArray(formData.projectIds)
+            formData.achievementType === "paper" &&
+              Array.isArray(formData.projectIds)
               ? formData.projectIds
               : null
         };
 
         // 处理空值，将空字符串转换为null
         Object.keys(curData).forEach(key => {
-          if (curData[key] === '' || curData[key] === undefined) {
+          if (curData[key] === "" || curData[key] === undefined) {
             curData[key] = null;
           }
         });
@@ -451,12 +458,30 @@ export function useHook() {
     }
     const result = await getAchievementListApi(params);
     const data = result.data;
+    const currentUser = useUserStoreHook().currentUserInfo as any;
+    const currentUserId = Number(
+      currentUser?.id ??
+      currentUser?.userId ??
+      currentUser?.userInfo?.id ??
+      currentUser?.userInfo?.userId
+    );
 
-    // 为每个成果初始化myVisibility字段，默认为true（显示）
-    dataList.value = data.rows.map(item => ({
-      ...item,
-      myVisibility: item.myVisibility !== undefined ? item.myVisibility : true
-    }));
+    // 为每个成果初始化myVisibility字段：优先后端返回值，其次回退为当前用户作者记录的visible
+    dataList.value = data.rows.map(item => {
+      const currentAuthor = item.authors?.find(
+        author =>
+          !Number.isNaN(currentUserId) && Number(author.userId) === currentUserId
+      );
+      const singleAuthor = item.authors?.length === 1 ? item.authors[0] : undefined;
+
+      return {
+        ...item,
+        myVisibility:
+          item.myVisibility !== undefined
+            ? item.myVisibility
+            : currentAuthor?.visible ?? singleAuthor?.visible ?? true
+      };
+    });
     pagination.total = data.total;
 
     setTimeout(() => {

@@ -34,8 +34,8 @@ export interface AchievementCategoryDTO {
  */
 export const getAchievementCategoriesApi = (parentId?: number) => {
   return http.request<ResponseData<AchievementCategoryDTO[]>>(
-    "get", 
-    "/open/achievement-categories/children", 
+    "get",
+    "/open/achievement-categories/children",
     { params: parentId ? { parentId } : {} }
   );
 };

@@ -14,11 +14,7 @@
           <template #default="{ node, data }">
             <span class="flex items-center">
               <IconifyIconOffline
-                :icon="
-                  data.type === 'dept'
-                    ? OfficeBuilding
-                    : Location
-                "
+                :icon="data.type === 'dept' ? OfficeBuilding : Location"
                 class="mr-1"
               />
               {{ node.label }}

@@ -53,6 +53,7 @@
             >
               <div class="avatar-container">
                 <img
+                  ref="avatarImgRef"
                   :src="avatarUrl"
                   :alt="member.name"
                   class="member-avatar"
@@ -526,7 +527,9 @@ const loadAchievementCategories = async () => {
       result.data &&
       Array.isArray(result.data)
     ) {
-      achievementCategories.value = result.data;
+      achievementCategories.value = result.data.sort(
+        (a, b) => (a.sortOrder || 0) - (b.sortOrder || 0)
+      );
     } else {
       console.error("获取成果分类数据格式错误:", result);
     }
@@ -714,6 +717,25 @@ const fetchProjects = async () => {
   }
 };
 
+const avatarImgRef = ref<HTMLImageElement | null>(null);
+
+// 在公开列表中定位当前成员作者记录：优先按 userId 匹配，失败时回退按姓名匹配
+const findCurrentMemberAuthor = (
+  authors: Array<{ userId?: number; name?: string; visible?: boolean }> | undefined
+) => {
+  if (!authors || !props.member) return undefined;
+
+  const byUserId = authors.find(author => {
+    if (author?.userId === undefined || author?.userId === null) return false;
+    return Number(author.userId) === Number(props.member?.id);
+  });
+  if (byUserId) return byUserId;
+
+  const memberName = (props.member?.name || "").trim();
+  if (!memberName) return undefined;
+  return authors.find(author => (author?.name || "").trim() === memberName);
+};
+
 // 监听member变化，重置头像加载状态和动画状态，并获取成果和项目数据
 watch(
   () => props.member,
@@ -731,6 +753,9 @@ watch(
 
     // 延迟触发动画，确保组件已渲染
     nextTick(() => {
+      if (avatarImgRef.value && avatarImgRef.value.complete) {
+        isAvatarLoaded.value = true;
+      }
       setTimeout(() => {
         isContentVisible.value = true;
       }, 100);
@@ -767,17 +792,25 @@ const sortedProjects = computed(() => {
   const visibleProjects = internalProjects.value.filter(project => {
     if (!project.authors || !props.member) return false;
 
-    // 查找当前成员在作者列表中的记录，使用name匹配 (Public API doesn't return userId or visible)
-    const currentMemberAuthor = project.authors.find(
-      author => author.name === props.member?.name
-    );
+    const currentMemberAuthor = findCurrentMemberAuthor(project.authors as any);
 
-    // 对于公开接口返回的数据，只要是作者就认为是可见的
-    return !!currentMemberAuthor;
+    // 默认可见，仅当明确 visible=false 时隐藏
+    return !!currentMemberAuthor && currentMemberAuthor.visible !== false;
   });
 
   return [...visibleProjects].sort((a, b) => {
-    // 优先使用项目开始时间排序
+    // 1. 优先按项目类型排序
+    // const categoryA = projectCategories.value.find(c => c.id === a.categoryId);
+    // const categoryB = projectCategories.value.find(c => c.id === b.categoryId);
+    // 使用 sortOrder 排序，如果没有则排在最后
+    // const orderA = categoryA?.sortOrder ?? 999;
+    // const orderB = categoryB?.sortOrder ?? 999;
+
+    // if (orderA !== orderB) {
+    //     return orderA - orderB;
+    // }
+
+    // 2. 类型相同则按项目开始时间排序
     const aDate = a.projectStartDate
       ? new Date(a.projectStartDate).getTime()
       : 0;
@@ -788,7 +821,7 @@ const sortedProjects = computed(() => {
   });
 });
 
-// 按时间排序的成果列表（从新到旧）
+// 按类型和时间排序的成果列表
 const sortedAchievements = computed(() => {
   if (!internalAchievements.value || internalAchievements.value.length === 0) {
     return [];
@@ -798,17 +831,33 @@ const sortedAchievements = computed(() => {
   const visibleAchievements = internalAchievements.value.filter(achievement => {
     if (!achievement.authors || !props.member) return false;
 
-    // 查找当前成员在作者列表中的记录，使用id匹配而不是name
-    const currentMemberAuthor = achievement.authors.find(
-      author => author.userId === props.member.id
+    const currentMemberAuthor = findCurrentMemberAuthor(
+      achievement.authors as any
     );
 
-    // 如果找到当前成员且visible为true，则显示该成果
-    return currentMemberAuthor && currentMemberAuthor.visible;
+    // 默认可见，仅当明确 visible=false 时隐藏
+    return !!currentMemberAuthor && currentMemberAuthor.visible !== false;
   });
 
   return [...visibleAchievements].sort((a, b) => {
-    // 优先使用发表时间排序
+    // 1. 优先按成果类型排序
+    // 使用 achievementCategories 数组中的顺序作为排序依据
+    // const indexA = achievementCategories.value.findIndex(
+    //   c => c.id === a.categoryId
+    // );
+    // const indexB = achievementCategories.value.findIndex(
+    //   c => c.id === b.categoryId
+    // );
+
+    // 如果找不到分类，放到最后
+    // const orderA = indexA === -1 ? 999 : indexA;
+    // const orderB = indexB === -1 ? 999 : indexB;
+
+    // if (orderA !== orderB) {
+    //   return orderA - orderB;
+    // }
+
+    // 2. 类型相同则按发表时间排序
     const aDate = a.publishDate ? new Date(a.publishDate).getTime() : 0;
     const bDate = b.publishDate ? new Date(b.publishDate).getTime() : 0;
     return bDate - aDate; // 从新到旧排序
@@ -919,9 +968,9 @@ const handleImageLoad = () => {
 // 处理图片加载错误
 const handleImageError = (event: Event) => {
   const img = event.target as HTMLImageElement;
-  const defaultAvatar = "/src/assets/lab/default_user_avatar.png";
+  // const defaultAvatar = "/src/assets/lab/default_user_avatar.png";
   // 部署时
-  // const defaultAvatar = "/static/png/default_user_avatar.png";
+  const defaultAvatar = "/static/png/default_user_avatar.png";
   // 防止无限循环，只有当前src不是默认头像时才切换
   if (img.src !== window.location.origin + defaultAvatar) {
     img.src = defaultAvatar;

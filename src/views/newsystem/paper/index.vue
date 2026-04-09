@@ -3,7 +3,10 @@ import { ref, onMounted } from "vue";
 import { useHook } from "./hook";
 import { PureTableBar } from "@/components/RePureTableBar";
 import { useRenderIcon } from "@/components/ReIcon/src/hooks";
-import { getDictCategoryTreeApi, type LabAchievementCategoryDTO } from "@/api/newsystem/achievement-category";
+import {
+  getDictCategoryTreeApi,
+  type LabAchievementCategoryDTO
+} from "@/api/newsystem/achievement-category";
 
 import Delete from "@iconify-icons/ep/delete";
 import EditPen from "@iconify-icons/ep/edit-pen";
@@ -46,7 +49,7 @@ const loadCategoryTree = async () => {
       }
     }
   } catch (error) {
-    console.error('获取成果类型失败:', error);
+    console.error("获取成果类型失败:", error);
   }
 };
 
@@ -104,7 +107,7 @@ onMounted(() => {
     <PureTableBar
       title="成果管理"
       :columns="columns"
-      :showDensity="false"
+      :showDensity="true"
       :showColumnSetting="false"
       @refresh="onSearch"
     >
@@ -117,18 +120,18 @@ onMounted(() => {
           新增成果
         </el-button>
       </template>
-      <template v-slot="{ dynamicColumns }">
+      <template v-slot="{ size, dynamicColumns }">
         <pure-table
           border
           adaptive
           align-whole="center"
           table-layout="auto"
           :loading="pageLoading"
-          size="default"
+          :size="size"
           :data="dataList"
           :columns="dynamicColumns"
           :pagination="pagination"
-          :paginationSmall="false"
+          :paginationSmall="size === 'small'"
           :header-cell-style="{
             background: 'var(--el-table-row-hover-bg-color)',
             color: 'var(--el-text-color-primary)'
@@ -141,7 +144,7 @@ onMounted(() => {
               class="reset-margin"
               link
               type="primary"
-              size="default"
+              :size="size"
               @click="openDialog('编辑', row)"
               :icon="useRenderIcon(EditPen)"
             >
@@ -153,7 +156,7 @@ onMounted(() => {
                   class="reset-margin"
                   link
                   type="danger"
-                  size="default"
+                  :size="size"
                   :icon="useRenderIcon(Delete)"
                 >
                   删除

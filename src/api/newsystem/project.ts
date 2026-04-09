@@ -258,16 +258,21 @@ export interface PublicProjectDTO {
  * 获取项目列表
  */
 export const getProjectListApi = (params?: ProjectListQuery) => {
-  return http.request<
-    ResponseData<{ total: number; rows: LabProjectDTO[] }>
-  >("get", "/lab/projects", { params });
+  return http.request<ResponseData<{ total: number; rows: LabProjectDTO[] }>>(
+    "get",
+    "/lab/projects",
+    { params }
+  );
 };
 
 /**
  * 获取项目详情
  */
 export const getProjectDetailApi = (id: number) => {
-  return http.request<ResponseData<LabProjectDTO>>("get", `/lab/projects/${id}`);
+  return http.request<ResponseData<LabProjectDTO>>(
+    "get",
+    `/lab/projects/${id}`
+  );
 };
 
 /**
@@ -282,10 +287,7 @@ export const createProjectApi = (data: CreateProjectRequest) => {
 /**
  * 更新项目
  */
-export const updateProjectApi = (
-  id: number,
-  data: UpdateProjectRequest
-) => {
+export const updateProjectApi = (id: number, data: UpdateProjectRequest) => {
   return http.request<ResponseData<void>>("put", `/lab/projects/${id}`, {
     data
   });
@@ -360,10 +362,7 @@ export const updateProjectAuthorApi = (
 /**
  * 删除项目作者（软删除）
  */
-export const deleteProjectAuthorApi = (
-  projectId: number,
-  authorId: number
-) => {
+export const deleteProjectAuthorApi = (projectId: number, authorId: number) => {
   return http.request<void>(
     "delete",
     `/lab/achievements/${projectId}/authors/${authorId}`
@@ -406,9 +405,11 @@ export const toggleAuthorVisibilityApi = (
  * 获取我的项目列表
  */
 export const getMyProjectsApi = (params?: MyProjectQuery) => {
-  return http.request<
-    ResponseData<{ total: number; rows: LabProjectDTO[] }>
-  >("get", "/lab/my-achievements", { params });
+  return http.request<ResponseData<{ total: number; rows: LabProjectDTO[] }>>(
+    "get",
+    "/lab/my-achievements",
+    { params }
+  );
 };
 
 /**
@@ -416,12 +417,13 @@ export const getMyProjectsApi = (params?: MyProjectQuery) => {
  */
 export const toggleMyProjectVisibilityApi = (
   projectId: number,
-  visible: boolean
+  visible: boolean,
+  type: "paper" | "project" = "project"
 ) => {
   return http.request<void>(
     "put",
     `/lab/my-achievements/${projectId}/visibility`,
-    { params: { visible } }
+    { params: { visible, type } }
   );
 };
 

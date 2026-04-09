@@ -117,7 +117,9 @@ export const createCategoryApi = (data: CreateCategoryCommand) => {
  * 更新类型
  */
 export const updateCategoryApi = (id: number, data: UpdateCategoryCommand) => {
-  return http.request<void>("put", `/lab/achievement-categories/${id}`, { data });
+  return http.request<void>("put", `/lab/achievement-categories/${id}`, {
+    data
+  });
 };
 
 /**
@@ -134,7 +136,9 @@ export const toggleCategoryStatusApi = (id: number, active: boolean) => {
  * 批量更新排序
  */
 export const batchUpdateSortApi = (data: BatchUpdateSortCommand) => {
-  return http.request<void>("put", "/lab/achievement-categories/batch/sort", { data });
+  return http.request<void>("put", "/lab/achievement-categories/batch/sort", {
+    data
+  });
 };
 
 /**

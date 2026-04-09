@@ -1,27 +1,27 @@
-import LabNavbar from '../../views/lab/components/navbar.vue';
-import LabBanner from '../../views/lab/components/banner.vue';
-import LabIntroCard from '../../views/lab/components/intro.vue';
-import ResearchSection from '../../views/lab/components/research.vue';
-import BlankPage from '../../views/lab/components/BlankPage.vue';
-import MembersPage from '../../views/lab/components/MembersPage.vue';
-import AchievementsPage from '../../views/lab/components/AchievementsPage.vue';
-import ProjectsPage from '../../views/lab/components/ProjectsPage.vue'
-import ActivityPage from '../../views/lab/components/ActivityPage.vue'
-import ActivityDetail from '../../views/lab/components/ActivityDetail.vue'
-
+import LabNavbar from "../../views/lab/components/navbar.vue";
+import LabBanner from "../../views/lab/components/banner.vue";
+import LabIntroCard from "../../views/lab/components/intro.vue";
+import ResearchSection from "../../views/lab/components/research.vue";
+import GraduatesSection from "../../views/lab/components/GraduatesSection.vue";
+import BlankPage from "../../views/lab/components/BlankPage.vue";
+import MembersPage from "../../views/lab/components/MembersPage.vue";
+import AchievementsPage from "../../views/lab/components/AchievementsPage.vue";
+import ProjectsPage from "../../views/lab/components/ProjectsPage.vue";
+import ActivityPage from "../../views/lab/components/ActivityPage.vue";
+import ActivityDetail from "../../views/lab/components/ActivityDetail.vue";
 
 export {
   LabNavbar,
   LabBanner,
   LabIntroCard,
   ResearchSection,
+  GraduatesSection,
   BlankPage,
   MembersPage,
   AchievementsPage,
   ProjectsPage,
   ActivityPage,
-  ActivityDetail,
-
+  ActivityDetail
 };
 
 export default {
@@ -29,11 +29,11 @@ export default {
   LabBanner,
   LabIntroCard,
   ResearchSection,
+  GraduatesSection,
   BlankPage,
   MembersPage,
   AchievementsPage,
   ProjectsPage,
   ActivityPage,
-  ActivityDetail,
-
+  ActivityDetail
 };

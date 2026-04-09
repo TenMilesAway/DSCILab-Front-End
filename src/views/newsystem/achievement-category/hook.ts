@@ -70,7 +70,13 @@ export function useHook() {
     ],
     sortOrder: [
       { required: true, message: "请输入排序号", trigger: "blur" },
-      { type: "number", min: 0, max: 9999, message: "排序号范围 0-9999", trigger: "blur" }
+      {
+        type: "number",
+        min: 0,
+        max: 9999,
+        message: "排序号范围 0-9999",
+        trigger: "blur"
+      }
     ]
   };
 
@@ -130,9 +136,9 @@ export function useHook() {
       prop: "isActive",
       width: 80,
       cellRenderer: ({ row }) => {
-        return row.isActive ?
-          h("el-tag", { type: "success" }, "启用") :
-          h("el-tag", { type: "danger" }, "禁用");
+        return row.isActive
+          ? h("el-tag", { type: "success" }, "启用")
+          : h("el-tag", { type: "danger" }, "禁用");
       }
     },
     {
@@ -140,9 +146,9 @@ export function useHook() {
       prop: "isSystem",
       width: 100,
       cellRenderer: ({ row }) => {
-        return row.isSystem ?
-          h("el-tag", { type: "info" }, "系统") :
-          h("el-tag", {}, "自定义");
+        return row.isSystem
+          ? h("el-tag", { type: "info" }, "系统")
+          : h("el-tag", {}, "自定义");
       }
     },
     {
@@ -303,7 +309,7 @@ export function useHook() {
   const toggleStatus = async (row: LabAchievementCategoryDTO) => {
     try {
       await toggleCategoryStatusApi(row.id, !row.isActive);
-      ElMessage.success(`${!row.isActive ? '启用' : '禁用'}成功`);
+      ElMessage.success(`${!row.isActive ? "启用" : "禁用"}成功`);
       getList();
     } catch (error) {
       console.error("状态切换失败:", error);

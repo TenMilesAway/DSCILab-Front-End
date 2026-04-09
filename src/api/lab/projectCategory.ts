@@ -34,8 +34,8 @@ export interface ProjectCategoryDTO {
  */
 export const getProjectCategoriesApi = (parentId?: number) => {
   return http.request<ResponseData<ProjectCategoryDTO[]>>(
-    "get", 
-    "/open/achievement-categories/children", 
+    "get",
+    "/open/achievement-categories/children",
     { params: parentId ? { parentId } : {} }
   );
 };
