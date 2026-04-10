@@ -54,7 +54,7 @@ const formatDate = (value?: string) => {
 
 const formatDateTime = (value?: string) => {
   if (!value) return "-";
-  return dayjs(value).format("YYYY-MM-DD HH:mm:ss");
+  return dayjs(value).format("YYYY-MM-DD");
 };
 </script>
 

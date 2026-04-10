@@ -91,7 +91,7 @@ export function useHook() {
       prop: "createTime",
       width: 170,
       formatter: ({ createTime }) => {
-        return createTime ? String(createTime).replace("T", " ").slice(0, 19) : "-";
+        return createTime ? String(createTime).replace("T", " ").slice(0, 10) : "-";
       }
     },
     {
