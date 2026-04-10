@@ -25,6 +25,7 @@ const {
   onSearch,
   resetForm,
   handleDelete,
+  togglePublish,
   openDialog,
   openDetailDialog,
   getList
@@ -39,35 +40,23 @@ const {
       :model="searchFormParams"
       class="search-form bg-bg_color w-full pl-8 pt-[12px]"
     >
-      <el-form-item label="标题：" prop="title">
+      <el-form-item label="标题：" prop="keyword">
         <el-input
-          v-model="searchFormParams.title"
-          placeholder="请输入新闻标题"
+          v-model="searchFormParams.keyword"
+          placeholder="请输入活动标题"
           clearable
           class="!w-[200px]"
         />
       </el-form-item>
-      <el-form-item label="类型：" prop="type">
+      <el-form-item label="发布：" prop="published">
         <el-select
-          v-model="searchFormParams.type"
-          placeholder="请选择类型"
+          v-model="searchFormParams.published"
+          placeholder="请选择发布状态"
           clearable
           class="!w-[160px]"
         >
-          <el-option label="新闻" :value="1" />
-          <el-option label="活动" :value="2" />
-          <el-option label="通知" :value="3" />
-        </el-select>
-      </el-form-item>
-      <el-form-item label="状态：" prop="status">
-        <el-select
-          v-model="searchFormParams.status"
-          placeholder="请选择状态"
-          clearable
-          class="!w-[160px]"
-        >
-          <el-option label="已发布" :value="1" />
-          <el-option label="草稿" :value="2" />
+          <el-option label="已发布" :value="true" />
+          <el-option label="未发布" :value="false" />
         </el-select>
       </el-form-item>
       <el-form-item>
@@ -86,7 +75,7 @@ const {
     </el-form>
 
     <PureTableBar
-      title="新闻活动"
+      title="活动管理"
       :columns="columns"
       :showDensity="false"
       :showColumnSetting="false"
@@ -98,7 +87,7 @@ const {
           :icon="useRenderIcon(AddFill)"
           @click="openDialog('新增')"
         >
-          新增新闻
+          新增活动
         </el-button>
       </template>
       <template v-slot="{ dynamicColumns }">
@@ -121,39 +110,50 @@ const {
           @page-current-change="getList"
         >
           <template #operation="{ row }">
-            <el-button
-              class="reset-margin"
-              link
-              type="primary"
-              size="default"
-              @click="openDialog('编辑', row)"
-              :icon="useRenderIcon(EditPen)"
-            >
-              修改
-            </el-button>
-            <el-popconfirm title="是否确认删除?" @confirm="handleDelete(row)">
-              <template #reference>
-                <el-button
-                  class="reset-margin"
-                  link
-                  type="danger"
-                  size="default"
-                  :icon="useRenderIcon(Delete)"
-                >
-                  删除
-                </el-button>
-              </template>
-            </el-popconfirm>
-            <el-button
-              class="reset-margin"
-              link
-              type="primary"
-              size="default"
-              :icon="useRenderIcon(View)"
-              @click="openDetailDialog(row)"
-            >
-              查看详情
-            </el-button>
+            <div class="operation-actions">
+              <el-button
+                class="reset-margin"
+                link
+                type="primary"
+                size="default"
+                @click="openDialog('编辑', row)"
+                :icon="useRenderIcon(EditPen)"
+              >
+                修改
+              </el-button>
+              <el-button
+                class="reset-margin"
+                link
+                type="warning"
+                size="default"
+                @click="togglePublish(row)"
+              >
+                {{ row.published ? "取消发布" : "发布" }}
+              </el-button>
+              <el-popconfirm title="是否确认删除?" @confirm="handleDelete(row)">
+                <template #reference>
+                  <el-button
+                    class="reset-margin"
+                    link
+                    type="danger"
+                    size="default"
+                    :icon="useRenderIcon(Delete)"
+                  >
+                    删除
+                  </el-button>
+                </template>
+              </el-popconfirm>
+              <el-button
+                class="reset-margin"
+                link
+                type="primary"
+                size="default"
+                :icon="useRenderIcon(View)"
+                @click="openDetailDialog(row)"
+              >
+                查看详情
+              </el-button>
+            </div>
           </template>
         </pure-table>
       </template>
@@ -170,5 +170,12 @@ const {
   :deep(.el-form-item) {
     margin-bottom: 12px;
   }
+}
+
+.operation-actions {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  white-space: nowrap;
 }
 </style>

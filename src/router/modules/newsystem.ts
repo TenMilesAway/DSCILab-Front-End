@@ -120,9 +120,9 @@ export default [
     component: Layout,
     redirect: "/newsystem/news/index",
     meta: {
-      title: "新闻活动",
+      title: "活动管理",
       rank: 6,
-      showLink: false
+      showLink: true
     },
     children: [
       {
@@ -130,9 +130,10 @@ export default [
         name: "NewSystemNews",
         component: () => import("@/views/newsystem/news/index.vue"),
         meta: {
-          title: "新闻活动",
-          showLink: false,
-          showParent: false
+          title: "活动管理",
+          showLink: true,
+          showParent: false,
+          roles: ["admin"]
         }
       }
     ]
