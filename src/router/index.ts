@@ -111,6 +111,7 @@ const whiteList = [
   "/welcome/members",
   "/welcome/achievements",
   "/welcome/projects",
+  "/welcome/activities",
   "/welcome/member"
 ];
 

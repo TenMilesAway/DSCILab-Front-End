@@ -48,6 +48,15 @@ export default [
         }
       },
       {
+        path: "activities",
+        name: "WelcomeActivities",
+        component: () => import("@/views/lab/index.vue"),
+        meta: {
+          title: "活动页",
+          showLink: false
+        }
+      },
+      {
         path: "member/:id",
         name: "WelcomeMemberDetail",
         component: () => import("@/views/lab/index.vue"),

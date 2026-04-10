@@ -66,7 +66,10 @@ const handleSelect = (key: string) => {
     case "5": // 毕业去向（直接进入成员页并选中已毕业学生）
       currentPage.value = "members";
       showMemberDetail.value = false;
-      router.push({ path: "/welcome/members", query: { category: "graduates" } });
+      router.push({
+        path: "/welcome/members",
+        query: { category: "graduates" }
+      });
       break;
     case "3": // 成果
       currentPage.value = "achievements";
@@ -78,6 +81,7 @@ const handleSelect = (key: string) => {
       break;
     case "6": // 活动（保留：当前顶部导航未展示）
       currentPage.value = "activities";
+      router.push("/welcome/activities");
       break;
 
     default:
@@ -111,6 +115,10 @@ const setPageFromRoute = () => {
     showMemberDetail.value = false;
     currentPage.value = "projects";
     activeIndex.value = "4";
+  } else if (path === "/welcome/activities") {
+    showMemberDetail.value = false;
+    currentPage.value = "activities";
+    activeIndex.value = "6";
   } else if (path.startsWith("/welcome/member/")) {
     const memberId = route.params.id;
     if (memberId) {
