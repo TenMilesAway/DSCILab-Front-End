@@ -5,8 +5,8 @@ import { formRules } from "./rule";
 import { ElIcon } from "element-plus";
 import { message } from "@/utils/message";
 import { Plus, Delete } from "@element-plus/icons-vue";
-import { uploadEventImageApi } from "@/api/lab/events";
 import {
+  uploadCommonFileApi,
   searchLabUsersByKeywordApi,
   type LabUserProfileDTO
 } from "@/api/newsystem/user";
@@ -153,7 +153,7 @@ const uploadImage = async (file: File) => {
   formData.append("file", file);
   uploadingImage.value = true;
   try {
-    const res = await uploadEventImageApi(formData);
+    const res = await uploadCommonFileApi(formData);
     const imageUrl =
       res.data?.url ||
       (res.data as any)?.fileUrl ||

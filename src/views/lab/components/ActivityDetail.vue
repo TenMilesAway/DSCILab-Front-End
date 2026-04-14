@@ -16,7 +16,10 @@
         <span>时间：{{ formatDate(eventDetail.eventTime) }}</span>
       </div>
 
-      <div class="content" v-html="eventDetail.content || ''" />
+      <div
+        class="content"
+        v-html="normalizeContentImgSrc(eventDetail.content || '')"
+      />
     </div>
 
     <div v-else class="state-wrap">
@@ -30,6 +33,8 @@ import { onMounted, ref, watch } from "vue";
 import dayjs from "dayjs";
 import { ArrowLeft } from "@element-plus/icons-vue";
 import { getOpenEventDetailApi, type LabEventDTO } from "@/api/lab/events";
+
+const { VITE_APP_BASE_API } = import.meta.env;
 
 defineOptions({
   name: "ActivityDetail"
@@ -48,6 +53,24 @@ const eventDetail = ref<LabEventDTO | null>(null);
 const formatDate = (value?: string) => {
   if (!value) return "-";
   return dayjs(value).format("YYYY-MM-DD");
+};
+
+const normalizeContentImgSrc = (html: string) => {
+  if (!html) return "";
+  return html.replace(
+    /(<img\b[^>]*\bsrc\s*=\s*["'])([^"']+)(["'][^>]*>)/gi,
+    (_, p1, src, p3) => {
+      const s = String(src || "").trim();
+      if (!s) return `${p1}${s}${p3}`;
+      if (/^https?:\/\//i.test(s) || s.startsWith("data:")) {
+        return `${p1}${s}${p3}`;
+      }
+      if (s.startsWith("/")) {
+        return `${p1}${VITE_APP_BASE_API}${s}${p3}`;
+      }
+      return `${p1}${VITE_APP_BASE_API}/${s}${p3}`;
+    }
+  );
 };
 
 const loadDetail = async () => {
