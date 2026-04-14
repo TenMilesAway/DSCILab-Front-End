@@ -13,8 +13,7 @@
     <div v-else-if="eventDetail" class="content-wrap">
       <h1 class="title">{{ eventDetail.title }}</h1>
       <div class="meta">
-        <span>时间：{{ formatDate(eventDetail.eventTime || eventDetail.createTime) }}</span>
-        <span v-if="authorText">作者：{{ authorText }}</span>
+        <span>时间：{{ formatDate(eventDetail.eventTime) }}</span>
       </div>
 
       <div class="content" v-html="eventDetail.content || ''" />
@@ -27,7 +26,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from "vue";
+import { onMounted, ref, watch } from "vue";
 import dayjs from "dayjs";
 import { ArrowLeft } from "@element-plus/icons-vue";
 import { getOpenEventDetailApi, type LabEventDTO } from "@/api/lab/events";
@@ -45,16 +44,6 @@ defineEmits<{ back: [] }>();
 
 const loading = ref(false);
 const eventDetail = ref<LabEventDTO | null>(null);
-
-const authorText = computed(() => {
-  if (!eventDetail.value?.authors || eventDetail.value.authors.length === 0) {
-    return "";
-  }
-  return eventDetail.value.authors
-    .map(item => item?.name)
-    .filter(Boolean)
-    .join("、");
-});
 
 const formatDate = (value?: string) => {
   if (!value) return "-";

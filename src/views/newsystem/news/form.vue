@@ -3,7 +3,9 @@ import { nextTick, ref, watch } from "vue";
 import ReCol from "@/components/ReCol";
 import { formRules } from "./rule";
 import { ElIcon } from "element-plus";
+import { message } from "@/utils/message";
 import { Plus, Delete } from "@element-plus/icons-vue";
+import { uploadEventImageApi } from "@/api/lab/events";
 import {
   searchLabUsersByKeywordApi,
   type LabUserProfileDTO
@@ -17,14 +19,16 @@ interface EventAuthorFormItem {
   authorOrder: number;
   isCorresponding?: boolean;
   role?: string;
-  visible?: boolean;
+  isVisible?: boolean;
 }
 
 interface FormInlineData {
   id: number;
   title: string;
+  summary: string;
   eventTime: string;
   content: string;
+  tag: string;
   published: boolean;
   authors: EventAuthorFormItem[];
 }
@@ -37,8 +41,10 @@ const props = withDefaults(defineProps<FormProps>(), {
   formInline: () => ({
     id: 0,
     title: "",
+    summary: "",
     eventTime: "",
     content: "",
+    tag: "",
     published: false,
     authors: []
   })
@@ -48,6 +54,9 @@ const formRuleRef = ref();
 const newFormInline = ref<FormInlineData>({ ...props.formInline });
 const imageInputRef = ref<HTMLInputElement | null>(null);
 const contentEditorRef = ref<HTMLDivElement | null>(null);
+const uploadingImage = ref(false);
+
+const MAX_IMAGE_COUNT = 20;
 
 watch(
   () => props.formInline,
@@ -75,7 +84,7 @@ const addAuthor = () => {
     authorOrder: order,
     isCorresponding: false,
     role: "",
-    visible: true
+    isVisible: true
   });
 };
 
@@ -129,17 +138,34 @@ function onUserClear(index: number) {
   author.userId = null;
 }
 
-const toDataUrl = (file: File): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result || ""));
-    reader.onerror = () => reject(new Error("read image failed"));
-    reader.readAsDataURL(file);
-  });
-};
-
 const syncModelFromEditor = () => {
   newFormInline.value.content = contentEditorRef.value?.innerHTML || "";
+};
+
+const countEditorImages = () => {
+  const html = contentEditorRef.value?.innerHTML || "";
+  const matched = html.match(/<img\b[^>]*>/gi);
+  return matched ? matched.length : 0;
+};
+
+const uploadImage = async (file: File) => {
+  const formData = new FormData();
+  formData.append("file", file);
+  uploadingImage.value = true;
+  try {
+    const res = await uploadEventImageApi(formData);
+    const imageUrl =
+      res.data?.url ||
+      (res.data as any)?.fileUrl ||
+      (res.data as any)?.fullUrl ||
+      "";
+    if (!imageUrl) {
+      throw new Error("上传成功但未返回图片地址");
+    }
+    return imageUrl;
+  } finally {
+    uploadingImage.value = false;
+  }
 };
 
 const insertImageAtCursor = (imageUrl: string) => {
@@ -189,12 +215,21 @@ const onSelectLocalImage = async (event: Event) => {
   const file = input.files?.[0];
   if (!file) return;
   if (!file.type.startsWith("image/")) {
+    message("仅支持图片文件", { type: "warning" });
+    input.value = "";
+    return;
+  }
+  if (countEditorImages() >= MAX_IMAGE_COUNT) {
+    message(`最多只能插入${MAX_IMAGE_COUNT}张图片`, { type: "warning" });
     input.value = "";
     return;
   }
   try {
-    const dataUrl = await toDataUrl(file);
-    insertImageAtCursor(dataUrl);
+    const imageUrl = await uploadImage(file);
+    insertImageAtCursor(imageUrl);
+    message("图片上传成功", { type: "success" });
+  } catch (error: any) {
+    message(error?.message || "图片上传失败", { type: "error" });
   } finally {
     input.value = "";
   }
@@ -210,9 +245,18 @@ const handleContentPaste = async (event: ClipboardEvent) => {
 
   const file = imageItem.getAsFile();
   if (!file) return;
+  if (countEditorImages() >= MAX_IMAGE_COUNT) {
+    message(`最多只能插入${MAX_IMAGE_COUNT}张图片`, { type: "warning" });
+    return;
+  }
   event.preventDefault();
-  const dataUrl = await toDataUrl(file);
-  insertImageAtCursor(dataUrl);
+  try {
+    const imageUrl = await uploadImage(file);
+    insertImageAtCursor(imageUrl);
+    message("图片上传成功", { type: "success" });
+  } catch (error: any) {
+    message(error?.message || "图片上传失败", { type: "error" });
+  }
 };
 
 const handleContentInput = () => {
@@ -251,13 +295,13 @@ defineExpose({ getFormRuleRef, getFormData });
             placeholder="请输入活动标题"
             type="textarea"
             :rows="2"
-            maxlength="100"
+            maxlength="500"
             show-word-limit
           />
         </el-form-item>
       </re-col>
 
-      <re-col :value="12">
+      <re-col :value="24">
         <el-form-item label="活动时间" prop="eventTime">
           <el-date-picker
             v-model="newFormInline.eventTime"
@@ -334,11 +378,14 @@ defineExpose({ getFormRuleRef, getFormData });
                 size="small"
                 type="primary"
                 plain
+                :loading="uploadingImage"
                 @click="triggerImageSelect"
               >
                 插入图片
               </el-button>
-              <span class="content-tip">支持 Ctrl/Cmd+V 直接粘贴图片</span>
+              <span class="content-tip"
+                >图片将先上传，再插入 URL（禁止 base64）</span
+              >
               <input
                 ref="imageInputRef"
                 class="hidden-image-input"
@@ -414,7 +461,7 @@ defineExpose({ getFormRuleRef, getFormData });
   overflow-y: auto;
 
   &:empty::before {
-    content: "请输入活动内容（可直接粘贴图片）";
+    content: "请输入活动内容（支持粘贴图片并自动上传）";
     color: var(--el-text-color-placeholder);
   }
 

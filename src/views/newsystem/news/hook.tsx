@@ -57,6 +57,19 @@ export function useHook() {
       }
     },
     {
+      label: "作者",
+      prop: "authors",
+      minWidth: 180,
+      showOverflowTooltip: true,
+      formatter: ({ authors }) => {
+        if (!Array.isArray(authors) || authors.length === 0) return "";
+        return authors
+          .map(author => author?.name)
+          .filter(Boolean)
+          .join("、");
+      }
+    },
+    {
       label: "发布状态",
       prop: "published",
       width: 110,
@@ -72,29 +85,6 @@ export function useHook() {
       }
     },
     {
-      label: "作者",
-      prop: "authors",
-      minWidth: 180,
-      showOverflowTooltip: true,
-      cellRenderer: ({ row }) => {
-        if (!Array.isArray(row.authors) || row.authors.length === 0) {
-          return "";
-        }
-        return row.authors
-          .map(author => author?.name)
-          .filter(Boolean)
-          .join("、");
-      }
-    },
-    {
-      label: "创建时间",
-      prop: "createTime",
-      width: 170,
-      formatter: ({ createTime }) => {
-        return createTime ? String(createTime).replace("T", " ").slice(0, 10) : "-";
-      }
-    },
-    {
       label: "操作",
       fixed: "right",
       width: 360,
@@ -102,15 +92,11 @@ export function useHook() {
     }
   ];
 
-  const normalizeEventTime = (value?: string | null) => {
+  const normalizeDateValue = (value?: string | null) => {
     if (!value) return null;
     const raw = String(value).trim();
     if (!raw) return null;
-    // Backend commonly uses LocalDateTime; keep UI date-only and convert on submit.
-    if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
-      return `${raw}T00:00:00`;
-    }
-    return raw;
+    return raw.slice(0, 10);
   };
 
   const normalizeContent = (value?: string | null) => {
@@ -141,8 +127,33 @@ export function useHook() {
         pageSize: pagination.pageSize
       };
       const res = await getAdminEventsApi(params);
-      dataList.value = res.data?.rows || [];
+      const rows = res.data?.rows || [];
+      dataList.value = rows;
       pagination.total = res.data?.total || 0;
+
+      // 列表接口为轻量模式时，补拉详情用于展示作者列。
+      const rowsNeedAuthors = rows.filter(
+        item => item?.id && (!Array.isArray(item.authors) || item.authors.length === 0)
+      );
+
+      if (rowsNeedAuthors.length > 0) {
+        const detailResults = await Promise.allSettled(
+          rowsNeedAuthors.map(item => getAdminEventDetailApi(item.id))
+        );
+
+        const authorMap = new Map<number, NonNullable<LabEventDTO["authors"]>>();
+        detailResults.forEach((result, index) => {
+          if (result.status === "fulfilled") {
+            const row = rowsNeedAuthors[index];
+            authorMap.set(row.id, result.value.data?.authors || []);
+          }
+        });
+
+        dataList.value = rows.map(item => ({
+          ...item,
+          authors: authorMap.get(item.id) || item.authors || []
+        }));
+      }
     } catch (error) {
       message("获取数据失败", { type: "error" });
     } finally {
@@ -180,7 +191,7 @@ export function useHook() {
         const detailRes = await getAdminEventDetailApi(row.id);
         detailData = detailRes.data;
       } catch (error) {
-        message("获取活动详情失败", { type: "error" });
+        message("获取活动详情失败，已使用列表数据打开", { type: "warning" });
       }
     }
 
@@ -190,10 +201,12 @@ export function useHook() {
         formInline: {
           id: detailData?.id ?? 0,
           title: detailData?.title ?? "",
+          summary: detailData?.summary ?? "",
           eventTime: detailData?.eventTime
             ? String(detailData.eventTime).slice(0, 10)
             : "",
           content: detailData?.content ?? "",
+          tag: detailData?.tag ?? "",
           published: detailData?.published ?? false,
           authors: Array.isArray(detailData?.authors)
             ? detailData.authors.map((author, index) => ({
@@ -204,7 +217,10 @@ export function useHook() {
                 authorOrder: author.authorOrder || index + 1,
                 isCorresponding: !!author.isCorresponding,
                 role: author.role || "",
-                visible: author.visible !== false
+                isVisible:
+                  author.isVisible !== undefined
+                    ? !!author.isVisible
+                    : author.visible !== false
               }))
             : []
         }
@@ -232,17 +248,19 @@ export function useHook() {
                 name: author.name.trim(),
                 nameEn: author.nameEn?.trim() || null,
                 affiliation: author.affiliation?.trim() || null,
-                authorOrder: index + 1,
+                authorOrder: Number(author.authorOrder) > 0 ? Number(author.authorOrder) : index + 1,
                 isCorresponding: !!author.isCorresponding,
                 role: author.role?.trim() || null,
-                visible: author.visible !== false
+                isVisible: author.isVisible !== false
               }))
           : [];
 
         const payload: LabEventSavePayload = {
           title: (formData.title || "").trim(),
-          eventTime: normalizeEventTime(formData.eventTime),
+          summary: (formData.summary || "").trim() || null,
+          eventTime: normalizeDateValue(formData.eventTime),
           content: normalizeContent(formData.content),
+          tag: (formData.tag || "").trim() || null,
           published: !!formData.published,
           authors
         };
@@ -261,6 +279,10 @@ export function useHook() {
   }
 
   async function openDetailDialog(row: NewsItem) {
+    if (!row?.id) {
+      message("当前活动缺少ID，无法查看详情", { type: "warning" });
+      return;
+    }
     try {
       const res = await getAdminEventDetailApi(row.id);
       addDialog({
@@ -279,7 +301,25 @@ export function useHook() {
           })
       });
     } catch (error) {
-      message("获取活动详情失败", { type: "error" });
+      message("获取活动详情失败，已使用列表数据打开", { type: "warning" });
+      addDialog({
+        title: "活动详情",
+        props: {
+          newsData: {
+            ...row,
+            content: row.content || ""
+          }
+        },
+        width: "70%",
+        draggable: true,
+        fullscreenIcon: true,
+        closeOnClickModal: false,
+        hideFooter: true,
+        contentRenderer: ({ options }) =>
+          h(detailDialog, {
+            ...options.props
+          })
+      });
     }
   }
 
