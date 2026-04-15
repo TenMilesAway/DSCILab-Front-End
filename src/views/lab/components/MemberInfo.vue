@@ -421,17 +421,7 @@
 </template>
 
 <script setup lang="ts">
-import {
-  defineEmits,
-  defineProps,
-  ref,
-  nextTick,
-  onMounted,
-  onUnmounted,
-  watch,
-  h,
-  computed
-} from "vue";
+import { ref, nextTick, onMounted, onUnmounted, watch, h, computed } from "vue";
 import { Link, Download } from "@element-plus/icons-vue";
 import { ElMessage } from "element-plus";
 import {
@@ -721,7 +711,9 @@ const avatarImgRef = ref<HTMLImageElement | null>(null);
 
 // 在公开列表中定位当前成员作者记录：优先按 userId 匹配，失败时回退按姓名匹配
 const findCurrentMemberAuthor = (
-  authors: Array<{ userId?: number; name?: string; visible?: boolean }> | undefined
+  authors:
+    | Array<{ userId?: number; name?: string; visible?: boolean }>
+    | undefined
 ) => {
   if (!authors || !props.member) return undefined;
 
@@ -766,20 +758,26 @@ watch(
 
 // 计算头像URL
 const avatarUrl = computed(() => {
+  const baseApi = import.meta.env.VITE_APP_BASE_API;
   const userPhoto = props.member?.photo;
   if (userPhoto) {
-    // 如果photo已经是完整URL，直接使用
-    if (userPhoto.startsWith("http")) {
-      return userPhoto;
+    const photo = String(userPhoto).trim();
+    if (/^https?:\/\//i.test(photo)) {
+      // https 页面下尽量将 http 头像走同源代理，避免混合内容被浏览器拦截。
+      if (window.location.protocol === "https:" && /^http:\/\//i.test(photo)) {
+        try {
+          const url = new URL(photo);
+          return `${baseApi}${url.pathname}${url.search}${url.hash}`;
+        } catch {
+          return photo.replace(/^http:\/\//i, "https://");
+        }
+      }
+      return photo;
     }
-    // 否则拼接base API
-    return import.meta.env.VITE_APP_BASE_API + userPhoto;
+    return photo.startsWith("/") ? `${baseApi}${photo}` : `${baseApi}/${photo}`;
   }
   // 默认头像
-  return (
-    import.meta.env.VITE_APP_BASE_API +
-    "/src/assets/lab/default_user_avatar.png"
-  );
+  return `${baseApi}/src/assets/lab/default_user_avatar.png`;
 });
 
 // 按时间排序的项目列表（从新到旧）

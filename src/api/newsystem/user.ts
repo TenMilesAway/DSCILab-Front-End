@@ -364,6 +364,7 @@ export const uploadCommonFileApi = (data: FormData) => {
     "/file/upload",
     { data },
     {
+      timeout: 120000,
       headers: {
         "Content-Type": "multipart/form-data"
       }

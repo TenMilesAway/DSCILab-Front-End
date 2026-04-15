@@ -163,6 +163,14 @@ const uploadImage = async (file: File) => {
       throw new Error("上传成功但未返回图片地址");
     }
     return imageUrl;
+  } catch (error: any) {
+    const msg = String(error?.message || "");
+    if (msg.includes("timeout")) {
+      throw new Error(
+        "图片上传超时（120秒），请检查服务器反向代理或减小图片大小后重试"
+      );
+    }
+    throw error;
   } finally {
     uploadingImage.value = false;
   }
