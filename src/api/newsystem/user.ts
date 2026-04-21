@@ -267,6 +267,13 @@ export interface UploadFileDTO {
   photo?: string;
 }
 
+export type UploadDTO = {
+  url: string;
+  fileName: string;
+  newFileName: string;
+  originalFilename: string;
+};
+
 /** 获取用户列表 */
 export const getUserListApi = (params?: UserListQuery) => {
   return http.request<ResponseData<{ total: number; rows: UserListItem[] }>>(
@@ -343,6 +350,21 @@ export const uploadUserPhotoApi = (userId: number, data: FormData) => {
       data
     },
     {
+      headers: {
+        "Content-Type": "multipart/form-data"
+      }
+    }
+  );
+};
+
+/** 通用文件上传 */
+export const uploadCommonFileApi = (data: FormData) => {
+  return http.request<ResponseData<UploadDTO>>(
+    "post",
+    "/file/upload",
+    { data },
+    {
+      timeout: 120000,
       headers: {
         "Content-Type": "multipart/form-data"
       }

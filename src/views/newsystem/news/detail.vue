@@ -2,6 +2,8 @@
 import { computed } from "vue";
 import dayjs from "dayjs";
 
+const { VITE_APP_BASE_API } = import.meta.env;
+
 interface DetailProps {
   newsData: {
     id: number;
@@ -56,6 +58,45 @@ const formatDateTime = (value?: string) => {
   if (!value) return "-";
   return dayjs(value).format("YYYY-MM-DD");
 };
+
+const normalizeContentImgSrc = (html: string) => {
+  if (!html) return "";
+  return html.replace(
+    /(<img\b[^>]*\bsrc\s*=\s*["'])([^"']+)(["'][^>]*>)/gi,
+    (_, p1, src, p3) => {
+      const s = String(src || "").trim();
+      if (!s || s.startsWith("data:")) return `${p1}${s}${p3}`;
+
+      const toProxyUploadPath = (pathValue: string) => {
+        return `${p1}${VITE_APP_BASE_API}${pathValue}${p3}`;
+      };
+
+      if (/^https?:\/\//i.test(s)) {
+        try {
+          const url = new URL(s);
+          if (url.pathname.startsWith("/profile/upload/")) {
+            return toProxyUploadPath(`${url.pathname}${url.search}${url.hash}`);
+          }
+          if (window.location.protocol === "https:" && /^http:\/\//i.test(s)) {
+            return `${p1}${s.replace(/^http:\/\//i, "https://")}${p3}`;
+          }
+          return `${p1}${s}${p3}`;
+        } catch {
+          return `${p1}${s}${p3}`;
+        }
+      }
+
+      if (s.startsWith("/profile/upload/")) {
+        return toProxyUploadPath(s);
+      }
+
+      if (s.startsWith("/")) {
+        return `${p1}${VITE_APP_BASE_API}${s}${p3}`;
+      }
+      return `${p1}${VITE_APP_BASE_API}/${s}${p3}`;
+    }
+  );
+};
 </script>
 
 <template>
@@ -90,7 +131,11 @@ const formatDateTime = (value?: string) => {
       <div class="content-body">
         <div
           class="content-text"
-          v-html="newsData.content.replace(/\n/g, '<br>')"
+          v-html="
+            normalizeContentImgSrc(
+              (newsData.content || '').replace(/\n/g, '<br>')
+            )
+          "
         />
       </div>
     </div>

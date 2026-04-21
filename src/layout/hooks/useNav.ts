@@ -42,15 +42,23 @@ export function useNav() {
 
   /** 用户头像 */
   const userAvatar = computed(() => {
+    const baseApi = import.meta.env.VITE_APP_BASE_API;
     const currentUser = useUserStoreHook().currentUserInfo;
 
     if (currentUser?.photo) {
-      // 如果photo已经是完整URL，直接使用
-      if (currentUser.photo.startsWith("http")) {
-        return currentUser.photo;
+      const photo = String(currentUser.photo).trim();
+      if (/^https?:\/\//i.test(photo)) {
+        if (window.location.protocol === "https:" && /^http:\/\//i.test(photo)) {
+          try {
+            const url = new URL(photo);
+            return `${baseApi}${url.pathname}${url.search}${url.hash}`;
+          } catch {
+            return photo.replace(/^http:\/\//i, "https://");
+          }
+        }
+        return photo;
       }
-      // 否则拼接base API
-      return import.meta.env.VITE_APP_BASE_API + currentUser.photo;
+      return photo.startsWith("/") ? `${baseApi}${photo}` : `${baseApi}/${photo}`;
     }
     // 默认头像
     return "/default-avatar.png";

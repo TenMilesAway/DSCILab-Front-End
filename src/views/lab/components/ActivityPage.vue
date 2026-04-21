@@ -28,7 +28,7 @@
           <button class="title-btn" @click="openDetail(item.id)">
             {{ item.title }}
           </button>
-          <span class="event-date">{{ formatDate(item.eventTime || item.createTime) }}</span>
+          <span class="event-date">{{ formatDate(item.eventTime) }}</span>
         </li>
       </ul>
     </div>
@@ -49,8 +49,8 @@ const selectedEventId = ref<number | null>(null);
 
 const filteredEvents = computed(() => {
   const list = [...events.value].sort((a, b) => {
-    const aTime = new Date(a.eventTime || a.createTime || 0).getTime();
-    const bTime = new Date(b.eventTime || b.createTime || 0).getTime();
+    const aTime = new Date(a.eventTime || 0).getTime();
+    const bTime = new Date(b.eventTime || 0).getTime();
     return bTime - aTime;
   });
 
@@ -155,6 +155,7 @@ onMounted(() => {
   padding: 0;
   cursor: pointer;
   font-size: 16px;
+  min-width: 0;
 
   &:hover {
     text-decoration: underline;
